@@ -15,4 +15,24 @@
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  mar
+  margin: 70px 0; /* adjust margin for proper spacing */
+  cursor: pointer;
+  height: 40px; /* set the same height as the other buttons */
+  line-height: 20px; /* adjust line-height accordingly */
+}
+
+
+.w-commerce-commercecheckoutformcontainer {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.w-commerce-commercelayoutcontainer {
+  justify-content: center;
+  align-items: flex-start;
+  display: flex;
+}
+
+.w-commerce-commercelayo
