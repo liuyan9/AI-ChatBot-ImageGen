@@ -498,4 +498,28 @@
   font-weight: 400;
 }
 
-.w-commerce-commercecheckoutbillingaddresswrappe
+.w-commerce-commercecheckoutbillingaddresswrapper {
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+
+.w-commerce-commercecheckoutbillingfullname {
+  height: 38px;
+  width: 100%;
+  -webkit-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  background-color: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  line-height: 20px;
+  display: block;
+}
+
+.w-commerce-commercecheckoutbillingfullname::-ms-input-placeholder {
+  color: #999;
+}
+
+.w-commerce-commercecheckoutbillingfu
