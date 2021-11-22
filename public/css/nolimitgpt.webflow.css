@@ -819,4 +819,26 @@
   margin-bottom: 20px;
 }
 
-.w-commerce-commercepaypalcheck
+.w-commerce-commercepaypalcheckouterrorstate {
+  background-color: #ffdede;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+}
+
+.w-commerce-commerceorderconfirmationcontainer {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.w-commerce-commercecheckoutshippingsummarywrapper {
+  margin-bottom: 20px;
+}
+
+.w-users-userformpagewrap {
+  height: 100vh;
+  max-width: 340px;
+  flex-direction: column;
+  justify-content:
