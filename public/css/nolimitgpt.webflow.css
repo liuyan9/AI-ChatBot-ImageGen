@@ -1072,4 +1072,34 @@ h2 {
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 42px;
-  font-weig
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.header {
+  color: #fff;
+  background-color: #040f56;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 185px 3% 80px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.container-flex {
+  width: 100%;
+  max-width: 1140px;
+  flex-direction: column;
+  justify-cont
