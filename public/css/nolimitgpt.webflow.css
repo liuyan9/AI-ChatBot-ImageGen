@@ -1190,4 +1190,38 @@ a {
   color: #fff;
   background-color: #0927a7;
   border-radius: 100px;
-  margi
+  margin-top: 0;
+  padding: 16px 45px;
+  font-size: 16px;
+  line-height: 21px;
+}
+
+.primary-cta.focus-button {
+  color: #fff;
+  background-color: #0927a7;
+}
+
+.hero-image-wrapper {
+  margin-top: 65px;
+  position: relative;
+}
+
+.hero-graphic-left {
+  position: absolute;
+  top: 170px;
+  bottom: auto;
+  left: -80px;
+  right: auto;
+}
+
+.hero-graphic-right {
+  position: absolute;
+  top: 300px;
+  bottom: 0%;
+  left: auto;
+  right: -80px;
+}
+
+.profile-images-wrapper {
+  justify-content: center;
+  ali
