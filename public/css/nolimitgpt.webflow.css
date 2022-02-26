@@ -1224,4 +1224,32 @@ a {
 
 .profile-images-wrapper {
   justify-content: center;
-  ali
+  align-items: center;
+  margin-top: 20px;
+  display: flex;
+}
+
+.people-group-image {
+  margin-right: 12px;
+}
+
+.follower-number {
+  color: #99a1ba;
+  font-size: 15px;
+  line-height: 26px;
+}
+
+.follower-number._02 {
+  color: #fff;
+}
+
+.tag-span {
+  color: #813efb;
+}
+
+.services-section {
+  background-image: linear-gradient(#f9f9f9, #fff);
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding-t
