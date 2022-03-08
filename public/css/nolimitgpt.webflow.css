@@ -1329,4 +1329,32 @@ a {
   width: 100%;
   height: 1px;
   max-width: 850px;
-  background-color: rgba(153, 161, 186
+  background-color: rgba(153, 161, 186, .2);
+  flex: 0 auto;
+  margin-top: 160px;
+  position: static;
+  top: auto;
+  bottom: 0%;
+  left: 0%;
+  right: 0%;
+}
+
+.features-section {
+  background-color: #f7f8f9;
+  justify-content: center;
+  align-items: center;
+  padding: 100px 3%;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.features-section.featuresbackgroundcolor {
+  background-color: #181a1b;
+}
+
+.content-h2 {
+  color: #2a51f4;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
