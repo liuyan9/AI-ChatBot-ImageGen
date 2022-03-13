@@ -1358,3 +1358,44 @@ a {
   margin-top: 0;
   margin-bottom: 16px;
 }
+
+.content-h2.content-h2-centre {
+  color: #fff;
+  text-align: center;
+}
+
+.feature-image-div {
+  position: relative;
+}
+
+.feature-image {
+  overflow: hidden;
+}
+
+.ribbon {
+  position: absolute;
+  top: -20px;
+  bottom: auto;
+  left: auto;
+  right: -8px;
+}
+
+.ribbon-2 {
+  position: absolute;
+  top: -50px;
+  bottom: auto;
+  left: -40px;
+  right: auto;
+}
+
+.ribbon-3 {
+  position: absolute;
+  top: auto;
+  bottom: -40px;
+  left: auto;
+  right: -40px;
+}
+
+.left-blur {
+  opacity: .5;
+ 
