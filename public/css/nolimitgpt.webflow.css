@@ -1398,4 +1398,30 @@ a {
 
 .left-blur {
   opacity: .5;
- 
+  position: absolute;
+  top: 20%;
+  bottom: auto;
+  left: 0%;
+  right: auto;
+}
+
+.testimonials-section {
+  background-color: #f7f8f9;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 120px;
+  padding-left: 3%;
+  padding-right: 3%;
+  display: flex;
+  position: relative;
+  overflow: visible;
+}
+
+.testimonials-section.testimonialbackground {
+  background-color: #1c1e1f;
+}
+
+.name-title {
+  color: #3b5998;
+  text-align
