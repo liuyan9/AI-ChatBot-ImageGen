@@ -1424,4 +1424,31 @@ a {
 
 .name-title {
   color: #3b5998;
-  text-align
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.right-blur {
+  max-width: 500px;
+  opacity: .5;
+  position: absolute;
+  top: auto;
+  bottom: 0%;
+  left: auto;
+  right: 0%;
+}
+
+.pricing-section {
+  background-color: #181a1b;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 120px 3% 140px;
+  display: flex;
+  position: relative;
+}
+
+.pricing-section.pricingsectionbackground 
