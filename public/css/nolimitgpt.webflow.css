@@ -1451,4 +1451,31 @@ a {
   position: relative;
 }
 
-.pricing-section.pricingsectionbackground 
+.pricing-section.pricingsectionbackground {
+  background-color: #181a1b;
+}
+
+.pricing-section.pricingsectionbackground.pricingsectiontypography {
+  color: #fff;
+}
+
+.tabs {
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 32px;
+  display: none;
+}
+
+.price-plan {
+  color: #99a1ba;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.tab-switcher {
+  width: 60px;
+  height: 30px;
+  background-color: #813efb;
+  border-radius: 100px;
+  justify-content: f
