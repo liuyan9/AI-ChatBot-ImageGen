@@ -1501,4 +1501,31 @@ a {
   grid-template-columns: 1fr 1fr 1fr;
   align-items: start;
   justify-items: stretch;
-  margin
+  margin-top: 55px;
+  position: static;
+}
+
+.pricing-block {
+  width: 100%;
+  opacity: 1;
+  background-color: rgba(153, 161, 186, .06);
+  border-radius: 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 48px;
+  display: flex;
+  overflow: hidden;
+}
+
+.price-title {
+  color: #99a1ba;
+  margin-bottom: 4px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.price-number {
+  color: #fff;
+ 
