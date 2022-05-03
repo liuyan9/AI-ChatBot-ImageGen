@@ -1582,3 +1582,29 @@ a {
   padding-top: 0;
   font-size: 15px;
   font-weight: 400;
+}
+
+.pricing-block-big {
+  opacity: 1;
+  background-color: rgba(153, 161, 186, .06);
+  border-radius: 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 48px;
+  display: flex;
+  overflow: hidden;
+}
+
+.pricing-top-block-big {
+  width: 100%;
+  background-color: #030c45;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 50px;
+  padding: 35px 25px;
+  display: flex;
+}
+
+.pricing-bot
