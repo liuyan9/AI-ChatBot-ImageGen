@@ -1554,4 +1554,31 @@ a {
   display: flex;
 }
 
-.pricing-botto
+.pricing-bottom-block {
+  flex: none;
+  margin-bottom: 121px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.pricing-bottom-block.bigblock {
+  margin-bottom: 53px;
+}
+
+.feature-block {
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 16px;
+  display: flex;
+}
+
+.tick-icon {
+  background-color: rgba(0, 0, 0, 0);
+  margin-right: 12px;
+}
+
+.feature {
+  color: #99a1ba;
+  padding-top: 0;
+  font-size: 15px;
+  font-weight: 400;
