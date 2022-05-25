@@ -1607,4 +1607,29 @@ a {
   display: flex;
 }
 
-.pricing-bot
+.pricing-bottom-block-big {
+  margin-bottom: 64px;
+  padding-bottom: 47px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.footer-link {
+  color: #99a1ba;
+  margin-bottom: 16px;
+  font-size: 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.footer-section {
+  background-color: #030c45;
+  justify-content: center;
+  align-items: center;
+  padding: 135px 3% 128px;
+  display: flex;
+}
+
+.form-block {
+  justify-content: flex-start;
+  align-items: cent
