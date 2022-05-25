@@ -1632,4 +1632,37 @@ a {
 
 .form-block {
   justify-content: flex-start;
-  align-items: cent
+  align-items: center;
+  margin-bottom: 0;
+  display: flex;
+}
+
+.form-block.no-padding {
+  margin-top: 0;
+}
+
+.newsletter-field {
+  width: 310px;
+  height: 55px;
+  color: #17171b;
+  border-radius: 100px;
+  margin-bottom: 0;
+  margin-right: 12px;
+  padding-left: 27px;
+  font-size: 15px;
+}
+
+.newsletter-field.newsletter-small {
+  width: 260px;
+}
+
+.form-title {
+  color: #fff;
+  margin-bottom: 22px;
+  font-size: 22px;
+  line-height: 26px;
+}
+
+.footer-content {
+  width: 100%;
+  flex: 0 auto
