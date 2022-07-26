@@ -1751,4 +1751,34 @@ a {
   margin-bottom: 48px;
   font-size: 18px;
   font-weight: 400;
-  line-height: 1.
+  line-height: 1.4;
+}
+
+.hero-h1 {
+  color: #fff;
+  font-size: 50px;
+  line-height: 1;
+}
+
+.hero-overline {
+  color: #fff;
+  text-align: center;
+  letter-spacing: 1.5px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hero-button {
+  color: #fff;
+  background-color: #2a51f4;
+  border-radius: 100px;
+  margin-top: 0;
+  padding: 16px 45px;
+  font-size: 16px;
+  line-height: 21px;
+  transition: all .2s;
+}
+
+.hero-button:ho
