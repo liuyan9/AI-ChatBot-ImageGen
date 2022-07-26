@@ -1696,4 +1696,29 @@ a {
 .footer-right-block {
   width: 50%;
   grid-column-gap: 29px;
-  grid
+  grid-row-gap: 16px;
+  grid-template: "."
+  / 1.5fr 1.5fr 1.5fr 1.5fr;
+  grid-auto-columns: 1fr;
+  display: grid;
+}
+
+.footer-title {
+  color: #fff;
+  margin-bottom: 40px;
+  font-size: 17px;
+}
+
+.footer-base {
+  background-color: #030c45;
+  justify-content: center;
+  align-items: center;
+  padding: 25px 3%;
+  display: flex;
+}
+
+.footer-base-container {
+  width: 100%;
+  max-width: 1200px;
+  flex-direction: row;
+  justify-content: space-between;
