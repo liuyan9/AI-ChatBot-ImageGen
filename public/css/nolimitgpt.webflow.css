@@ -1665,4 +1665,35 @@ a {
 
 .footer-content {
   width: 100%;
-  flex: 0 auto
+  flex: 0 auto;
+  justify-content: space-between;
+  align-self: auto;
+  align-items: flex-start;
+  display: flex;
+}
+
+.footer-logo {
+  margin-bottom: 12px;
+}
+
+.copyright {
+  color: #99a1ba;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+.copyright.white {
+  color: #fff;
+  font-size: 14px;
+  display: inline-block;
+}
+
+.footer-left-block {
+  width: 50%;
+}
+
+.footer-right-block {
+  width: 50%;
+  grid-column-gap: 29px;
+  grid
