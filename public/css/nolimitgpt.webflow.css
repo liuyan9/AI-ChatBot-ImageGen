@@ -1808,4 +1808,33 @@ a {
   overflow: hidden;
 }
 
-.newsletter-blo
+.newsletter-block {
+  background-color: #030c45;
+  border-radius: 15px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 105px 35px;
+  display: flex;
+  position: relative;
+}
+
+.content-cta {
+  max-width: 580px;
+  text-align: center;
+  margin-bottom: 35px;
+  font-size: 50px;
+}
+
+.send-button {
+  color: #17171b;
+  background-color: #fff;
+  border-radius: 100px;
+  margin-top: 0;
+  padding: 16px 45px;
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.link {
+  opa
