@@ -1863,4 +1863,28 @@ a {
 .services-grid-block-03 {
   background-color: #fff;
   border: 1.5px solid rgba(0, 0, 0, 0);
-  border-radius: 1
+  border-radius: 10px;
+  padding: 50px 30px;
+  text-decoration: none;
+  transition: all .25s;
+}
+
+.services-grid-block-03:hover {
+  border: 1.5px solid #813efb;
+}
+
+.services-grid-block-04 {
+  background-color: #fff;
+  border: 1.5px solid rgba(0, 0, 0, 0);
+  border-radius: 10px;
+  padding: 50px 30px;
+  text-decoration: none;
+  transition: all .25s;
+}
+
+.services-grid-block-04:hover {
+  border: 1.5px solid #813efb;
+}
+
+.services-grid-block-04.end-block {
+  flex-direction: 
