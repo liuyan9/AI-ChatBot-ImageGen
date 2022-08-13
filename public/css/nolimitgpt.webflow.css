@@ -1837,4 +1837,30 @@ a {
 }
 
 .link {
-  opa
+  opacity: .5;
+}
+
+.form-wrapper {
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 0;
+  display: flex;
+}
+
+.services-grid-block-02 {
+  background-color: #fff;
+  border: 1.5px solid rgba(0, 0, 0, 0);
+  border-radius: 10px;
+  padding: 50px 30px;
+  text-decoration: none;
+  transition: all .25s;
+}
+
+.services-grid-block-02:hover {
+  border: 1.5px solid #813efb;
+}
+
+.services-grid-block-03 {
+  background-color: #fff;
+  border: 1.5px solid rgba(0, 0, 0, 0);
+  border-radius: 1
