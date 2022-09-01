@@ -1916,4 +1916,37 @@ a {
 .feature-column-image {
   width: 50%;
   min-height: 250px;
-  fl
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding: 30px;
+  display: flex;
+}
+
+.flowb {
+  font-weight: 600;
+}
+
+.title-wrap.flex-centre {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.flowbase-banner {
+  height: 64px;
+}
+
+.text-block {
+  margin-top: 28px;
+  margin-bottom: -28px;
+  padding-left: 30px;
+  font-size: 26px;
+}
+
+.navbar {
+  height: 80px;
+  color: #fff;
+  white-space: normal;
+  background-co
