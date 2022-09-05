@@ -1949,4 +1949,29 @@ a {
   height: 80px;
   color: #fff;
   white-space: normal;
-  background-co
+  background-color: #030c45;
+  padding: 9px;
+  font-size: 20px;
+  position: fixed;
+  top: 0%;
+  bottom: auto;
+  left: 0%;
+  right: 0%;
+}
+
+.brand {
+  background-image: url('../images/flash.svg');
+  background-position: 0 0;
+  background-size: auto;
+  display: block;
+  left: -69px;
+}
+
+.user-log-in-log-out {
+  width: auto;
+  max-width: 100px;
+  object-fit: fill;
+  margin-left: 948px;
+  padding-top: 11px;
+  padding-left: 0;
+  padding-r
