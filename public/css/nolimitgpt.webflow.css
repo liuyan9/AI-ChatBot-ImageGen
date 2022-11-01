@@ -2191,3 +2191,36 @@ a {
   top: -5px;
 }
 
+.brand-2.w--current {
+  top: -7px;
+  left: -1px;
+}
+
+.nav-link-4 {
+  white-space: normal;
+  -webkit-text-fill-color: inherit;
+  mix-blend-mode: normal;
+  background-color: #0927a7;
+  background-clip: border-box;
+  border: 1px #000;
+  border-radius: 20px;
+}
+
+.body {
+  color: #fff;
+  background-color: #1c1e1f;
+}
+
+.image {
+  position: relative;
+  top: -17px;
+  left: -53px;
+}
+
+.text-span {
+  font-size: 15px;
+  position: relative;
+  top: 17px;
+}
+
+.text-span-2 {
