@@ -2224,3 +2224,38 @@ a {
 }
 
 .text-span-2 {
+  color: #8186a2;
+}
+
+.text-span-3, .checkbox-label {
+  color: #fff;
+}
+
+.text-span-4, .text-span-5, .link-2 {
+  color: #686868;
+}
+
+.form-footer {
+  color: #333;
+}
+
+.link-3 {
+  color: #fff;
+}
+
+.utility-page-wrap {
+  width: 100vw;
+  height: 100vh;
+  max-height: 100%;
+  max-width: 100%;
+  color: #fff;
+  background-color: #040f56;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.utility-page-content {
+  width: 260px;
+  text-align: center;
+  flex-directio
