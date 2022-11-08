@@ -2298,4 +2298,39 @@ a {
   background-color: #181a1b;
 }
 
-@me
+@media screen and (max-width: 991px) {
+  .nav-bar {
+    padding-left: 3%;
+    padding-right: 3px;
+  }
+
+  .nav-link {
+    color: #17171b;
+  }
+
+  .nav-menu {
+    background-color: #fff;
+  }
+
+  .nav-button {
+    display: none;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: row;
+  }
+
+  .content-h2 {
+    font-size: 38px;
+  }
+
+  .left-blur {
+    z-index: -1;
+  }
+
+  .testimonials-section {
+    overflow: hidden;
+  }
+
+  .right-blur {
