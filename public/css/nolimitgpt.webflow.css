@@ -2334,3 +2334,34 @@ a {
   }
 
   .right-blur {
+    z-index: -1;
+  }
+
+  .feature {
+    font-size: 15px;
+  }
+
+  .footer-section {
+    overflow: hidden;
+  }
+
+  .footer-content {
+    flex-wrap: wrap;
+  }
+
+  .footer-left-block {
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+  }
+
+  .footer-right-block {
+    width: 100%;
+    max-width: 550px;
+    margin-top: 35px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
