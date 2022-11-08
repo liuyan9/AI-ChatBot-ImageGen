@@ -2365,3 +2365,38 @@ a {
     margin-right: auto;
   }
 
+  .footer-link-block {
+    padding: 15px;
+  }
+
+  .icon {
+    color: #813efb;
+  }
+
+  .hero-h1 {
+    text-align: center;
+  }
+
+  .cta-section {
+    padding-top: 100px;
+    padding-bottom: 100px;
+  }
+
+  .newsletter-block {
+    z-index: 5;
+  }
+
+  .feature-column-content, .feature-column-image {
+    padding: 25px;
+  }
+
+  .menu-button {
+    border-radius: 100px;
+  }
+
+  .menu-button.w--open {
+    background-color: rgba(255, 255, 255, .17);
+  }
+
+  .nav-menu-wrapper {
+    background-colo
