@@ -2540,4 +2540,30 @@ a {
   }
 
   .nav-dropdown-toggle {
-    padding-top: 
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .nav-dropdown-list.shadow-three {
+    box-shadow: 0 8px 50px rgba(0, 0, 0, .05);
+  }
+
+  .nav-dropdown-list.shadow-three.w--open {
+    position: relative;
+  }
+
+  .nav-dropdown-list.shadow-three.mobile-shadow-hide {
+    box-shadow: none;
+  }
+
+  .mobile-margin-top-10 {
+    margin-top: 10px;
+  }
+
+  .navbar-logo-left-container {
+    max-width: 100%;
+  }
+
+  .nav-menu-two {
+    border-radius: 20px;
+    flex-direction: column;
