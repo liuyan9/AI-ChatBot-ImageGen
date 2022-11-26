@@ -2567,3 +2567,30 @@ a {
   .nav-menu-two {
     border-radius: 20px;
     flex-direction: column;
+    padding-bottom: 30px;
+  }
+
+  .nav-divider {
+    width: 200px;
+    height: 1px;
+    max-width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .nav-link-accent {
+    margin-right: 5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-section {
+    padding-top: 60px;
+    padding-bottom: 60
