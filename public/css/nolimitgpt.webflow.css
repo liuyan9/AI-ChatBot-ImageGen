@@ -2593,4 +2593,39 @@ a {
 
   .features-section {
     padding-top: 60px;
-    padding-bottom: 60
+    padding-bottom: 60px;
+  }
+
+  .ribbon, .ribbon-2 {
+    display: none;
+  }
+
+  .ribbon-3 {
+    width: 90px;
+    display: none;
+  }
+
+  .right-blur {
+    display: none;
+  }
+
+  .form-block {
+    flex-wrap: wrap;
+  }
+
+  .newsletter-field {
+    margin-bottom: 15px;
+    margin-right: 0;
+  }
+
+  .newsletter-field.newsletter-small {
+    width: 100%;
+  }
+
+  .footer-right-block {
+    grid-template-rows: auto;
+    grid-template-columns: 1.5fr;
+  }
+
+  .hero-h1 {
+    fon
