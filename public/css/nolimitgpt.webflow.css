@@ -2628,4 +2628,40 @@ a {
   }
 
   .hero-h1 {
-    fon
+    font-size: 44px;
+  }
+
+  .cta-section {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .newsletter-block {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .content-cta {
+    font-size: 38px;
+  }
+
+  .send-button {
+    width: 100%;
+  }
+
+  .form-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .feature-column-content {
+    padding: 10px;
+  }
+
+  .feature-column-image {
+    margin-top: 25px;
+    padding: 10px;
+  }
+
+  .flowbase-banner {
+    display: none;
+  }
