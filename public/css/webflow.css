@@ -1153,4 +1153,23 @@ textarea.w-select {
  * ## Note
  * Safari (on both iOS and OS X) does not handle viewport units (vh, vw) well.
  * For example percentage units do not work on descendants of elements that
- * have any dimensions expressed in viewport units. It also doesn’
+ * have any dimensions expressed in viewport units. It also doesn’t handle them at
+ * all in `calc()`.
+ */
+/**
+ * Wrapper around all lightbox elements
+ *
+ * 1. Since the lightbox can receive focus, IE also gives it an outline.
+ * 2. Fixes flickering on Chrome when a transition is in progress
+ *    underneath the lightbox.
+ */
+.w-lightbox-backdrop {
+  cursor: auto;
+  font-style: normal;
+  letter-spacing: normal;
+  list-style: disc;
+  text-indent: 0;
+  text-shadow: none;
+  text-transform: none;
+  visibility: visible;
+  white-spac
