@@ -1255,4 +1255,25 @@ textarea.w-select {
   height: auto;
   max-width: none;
 }
-/
+/**
+ * 1. Reset if style is set by user on "All Images"
+ */
+.w-lightbox-image {
+  display: block;
+  float: none;
+  /* 1 */
+  max-width: 100vw;
+  max-height: 100vh;
+}
+.w-lightbox-group .w-lightbox-image {
+  max-height: 86vh;
+}
+.w-lightbox-caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0.5em 1em;
+  background: rgba(0, 0, 0, 0.4);
+  text-align: left;
+  text-overflow: ellipsis;
