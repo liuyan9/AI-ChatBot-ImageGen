@@ -1427,4 +1427,28 @@ textarea.w-select {
   overflow: hidden;
 }
 @media (min-width: 768px) {
-  .w-lightbox-co
+  .w-lightbox-content {
+    height: 96vh;
+    margin-top: 2vh;
+  }
+  .w-lightbox-view,
+  .w-lightbox-view:before {
+    height: 96vh;
+  }
+  /* .w-lightbox-content */
+  .w-lightbox-group,
+  .w-lightbox-group .w-lightbox-view,
+  .w-lightbox-group .w-lightbox-view:before {
+    height: 84vh;
+  }
+  .w-lightbox-image {
+    max-width: 96vw;
+    max-height: 96vh;
+  }
+  .w-lightbox-group .w-lightbox-image {
+    max-width: 82.3vw;
+    max-height: 84vh;
+  }
+  .w-lightbox-left,
+  .w-lightbox-right {
+    
