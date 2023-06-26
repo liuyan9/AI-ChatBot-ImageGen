@@ -650,3 +650,434 @@
             var b3, c2, d2 = this.tweens.length, e2 = false;
             for (b3 = d2; b3--; )
               c2 = this.tweens[b3], c2.context && (c2.render(a3), this.current[c2.name] = c2.value, e2 = true);
+            return e2 ? void (this.update && this.update.call(this.context)) : this.destroy();
+          }, a2.destroy = function() {
+            if (b2.destroy.call(this), this.tweens) {
+              var a3, c2 = this.tweens.length;
+              for (a3 = c2; a3--; )
+                this.tweens[a3].destroy();
+              this.tweens = null, this.current = null;
+            }
+          };
+        }), U = b.config = {
+          debug: false,
+          defaultUnit: "px",
+          defaultAngle: "deg",
+          keepInherited: false,
+          hideBackface: false,
+          perspective: "",
+          fallback: !G.transition,
+          agentTests: []
+        };
+        b.fallback = function(a2) {
+          if (!G.transition)
+            return U.fallback = true;
+          U.agentTests.push("(" + a2 + ")");
+          var b2 = new RegExp(U.agentTests.join("|"), "i");
+          U.fallback = b2.test(navigator.userAgent);
+        }, b.fallback("6.0.[2-5] Safari"), b.tween = function(a2) {
+          return new R(a2);
+        }, b.delay = function(a2, b2, c2) {
+          return new S({
+            complete: b2,
+            duration: a2,
+            context: c2
+          });
+        }, a.fn.tram = function(a2) {
+          return b.call(null, this, a2);
+        };
+        var V = a.style, W = a.css, X = {
+          transform: G.transform && G.transform.css
+        }, Y = {
+          color: [O, u],
+          background: [O, u, "background-color"],
+          "outline-color": [O, u],
+          "border-color": [O, u],
+          "border-top-color": [O, u],
+          "border-right-color": [O, u],
+          "border-bottom-color": [O, u],
+          "border-left-color": [O, u],
+          "border-width": [N, v],
+          "border-top-width": [N, v],
+          "border-right-width": [N, v],
+          "border-bottom-width": [N, v],
+          "border-left-width": [N, v],
+          "border-spacing": [N, v],
+          "letter-spacing": [N, v],
+          margin: [N, v],
+          "margin-top": [N, v],
+          "margin-right": [N, v],
+          "margin-bottom": [N, v],
+          "margin-left": [N, v],
+          padding: [N, v],
+          "padding-top": [N, v],
+          "padding-right": [N, v],
+          "padding-bottom": [N, v],
+          "padding-left": [N, v],
+          "outline-width": [N, v],
+          opacity: [N, t],
+          top: [N, w],
+          right: [N, w],
+          bottom: [N, w],
+          left: [N, w],
+          "font-size": [N, w],
+          "text-indent": [N, w],
+          "word-spacing": [N, w],
+          width: [N, w],
+          "min-width": [N, w],
+          "max-width": [N, w],
+          height: [N, w],
+          "min-height": [N, w],
+          "max-height": [N, w],
+          "line-height": [N, y],
+          "scroll-top": [P, t, "scrollTop"],
+          "scroll-left": [P, t, "scrollLeft"]
+        }, Z = {};
+        G.transform && (Y.transform = [Q], Z = {
+          x: [w, "translateX"],
+          y: [w, "translateY"],
+          rotate: [x],
+          rotateX: [x],
+          rotateY: [x],
+          scale: [t],
+          scaleX: [t],
+          scaleY: [t],
+          skew: [x],
+          skewX: [x],
+          skewY: [x]
+        }), G.transform && G.backface && (Z.z = [w, "translateZ"], Z.rotateZ = [x], Z.scaleZ = [t], Z.perspective = [v]);
+        var $2 = /ms/, _ = /s|\./;
+        return a.tram = b;
+      }(window.jQuery);
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/underscore-custom.js
+  var require_underscore_custom = __commonJS({
+    "shared/render/plugins/BaseSiteModules/underscore-custom.js"(exports, module) {
+      var $2 = window.$;
+      var tram = require_tram_min() && $2.tram;
+      module.exports = function() {
+        var _ = {};
+        _.VERSION = "1.6.0-Webflow";
+        var breaker = {};
+        var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
+        var push = ArrayProto.push, slice = ArrayProto.slice, concat = ArrayProto.concat, toString = ObjProto.toString, hasOwnProperty = ObjProto.hasOwnProperty;
+        var nativeForEach = ArrayProto.forEach, nativeMap = ArrayProto.map, nativeReduce = ArrayProto.reduce, nativeReduceRight = ArrayProto.reduceRight, nativeFilter = ArrayProto.filter, nativeEvery = ArrayProto.every, nativeSome = ArrayProto.some, nativeIndexOf = ArrayProto.indexOf, nativeLastIndexOf = ArrayProto.lastIndexOf, nativeIsArray = Array.isArray, nativeKeys = Object.keys, nativeBind = FuncProto.bind;
+        var each = _.each = _.forEach = function(obj, iterator, context) {
+          if (obj == null)
+            return obj;
+          if (nativeForEach && obj.forEach === nativeForEach) {
+            obj.forEach(iterator, context);
+          } else if (obj.length === +obj.length) {
+            for (var i = 0, length = obj.length; i < length; i++) {
+              if (iterator.call(context, obj[i], i, obj) === breaker)
+                return;
+            }
+          } else {
+            var keys = _.keys(obj);
+            for (var i = 0, length = keys.length; i < length; i++) {
+              if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker)
+                return;
+            }
+          }
+          return obj;
+        };
+        _.map = _.collect = function(obj, iterator, context) {
+          var results = [];
+          if (obj == null)
+            return results;
+          if (nativeMap && obj.map === nativeMap)
+            return obj.map(iterator, context);
+          each(obj, function(value, index, list) {
+            results.push(iterator.call(context, value, index, list));
+          });
+          return results;
+        };
+        _.find = _.detect = function(obj, predicate, context) {
+          var result;
+          any(obj, function(value, index, list) {
+            if (predicate.call(context, value, index, list)) {
+              result = value;
+              return true;
+            }
+          });
+          return result;
+        };
+        _.filter = _.select = function(obj, predicate, context) {
+          var results = [];
+          if (obj == null)
+            return results;
+          if (nativeFilter && obj.filter === nativeFilter)
+            return obj.filter(predicate, context);
+          each(obj, function(value, index, list) {
+            if (predicate.call(context, value, index, list))
+              results.push(value);
+          });
+          return results;
+        };
+        var any = _.some = _.any = function(obj, predicate, context) {
+          predicate || (predicate = _.identity);
+          var result = false;
+          if (obj == null)
+            return result;
+          if (nativeSome && obj.some === nativeSome)
+            return obj.some(predicate, context);
+          each(obj, function(value, index, list) {
+            if (result || (result = predicate.call(context, value, index, list)))
+              return breaker;
+          });
+          return !!result;
+        };
+        _.contains = _.include = function(obj, target) {
+          if (obj == null)
+            return false;
+          if (nativeIndexOf && obj.indexOf === nativeIndexOf)
+            return obj.indexOf(target) != -1;
+          return any(obj, function(value) {
+            return value === target;
+          });
+        };
+        _.delay = function(func, wait) {
+          var args = slice.call(arguments, 2);
+          return setTimeout(function() {
+            return func.apply(null, args);
+          }, wait);
+        };
+        _.defer = function(func) {
+          return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
+        };
+        _.throttle = function(func) {
+          var wait, args, context;
+          return function() {
+            if (wait)
+              return;
+            wait = true;
+            args = arguments;
+            context = this;
+            tram.frame(function() {
+              wait = false;
+              func.apply(context, args);
+            });
+          };
+        };
+        _.debounce = function(func, wait, immediate) {
+          var timeout, args, context, timestamp, result;
+          var later = function() {
+            var last = _.now() - timestamp;
+            if (last < wait) {
+              timeout = setTimeout(later, wait - last);
+            } else {
+              timeout = null;
+              if (!immediate) {
+                result = func.apply(context, args);
+                context = args = null;
+              }
+            }
+          };
+          return function() {
+            context = this;
+            args = arguments;
+            timestamp = _.now();
+            var callNow = immediate && !timeout;
+            if (!timeout) {
+              timeout = setTimeout(later, wait);
+            }
+            if (callNow) {
+              result = func.apply(context, args);
+              context = args = null;
+            }
+            return result;
+          };
+        };
+        _.defaults = function(obj) {
+          if (!_.isObject(obj))
+            return obj;
+          for (var i = 1, length = arguments.length; i < length; i++) {
+            var source = arguments[i];
+            for (var prop in source) {
+              if (obj[prop] === void 0)
+                obj[prop] = source[prop];
+            }
+          }
+          return obj;
+        };
+        _.keys = function(obj) {
+          if (!_.isObject(obj))
+            return [];
+          if (nativeKeys)
+            return nativeKeys(obj);
+          var keys = [];
+          for (var key in obj)
+            if (_.has(obj, key))
+              keys.push(key);
+          return keys;
+        };
+        _.has = function(obj, key) {
+          return hasOwnProperty.call(obj, key);
+        };
+        _.isObject = function(obj) {
+          return obj === Object(obj);
+        };
+        _.now = Date.now || function() {
+          return (/* @__PURE__ */ new Date()).getTime();
+        };
+        _.templateSettings = {
+          evaluate: /<%([\s\S]+?)%>/g,
+          interpolate: /<%=([\s\S]+?)%>/g,
+          escape: /<%-([\s\S]+?)%>/g
+        };
+        var noMatch = /(.)^/;
+        var escapes = {
+          "'": "'",
+          "\\": "\\",
+          "\r": "r",
+          "\n": "n",
+          "\u2028": "u2028",
+          "\u2029": "u2029"
+        };
+        var escapeRegExp = /\\|'|\r|\n|\u2028|\u2029/g;
+        var escapeChar = function(match) {
+          return "\\" + escapes[match];
+        };
+        var bareIdentifier = /^\s*(\w|\$)+\s*$/;
+        _.template = function(text, settings, oldSettings) {
+          if (!settings && oldSettings)
+            settings = oldSettings;
+          settings = _.defaults({}, settings, _.templateSettings);
+          var matcher = RegExp([(settings.escape || noMatch).source, (settings.interpolate || noMatch).source, (settings.evaluate || noMatch).source].join("|") + "|$", "g");
+          var index = 0;
+          var source = "__p+='";
+          text.replace(matcher, function(match, escape2, interpolate, evaluate, offset) {
+            source += text.slice(index, offset).replace(escapeRegExp, escapeChar);
+            index = offset + match.length;
+            if (escape2) {
+              source += "'+\n((__t=(" + escape2 + "))==null?'':_.escape(__t))+\n'";
+            } else if (interpolate) {
+              source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
+            } else if (evaluate) {
+              source += "';\n" + evaluate + "\n__p+='";
+            }
+            return match;
+          });
+          source += "';\n";
+          var argument = settings.variable;
+          if (argument) {
+            if (!bareIdentifier.test(argument))
+              throw new Error("variable is not a bare identifier: " + argument);
+          } else {
+            source = "with(obj||{}){\n" + source + "}\n";
+            argument = "obj";
+          }
+          source = "var __t,__p='',__j=Array.prototype.join,print=function(){__p+=__j.call(arguments,'');};\n" + source + "return __p;\n";
+          var render;
+          try {
+            render = new Function(settings.variable || "obj", "_", source);
+          } catch (e) {
+            e.source = source;
+            throw e;
+          }
+          var template = function(data) {
+            return render.call(this, data, _);
+          };
+          template.source = "function(" + argument + "){\n" + source + "}";
+          return template;
+        };
+        return _;
+      }();
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/webflow-lib.js
+  var require_webflow_lib = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-lib.js"(exports, module) {
+      var Webflow = {};
+      var modules = {};
+      var primary = [];
+      var secondary = window.Webflow || [];
+      var $2 = window.jQuery;
+      var $win = $2(window);
+      var $doc = $2(document);
+      var isFunction = $2.isFunction;
+      var _ = Webflow._ = require_underscore_custom();
+      var tram = Webflow.tram = require_tram_min() && $2.tram;
+      var domready = false;
+      var destroyed = false;
+      tram.config.hideBackface = false;
+      tram.config.keepInherited = true;
+      Webflow.define = function(name, factory, options) {
+        if (modules[name]) {
+          unbindModule(modules[name]);
+        }
+        var instance = modules[name] = factory($2, _, options) || {};
+        bindModule(instance);
+        return instance;
+      };
+      Webflow.require = function(name) {
+        return modules[name];
+      };
+      function bindModule(module2) {
+        if (Webflow.env()) {
+          isFunction(module2.design) && $win.on("__wf_design", module2.design);
+          isFunction(module2.preview) && $win.on("__wf_preview", module2.preview);
+        }
+        isFunction(module2.destroy) && $win.on("__wf_destroy", module2.destroy);
+        if (module2.ready && isFunction(module2.ready)) {
+          addReady(module2);
+        }
+      }
+      function addReady(module2) {
+        if (domready) {
+          module2.ready();
+          return;
+        }
+        if (_.contains(primary, module2.ready)) {
+          return;
+        }
+        primary.push(module2.ready);
+      }
+      function unbindModule(module2) {
+        isFunction(module2.design) && $win.off("__wf_design", module2.design);
+        isFunction(module2.preview) && $win.off("__wf_preview", module2.preview);
+        isFunction(module2.destroy) && $win.off("__wf_destroy", module2.destroy);
+        if (module2.ready && isFunction(module2.ready)) {
+          removeReady(module2);
+        }
+      }
+      function removeReady(module2) {
+        primary = _.filter(primary, function(readyFn) {
+          return readyFn !== module2.ready;
+        });
+      }
+      Webflow.push = function(ready) {
+        if (domready) {
+          isFunction(ready) && ready();
+          return;
+        }
+        secondary.push(ready);
+      };
+      Webflow.env = function(mode) {
+        var designFlag = window.__wf_design;
+        var inApp = typeof designFlag !== "undefined";
+        if (!mode) {
+          return inApp;
+        }
+        if (mode === "design") {
+          return inApp && designFlag;
+        }
+        if (mode === "preview") {
+          return inApp && !designFlag;
+        }
+        if (mode === "slug") {
+          return inApp && window.__wf_slug;
+        }
+        if (mode === "editor") {
+          return window.WebflowEditor;
+        }
+        if (mode === "test") {
+          return window.__wf_test;
+        }
+        if (mode === "frame") {
+          return window !== window.top;
+        }
+      };
