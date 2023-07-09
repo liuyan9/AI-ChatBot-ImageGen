@@ -3343,3 +3343,449 @@
       }
     }
   });
+
+  // node_modules/redux/lib/bindActionCreators.js
+  var require_bindActionCreators = __commonJS({
+    "node_modules/redux/lib/bindActionCreators.js"(exports) {
+      "use strict";
+      exports.__esModule = true;
+      exports["default"] = bindActionCreators;
+      function bindActionCreator(actionCreator, dispatch) {
+        return function() {
+          return dispatch(actionCreator.apply(void 0, arguments));
+        };
+      }
+      function bindActionCreators(actionCreators, dispatch) {
+        if (typeof actionCreators === "function") {
+          return bindActionCreator(actionCreators, dispatch);
+        }
+        if (typeof actionCreators !== "object" || actionCreators === null) {
+          throw new Error("bindActionCreators expected an object or a function, instead received " + (actionCreators === null ? "null" : typeof actionCreators) + '. Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?');
+        }
+        var keys = Object.keys(actionCreators);
+        var boundActionCreators = {};
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          var actionCreator = actionCreators[key];
+          if (typeof actionCreator === "function") {
+            boundActionCreators[key] = bindActionCreator(actionCreator, dispatch);
+          }
+        }
+        return boundActionCreators;
+      }
+    }
+  });
+
+  // node_modules/redux/lib/compose.js
+  var require_compose = __commonJS({
+    "node_modules/redux/lib/compose.js"(exports) {
+      "use strict";
+      exports.__esModule = true;
+      exports["default"] = compose;
+      function compose() {
+        for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
+          funcs[_key] = arguments[_key];
+        }
+        if (funcs.length === 0) {
+          return function(arg) {
+            return arg;
+          };
+        }
+        if (funcs.length === 1) {
+          return funcs[0];
+        }
+        var last = funcs[funcs.length - 1];
+        var rest = funcs.slice(0, -1);
+        return function() {
+          return rest.reduceRight(function(composed, f) {
+            return f(composed);
+          }, last.apply(void 0, arguments));
+        };
+      }
+    }
+  });
+
+  // node_modules/redux/lib/applyMiddleware.js
+  var require_applyMiddleware = __commonJS({
+    "node_modules/redux/lib/applyMiddleware.js"(exports) {
+      "use strict";
+      exports.__esModule = true;
+      var _extends = Object.assign || function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      };
+      exports["default"] = applyMiddleware;
+      var _compose = require_compose();
+      var _compose2 = _interopRequireDefault(_compose);
+      function _interopRequireDefault(obj) {
+        return obj && obj.__esModule ? obj : { "default": obj };
+      }
+      function applyMiddleware() {
+        for (var _len = arguments.length, middlewares = Array(_len), _key = 0; _key < _len; _key++) {
+          middlewares[_key] = arguments[_key];
+        }
+        return function(createStore) {
+          return function(reducer, preloadedState, enhancer) {
+            var store = createStore(reducer, preloadedState, enhancer);
+            var _dispatch = store.dispatch;
+            var chain = [];
+            var middlewareAPI = {
+              getState: store.getState,
+              dispatch: function dispatch(action) {
+                return _dispatch(action);
+              }
+            };
+            chain = middlewares.map(function(middleware) {
+              return middleware(middlewareAPI);
+            });
+            _dispatch = _compose2["default"].apply(void 0, chain)(store.dispatch);
+            return _extends({}, store, {
+              dispatch: _dispatch
+            });
+          };
+        };
+      }
+    }
+  });
+
+  // node_modules/redux/lib/index.js
+  var require_lib2 = __commonJS({
+    "node_modules/redux/lib/index.js"(exports) {
+      "use strict";
+      exports.__esModule = true;
+      exports.compose = exports.applyMiddleware = exports.bindActionCreators = exports.combineReducers = exports.createStore = void 0;
+      var _createStore = require_createStore();
+      var _createStore2 = _interopRequireDefault(_createStore);
+      var _combineReducers = require_combineReducers();
+      var _combineReducers2 = _interopRequireDefault(_combineReducers);
+      var _bindActionCreators = require_bindActionCreators();
+      var _bindActionCreators2 = _interopRequireDefault(_bindActionCreators);
+      var _applyMiddleware = require_applyMiddleware();
+      var _applyMiddleware2 = _interopRequireDefault(_applyMiddleware);
+      var _compose = require_compose();
+      var _compose2 = _interopRequireDefault(_compose);
+      var _warning = require_warning();
+      var _warning2 = _interopRequireDefault(_warning);
+      function _interopRequireDefault(obj) {
+        return obj && obj.__esModule ? obj : { "default": obj };
+      }
+      if (false) {
+        (0, _warning2["default"])("You are currently using minified code outside of NODE_ENV === 'production'. This means that you are running a slower development build of Redux. You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) to ensure you have the correct code for your production build.");
+      }
+      exports.createStore = _createStore2["default"];
+      exports.combineReducers = _combineReducers2["default"];
+      exports.bindActionCreators = _bindActionCreators2["default"];
+      exports.applyMiddleware = _applyMiddleware2["default"];
+      exports.compose = _compose2["default"];
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/trigger-events.js
+  var require_trigger_events = __commonJS({
+    "packages/systems/ix2/shared/constants/trigger-events.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.QuickEffectIds = exports.QuickEffectDirectionConsts = exports.EventTypeConsts = exports.EventLimitAffectedElements = exports.EventContinuousMouseAxes = exports.EventBasedOn = exports.EventAppliesTo = void 0;
+      var EventTypeConsts = {
+        NAVBAR_OPEN: "NAVBAR_OPEN",
+        NAVBAR_CLOSE: "NAVBAR_CLOSE",
+        TAB_ACTIVE: "TAB_ACTIVE",
+        TAB_INACTIVE: "TAB_INACTIVE",
+        SLIDER_ACTIVE: "SLIDER_ACTIVE",
+        SLIDER_INACTIVE: "SLIDER_INACTIVE",
+        DROPDOWN_OPEN: "DROPDOWN_OPEN",
+        DROPDOWN_CLOSE: "DROPDOWN_CLOSE",
+        MOUSE_CLICK: "MOUSE_CLICK",
+        MOUSE_SECOND_CLICK: "MOUSE_SECOND_CLICK",
+        MOUSE_DOWN: "MOUSE_DOWN",
+        MOUSE_UP: "MOUSE_UP",
+        MOUSE_OVER: "MOUSE_OVER",
+        MOUSE_OUT: "MOUSE_OUT",
+        MOUSE_MOVE: "MOUSE_MOVE",
+        MOUSE_MOVE_IN_VIEWPORT: "MOUSE_MOVE_IN_VIEWPORT",
+        SCROLL_INTO_VIEW: "SCROLL_INTO_VIEW",
+        SCROLL_OUT_OF_VIEW: "SCROLL_OUT_OF_VIEW",
+        SCROLLING_IN_VIEW: "SCROLLING_IN_VIEW",
+        ECOMMERCE_CART_OPEN: "ECOMMERCE_CART_OPEN",
+        ECOMMERCE_CART_CLOSE: "ECOMMERCE_CART_CLOSE",
+        PAGE_START: "PAGE_START",
+        PAGE_FINISH: "PAGE_FINISH",
+        PAGE_SCROLL_UP: "PAGE_SCROLL_UP",
+        PAGE_SCROLL_DOWN: "PAGE_SCROLL_DOWN",
+        PAGE_SCROLL: "PAGE_SCROLL"
+      };
+      exports.EventTypeConsts = EventTypeConsts;
+      var EventAppliesTo = {
+        ELEMENT: "ELEMENT",
+        CLASS: "CLASS",
+        PAGE: "PAGE"
+      };
+      exports.EventAppliesTo = EventAppliesTo;
+      var EventBasedOn = {
+        ELEMENT: "ELEMENT",
+        VIEWPORT: "VIEWPORT"
+      };
+      exports.EventBasedOn = EventBasedOn;
+      var EventContinuousMouseAxes = {
+        X_AXIS: "X_AXIS",
+        Y_AXIS: "Y_AXIS"
+      };
+      exports.EventContinuousMouseAxes = EventContinuousMouseAxes;
+      var EventLimitAffectedElements = {
+        CHILDREN: "CHILDREN",
+        SIBLINGS: "SIBLINGS",
+        IMMEDIATE_CHILDREN: "IMMEDIATE_CHILDREN"
+      };
+      exports.EventLimitAffectedElements = EventLimitAffectedElements;
+      var QuickEffectIds = {
+        FADE_EFFECT: "FADE_EFFECT",
+        SLIDE_EFFECT: "SLIDE_EFFECT",
+        GROW_EFFECT: "GROW_EFFECT",
+        SHRINK_EFFECT: "SHRINK_EFFECT",
+        SPIN_EFFECT: "SPIN_EFFECT",
+        FLY_EFFECT: "FLY_EFFECT",
+        POP_EFFECT: "POP_EFFECT",
+        FLIP_EFFECT: "FLIP_EFFECT",
+        JIGGLE_EFFECT: "JIGGLE_EFFECT",
+        PULSE_EFFECT: "PULSE_EFFECT",
+        DROP_EFFECT: "DROP_EFFECT",
+        BLINK_EFFECT: "BLINK_EFFECT",
+        BOUNCE_EFFECT: "BOUNCE_EFFECT",
+        FLIP_LEFT_TO_RIGHT_EFFECT: "FLIP_LEFT_TO_RIGHT_EFFECT",
+        FLIP_RIGHT_TO_LEFT_EFFECT: "FLIP_RIGHT_TO_LEFT_EFFECT",
+        RUBBER_BAND_EFFECT: "RUBBER_BAND_EFFECT",
+        JELLO_EFFECT: "JELLO_EFFECT",
+        GROW_BIG_EFFECT: "GROW_BIG_EFFECT",
+        SHRINK_BIG_EFFECT: "SHRINK_BIG_EFFECT",
+        PLUGIN_LOTTIE_EFFECT: "PLUGIN_LOTTIE_EFFECT"
+      };
+      exports.QuickEffectIds = QuickEffectIds;
+      var QuickEffectDirectionConsts = {
+        LEFT: "LEFT",
+        RIGHT: "RIGHT",
+        BOTTOM: "BOTTOM",
+        TOP: "TOP",
+        BOTTOM_LEFT: "BOTTOM_LEFT",
+        BOTTOM_RIGHT: "BOTTOM_RIGHT",
+        TOP_RIGHT: "TOP_RIGHT",
+        TOP_LEFT: "TOP_LEFT",
+        CLOCKWISE: "CLOCKWISE",
+        COUNTER_CLOCKWISE: "COUNTER_CLOCKWISE"
+      };
+      exports.QuickEffectDirectionConsts = QuickEffectDirectionConsts;
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/animation-actions.js
+  var require_animation_actions = __commonJS({
+    "packages/systems/ix2/shared/constants/animation-actions.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ActionTypeConsts = exports.ActionAppliesTo = void 0;
+      var ActionTypeConsts = {
+        TRANSFORM_MOVE: "TRANSFORM_MOVE",
+        TRANSFORM_SCALE: "TRANSFORM_SCALE",
+        TRANSFORM_ROTATE: "TRANSFORM_ROTATE",
+        TRANSFORM_SKEW: "TRANSFORM_SKEW",
+        STYLE_OPACITY: "STYLE_OPACITY",
+        STYLE_SIZE: "STYLE_SIZE",
+        STYLE_FILTER: "STYLE_FILTER",
+        STYLE_FONT_VARIATION: "STYLE_FONT_VARIATION",
+        STYLE_BACKGROUND_COLOR: "STYLE_BACKGROUND_COLOR",
+        STYLE_BORDER: "STYLE_BORDER",
+        STYLE_TEXT_COLOR: "STYLE_TEXT_COLOR",
+        PLUGIN_LOTTIE: "PLUGIN_LOTTIE",
+        GENERAL_DISPLAY: "GENERAL_DISPLAY",
+        GENERAL_START_ACTION: "GENERAL_START_ACTION",
+        GENERAL_CONTINUOUS_ACTION: "GENERAL_CONTINUOUS_ACTION",
+        // TODO: Clean these up below because they're not used at this time
+        GENERAL_COMBO_CLASS: "GENERAL_COMBO_CLASS",
+        GENERAL_STOP_ACTION: "GENERAL_STOP_ACTION",
+        GENERAL_LOOP: "GENERAL_LOOP",
+        STYLE_BOX_SHADOW: "STYLE_BOX_SHADOW"
+      };
+      exports.ActionTypeConsts = ActionTypeConsts;
+      var ActionAppliesTo = {
+        ELEMENT: "ELEMENT",
+        ELEMENT_CLASS: "ELEMENT_CLASS",
+        TRIGGER_ELEMENT: "TRIGGER_ELEMENT"
+      };
+      exports.ActionAppliesTo = ActionAppliesTo;
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/trigger-interactions.js
+  var require_trigger_interactions = __commonJS({
+    "packages/systems/ix2/shared/constants/trigger-interactions.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.InteractionTypeConsts = void 0;
+      var InteractionTypeConsts = {
+        MOUSE_CLICK_INTERACTION: "MOUSE_CLICK_INTERACTION",
+        MOUSE_HOVER_INTERACTION: "MOUSE_HOVER_INTERACTION",
+        MOUSE_MOVE_INTERACTION: "MOUSE_MOVE_INTERACTION",
+        SCROLL_INTO_VIEW_INTERACTION: "SCROLL_INTO_VIEW_INTERACTION",
+        SCROLLING_IN_VIEW_INTERACTION: "SCROLLING_IN_VIEW_INTERACTION",
+        MOUSE_MOVE_IN_VIEWPORT_INTERACTION: "MOUSE_MOVE_IN_VIEWPORT_INTERACTION",
+        PAGE_IS_SCROLLING_INTERACTION: "PAGE_IS_SCROLLING_INTERACTION",
+        PAGE_LOAD_INTERACTION: "PAGE_LOAD_INTERACTION",
+        PAGE_SCROLLED_INTERACTION: "PAGE_SCROLLED_INTERACTION",
+        NAVBAR_INTERACTION: "NAVBAR_INTERACTION",
+        DROPDOWN_INTERACTION: "DROPDOWN_INTERACTION",
+        ECOMMERCE_CART_INTERACTION: "ECOMMERCE_CART_INTERACTION",
+        TAB_INTERACTION: "TAB_INTERACTION",
+        SLIDER_INTERACTION: "SLIDER_INTERACTION"
+      };
+      exports.InteractionTypeConsts = InteractionTypeConsts;
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/reduced-motion.js
+  var require_reduced_motion = __commonJS({
+    "packages/systems/ix2/shared/constants/reduced-motion.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ReducedMotionTypes = void 0;
+      var _animationActions = require_animation_actions();
+      var {
+        TRANSFORM_MOVE,
+        TRANSFORM_SCALE,
+        TRANSFORM_ROTATE,
+        TRANSFORM_SKEW,
+        STYLE_SIZE,
+        STYLE_FILTER,
+        STYLE_FONT_VARIATION
+      } = _animationActions.ActionTypeConsts;
+      var ReducedMotionTypes = {
+        [TRANSFORM_MOVE]: true,
+        [TRANSFORM_SCALE]: true,
+        [TRANSFORM_ROTATE]: true,
+        [TRANSFORM_SKEW]: true,
+        [STYLE_SIZE]: true,
+        [STYLE_FILTER]: true,
+        [STYLE_FONT_VARIATION]: true
+      };
+      exports.ReducedMotionTypes = ReducedMotionTypes;
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/IX2EngineActionTypes.js
+  var require_IX2EngineActionTypes = __commonJS({
+    "packages/systems/ix2/shared/constants/IX2EngineActionTypes.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.IX2_VIEWPORT_WIDTH_CHANGED = exports.IX2_TEST_FRAME_RENDERED = exports.IX2_STOP_REQUESTED = exports.IX2_SESSION_STOPPED = exports.IX2_SESSION_STARTED = exports.IX2_SESSION_INITIALIZED = exports.IX2_RAW_DATA_IMPORTED = exports.IX2_PREVIEW_REQUESTED = exports.IX2_PLAYBACK_REQUESTED = exports.IX2_PARAMETER_CHANGED = exports.IX2_MEDIA_QUERIES_DEFINED = exports.IX2_INSTANCE_STARTED = exports.IX2_INSTANCE_REMOVED = exports.IX2_INSTANCE_ADDED = exports.IX2_EVENT_STATE_CHANGED = exports.IX2_EVENT_LISTENER_ADDED = exports.IX2_ELEMENT_STATE_CHANGED = exports.IX2_CLEAR_REQUESTED = exports.IX2_ANIMATION_FRAME_CHANGED = exports.IX2_ACTION_LIST_PLAYBACK_CHANGED = void 0;
+      var IX2_RAW_DATA_IMPORTED = "IX2_RAW_DATA_IMPORTED";
+      exports.IX2_RAW_DATA_IMPORTED = IX2_RAW_DATA_IMPORTED;
+      var IX2_SESSION_INITIALIZED = "IX2_SESSION_INITIALIZED";
+      exports.IX2_SESSION_INITIALIZED = IX2_SESSION_INITIALIZED;
+      var IX2_SESSION_STARTED = "IX2_SESSION_STARTED";
+      exports.IX2_SESSION_STARTED = IX2_SESSION_STARTED;
+      var IX2_SESSION_STOPPED = "IX2_SESSION_STOPPED";
+      exports.IX2_SESSION_STOPPED = IX2_SESSION_STOPPED;
+      var IX2_PREVIEW_REQUESTED = "IX2_PREVIEW_REQUESTED";
+      exports.IX2_PREVIEW_REQUESTED = IX2_PREVIEW_REQUESTED;
+      var IX2_PLAYBACK_REQUESTED = "IX2_PLAYBACK_REQUESTED";
+      exports.IX2_PLAYBACK_REQUESTED = IX2_PLAYBACK_REQUESTED;
+      var IX2_STOP_REQUESTED = "IX2_STOP_REQUESTED";
+      exports.IX2_STOP_REQUESTED = IX2_STOP_REQUESTED;
+      var IX2_CLEAR_REQUESTED = "IX2_CLEAR_REQUESTED";
+      exports.IX2_CLEAR_REQUESTED = IX2_CLEAR_REQUESTED;
+      var IX2_EVENT_LISTENER_ADDED = "IX2_EVENT_LISTENER_ADDED";
+      exports.IX2_EVENT_LISTENER_ADDED = IX2_EVENT_LISTENER_ADDED;
+      var IX2_EVENT_STATE_CHANGED = "IX2_EVENT_STATE_CHANGED";
+      exports.IX2_EVENT_STATE_CHANGED = IX2_EVENT_STATE_CHANGED;
+      var IX2_ANIMATION_FRAME_CHANGED = "IX2_ANIMATION_FRAME_CHANGED";
+      exports.IX2_ANIMATION_FRAME_CHANGED = IX2_ANIMATION_FRAME_CHANGED;
+      var IX2_PARAMETER_CHANGED = "IX2_PARAMETER_CHANGED";
+      exports.IX2_PARAMETER_CHANGED = IX2_PARAMETER_CHANGED;
+      var IX2_INSTANCE_ADDED = "IX2_INSTANCE_ADDED";
+      exports.IX2_INSTANCE_ADDED = IX2_INSTANCE_ADDED;
+      var IX2_INSTANCE_STARTED = "IX2_INSTANCE_STARTED";
+      exports.IX2_INSTANCE_STARTED = IX2_INSTANCE_STARTED;
+      var IX2_INSTANCE_REMOVED = "IX2_INSTANCE_REMOVED";
+      exports.IX2_INSTANCE_REMOVED = IX2_INSTANCE_REMOVED;
+      var IX2_ELEMENT_STATE_CHANGED = "IX2_ELEMENT_STATE_CHANGED";
+      exports.IX2_ELEMENT_STATE_CHANGED = IX2_ELEMENT_STATE_CHANGED;
+      var IX2_ACTION_LIST_PLAYBACK_CHANGED = "IX2_ACTION_LIST_PLAYBACK_CHANGED";
+      exports.IX2_ACTION_LIST_PLAYBACK_CHANGED = IX2_ACTION_LIST_PLAYBACK_CHANGED;
+      var IX2_VIEWPORT_WIDTH_CHANGED = "IX2_VIEWPORT_WIDTH_CHANGED";
+      exports.IX2_VIEWPORT_WIDTH_CHANGED = IX2_VIEWPORT_WIDTH_CHANGED;
+      var IX2_MEDIA_QUERIES_DEFINED = "IX2_MEDIA_QUERIES_DEFINED";
+      exports.IX2_MEDIA_QUERIES_DEFINED = IX2_MEDIA_QUERIES_DEFINED;
+      var IX2_TEST_FRAME_RENDERED = "IX2_TEST_FRAME_RENDERED";
+      exports.IX2_TEST_FRAME_RENDERED = IX2_TEST_FRAME_RENDERED;
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/IX2EngineConstants.js
+  var require_IX2EngineConstants = __commonJS({
+    "packages/systems/ix2/shared/constants/IX2EngineConstants.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.W_MOD_JS = exports.W_MOD_IX = exports.WILL_CHANGE = exports.WIDTH = exports.WF_PAGE = exports.TRANSLATE_Z = exports.TRANSLATE_Y = exports.TRANSLATE_X = exports.TRANSLATE_3D = exports.TRANSFORM = exports.SKEW_Y = exports.SKEW_X = exports.SKEW = exports.SIBLINGS = exports.SCALE_Z = exports.SCALE_Y = exports.SCALE_X = exports.SCALE_3D = exports.ROTATE_Z = exports.ROTATE_Y = exports.ROTATE_X = exports.RENDER_TRANSFORM = exports.RENDER_STYLE = exports.RENDER_PLUGIN = exports.RENDER_GENERAL = exports.PRESERVE_3D = exports.PLAIN_OBJECT = exports.PARENT = exports.OPACITY = exports.IX2_ID_DELIMITER = exports.IMMEDIATE_CHILDREN = exports.HTML_ELEMENT = exports.HEIGHT = exports.FONT_VARIATION_SETTINGS = exports.FLEX = exports.FILTER = exports.DISPLAY = exports.CONFIG_Z_VALUE = exports.CONFIG_Z_UNIT = exports.CONFIG_Y_VALUE = exports.CONFIG_Y_UNIT = exports.CONFIG_X_VALUE = exports.CONFIG_X_UNIT = exports.CONFIG_VALUE = exports.CONFIG_UNIT = exports.COMMA_DELIMITER = exports.COLOR = exports.COLON_DELIMITER = exports.CHILDREN = exports.BOUNDARY_SELECTOR = exports.BORDER_COLOR = exports.BAR_DELIMITER = exports.BACKGROUND_COLOR = exports.BACKGROUND = exports.AUTO = exports.ABSTRACT_NODE = void 0;
+      var IX2_ID_DELIMITER = "|";
+      exports.IX2_ID_DELIMITER = IX2_ID_DELIMITER;
+      var WF_PAGE = "data-wf-page";
+      exports.WF_PAGE = WF_PAGE;
+      var W_MOD_JS = "w-mod-js";
+      exports.W_MOD_JS = W_MOD_JS;
+      var W_MOD_IX = "w-mod-ix";
+      exports.W_MOD_IX = W_MOD_IX;
+      var BOUNDARY_SELECTOR = ".w-dyn-item";
+      exports.BOUNDARY_SELECTOR = BOUNDARY_SELECTOR;
+      var CONFIG_X_VALUE = "xValue";
+      exports.CONFIG_X_VALUE = CONFIG_X_VALUE;
+      var CONFIG_Y_VALUE = "yValue";
+      exports.CONFIG_Y_VALUE = CONFIG_Y_VALUE;
+      var CONFIG_Z_VALUE = "zValue";
+      exports.CONFIG_Z_VALUE = CONFIG_Z_VALUE;
+      var CONFIG_VALUE = "value";
+      exports.CONFIG_VALUE = CONFIG_VALUE;
+      var CONFIG_X_UNIT = "xUnit";
+      exports.CONFIG_X_UNIT = CONFIG_X_UNIT;
+      var CONFIG_Y_UNIT = "yUnit";
+      exports.CONFIG_Y_UNIT = CONFIG_Y_UNIT;
+      var CONFIG_Z_UNIT = "zUnit";
+      exports.CONFIG_Z_UNIT = CONFIG_Z_UNIT;
+      var CONFIG_UNIT = "unit";
+      exports.CONFIG_UNIT = CONFIG_UNIT;
+      var TRANSFORM = "transform";
+      exports.TRANSFORM = TRANSFORM;
+      var TRANSLATE_X = "translateX";
+      exports.TRANSLATE_X = TRANSLATE_X;
+      var TRANSLATE_Y = "translateY";
+      exports.TRANSLATE_Y = TRANSLATE_Y;
+      var TRANSLATE_Z = "translateZ";
+      exports.TRANSLATE_Z = TRANSLATE_Z;
+      var TRANSLATE_3D = "translate3d";
+      exports.TRANSLATE_3D = TRANSLATE_3D;
+      var SCALE_X = "scaleX";
+      exports.SCALE_X = SCALE_X;
+      var SCALE_Y = "scaleY";
+      exports.SCALE_Y = SCALE_Y;
+      var SCALE_Z = "scaleZ";
+      exports.SCALE_Z = SCALE_Z;
+      var SCALE_3D = "scale3d";
+      exports.SCALE_3D = SCALE_3D;
+      var ROTATE_X = "rotateX";
+      exports.ROTATE_X = ROTATE_X;
