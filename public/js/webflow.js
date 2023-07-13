@@ -3789,3 +3789,445 @@
       exports.SCALE_3D = SCALE_3D;
       var ROTATE_X = "rotateX";
       exports.ROTATE_X = ROTATE_X;
+      var ROTATE_Y = "rotateY";
+      exports.ROTATE_Y = ROTATE_Y;
+      var ROTATE_Z = "rotateZ";
+      exports.ROTATE_Z = ROTATE_Z;
+      var SKEW = "skew";
+      exports.SKEW = SKEW;
+      var SKEW_X = "skewX";
+      exports.SKEW_X = SKEW_X;
+      var SKEW_Y = "skewY";
+      exports.SKEW_Y = SKEW_Y;
+      var OPACITY = "opacity";
+      exports.OPACITY = OPACITY;
+      var FILTER = "filter";
+      exports.FILTER = FILTER;
+      var FONT_VARIATION_SETTINGS = "font-variation-settings";
+      exports.FONT_VARIATION_SETTINGS = FONT_VARIATION_SETTINGS;
+      var WIDTH = "width";
+      exports.WIDTH = WIDTH;
+      var HEIGHT = "height";
+      exports.HEIGHT = HEIGHT;
+      var BACKGROUND_COLOR = "backgroundColor";
+      exports.BACKGROUND_COLOR = BACKGROUND_COLOR;
+      var BACKGROUND = "background";
+      exports.BACKGROUND = BACKGROUND;
+      var BORDER_COLOR = "borderColor";
+      exports.BORDER_COLOR = BORDER_COLOR;
+      var COLOR = "color";
+      exports.COLOR = COLOR;
+      var DISPLAY = "display";
+      exports.DISPLAY = DISPLAY;
+      var FLEX = "flex";
+      exports.FLEX = FLEX;
+      var WILL_CHANGE = "willChange";
+      exports.WILL_CHANGE = WILL_CHANGE;
+      var AUTO = "AUTO";
+      exports.AUTO = AUTO;
+      var COMMA_DELIMITER = ",";
+      exports.COMMA_DELIMITER = COMMA_DELIMITER;
+      var COLON_DELIMITER = ":";
+      exports.COLON_DELIMITER = COLON_DELIMITER;
+      var BAR_DELIMITER = "|";
+      exports.BAR_DELIMITER = BAR_DELIMITER;
+      var CHILDREN = "CHILDREN";
+      exports.CHILDREN = CHILDREN;
+      var IMMEDIATE_CHILDREN = "IMMEDIATE_CHILDREN";
+      exports.IMMEDIATE_CHILDREN = IMMEDIATE_CHILDREN;
+      var SIBLINGS = "SIBLINGS";
+      exports.SIBLINGS = SIBLINGS;
+      var PARENT = "PARENT";
+      exports.PARENT = PARENT;
+      var PRESERVE_3D = "preserve-3d";
+      exports.PRESERVE_3D = PRESERVE_3D;
+      var HTML_ELEMENT = "HTML_ELEMENT";
+      exports.HTML_ELEMENT = HTML_ELEMENT;
+      var PLAIN_OBJECT = "PLAIN_OBJECT";
+      exports.PLAIN_OBJECT = PLAIN_OBJECT;
+      var ABSTRACT_NODE = "ABSTRACT_NODE";
+      exports.ABSTRACT_NODE = ABSTRACT_NODE;
+      var RENDER_TRANSFORM = "RENDER_TRANSFORM";
+      exports.RENDER_TRANSFORM = RENDER_TRANSFORM;
+      var RENDER_GENERAL = "RENDER_GENERAL";
+      exports.RENDER_GENERAL = RENDER_GENERAL;
+      var RENDER_STYLE = "RENDER_STYLE";
+      exports.RENDER_STYLE = RENDER_STYLE;
+      var RENDER_PLUGIN = "RENDER_PLUGIN";
+      exports.RENDER_PLUGIN = RENDER_PLUGIN;
+    }
+  });
+
+  // packages/systems/ix2/shared/constants/index.js
+  var require_constants = __commonJS({
+    "packages/systems/ix2/shared/constants/index.js"(exports) {
+      "use strict";
+      var _interopRequireWildcard = require_interopRequireWildcard().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _exportNames = {
+        IX2EngineActionTypes: true,
+        IX2EngineConstants: true
+      };
+      exports.IX2EngineConstants = exports.IX2EngineActionTypes = void 0;
+      var _triggerEvents = require_trigger_events();
+      Object.keys(_triggerEvents).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _triggerEvents[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _triggerEvents[key];
+          }
+        });
+      });
+      var _animationActions = require_animation_actions();
+      Object.keys(_animationActions).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _animationActions[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _animationActions[key];
+          }
+        });
+      });
+      var _triggerInteractions = require_trigger_interactions();
+      Object.keys(_triggerInteractions).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _triggerInteractions[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _triggerInteractions[key];
+          }
+        });
+      });
+      var _reducedMotion = require_reduced_motion();
+      Object.keys(_reducedMotion).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _reducedMotion[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _reducedMotion[key];
+          }
+        });
+      });
+      var IX2EngineActionTypes = _interopRequireWildcard(require_IX2EngineActionTypes());
+      exports.IX2EngineActionTypes = IX2EngineActionTypes;
+      var IX2EngineConstants = _interopRequireWildcard(require_IX2EngineConstants());
+      exports.IX2EngineConstants = IX2EngineConstants;
+    }
+  });
+
+  // packages/systems/ix2/engine/reducers/IX2DataReducer.js
+  var require_IX2DataReducer = __commonJS({
+    "packages/systems/ix2/engine/reducers/IX2DataReducer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ixData = void 0;
+      var _constants = require_constants();
+      var {
+        IX2_RAW_DATA_IMPORTED
+      } = _constants.IX2EngineActionTypes;
+      var ixData = (state = Object.freeze({}), action) => {
+        switch (action.type) {
+          case IX2_RAW_DATA_IMPORTED: {
+            return action.payload.ixData || Object.freeze({});
+          }
+          default: {
+            return state;
+          }
+        }
+      };
+      exports.ixData = ixData;
+    }
+  });
+
+  // node_modules/@babel/runtime/helpers/extends.js
+  var require_extends = __commonJS({
+    "node_modules/@babel/runtime/helpers/extends.js"(exports, module) {
+      function _extends() {
+        module.exports = _extends = Object.assign ? Object.assign.bind() : function(target) {
+          for (var i = 1; i < arguments.length; i++) {
+            var source = arguments[i];
+            for (var key in source) {
+              if (Object.prototype.hasOwnProperty.call(source, key)) {
+                target[key] = source[key];
+              }
+            }
+          }
+          return target;
+        }, module.exports.__esModule = true, module.exports["default"] = module.exports;
+        return _extends.apply(this, arguments);
+      }
+      module.exports = _extends, module.exports.__esModule = true, module.exports["default"] = module.exports;
+    }
+  });
+
+  // node_modules/timm/lib/timm.js
+  var require_timm = __commonJS({
+    "node_modules/timm/lib/timm.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) {
+        return typeof obj;
+      } : function(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+      exports.clone = clone;
+      exports.addLast = addLast;
+      exports.addFirst = addFirst;
+      exports.removeLast = removeLast;
+      exports.removeFirst = removeFirst;
+      exports.insert = insert;
+      exports.removeAt = removeAt;
+      exports.replaceAt = replaceAt;
+      exports.getIn = getIn;
+      exports.set = set;
+      exports.setIn = setIn;
+      exports.update = update;
+      exports.updateIn = updateIn;
+      exports.merge = merge;
+      exports.mergeDeep = mergeDeep;
+      exports.mergeIn = mergeIn;
+      exports.omit = omit;
+      exports.addDefaults = addDefaults;
+      var INVALID_ARGS = "INVALID_ARGS";
+      function throwStr(msg) {
+        throw new Error(msg);
+      }
+      function getKeysAndSymbols(obj) {
+        var keys = Object.keys(obj);
+        if (Object.getOwnPropertySymbols) {
+          return keys.concat(Object.getOwnPropertySymbols(obj));
+        }
+        return keys;
+      }
+      var hasOwnProperty = {}.hasOwnProperty;
+      function clone(obj) {
+        if (Array.isArray(obj))
+          return obj.slice();
+        var keys = getKeysAndSymbols(obj);
+        var out = {};
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          out[key] = obj[key];
+        }
+        return out;
+      }
+      function doMerge(fAddDefaults, fDeep, first) {
+        var out = first;
+        !(out != null) && throwStr(false ? "At least one object should be provided to merge()" : INVALID_ARGS);
+        var fChanged = false;
+        for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+          rest[_key - 3] = arguments[_key];
+        }
+        for (var idx = 0; idx < rest.length; idx++) {
+          var obj = rest[idx];
+          if (obj == null)
+            continue;
+          var keys = getKeysAndSymbols(obj);
+          if (!keys.length)
+            continue;
+          for (var j = 0; j <= keys.length; j++) {
+            var key = keys[j];
+            if (fAddDefaults && out[key] !== void 0)
+              continue;
+            var nextVal = obj[key];
+            if (fDeep && isObject(out[key]) && isObject(nextVal)) {
+              nextVal = doMerge(fAddDefaults, fDeep, out[key], nextVal);
+            }
+            if (nextVal === void 0 || nextVal === out[key])
+              continue;
+            if (!fChanged) {
+              fChanged = true;
+              out = clone(out);
+            }
+            out[key] = nextVal;
+          }
+        }
+        return out;
+      }
+      function isObject(o) {
+        var type = typeof o === "undefined" ? "undefined" : _typeof(o);
+        return o != null && (type === "object" || type === "function");
+      }
+      function addLast(array, val) {
+        if (Array.isArray(val))
+          return array.concat(val);
+        return array.concat([val]);
+      }
+      function addFirst(array, val) {
+        if (Array.isArray(val))
+          return val.concat(array);
+        return [val].concat(array);
+      }
+      function removeLast(array) {
+        if (!array.length)
+          return array;
+        return array.slice(0, array.length - 1);
+      }
+      function removeFirst(array) {
+        if (!array.length)
+          return array;
+        return array.slice(1);
+      }
+      function insert(array, idx, val) {
+        return array.slice(0, idx).concat(Array.isArray(val) ? val : [val]).concat(array.slice(idx));
+      }
+      function removeAt(array, idx) {
+        if (idx >= array.length || idx < 0)
+          return array;
+        return array.slice(0, idx).concat(array.slice(idx + 1));
+      }
+      function replaceAt(array, idx, newItem) {
+        if (array[idx] === newItem)
+          return array;
+        var len = array.length;
+        var result = Array(len);
+        for (var i = 0; i < len; i++) {
+          result[i] = array[i];
+        }
+        result[idx] = newItem;
+        return result;
+      }
+      function getIn(obj, path) {
+        !Array.isArray(path) && throwStr(false ? "A path array should be provided when calling getIn()" : INVALID_ARGS);
+        if (obj == null)
+          return void 0;
+        var ptr = obj;
+        for (var i = 0; i < path.length; i++) {
+          var key = path[i];
+          ptr = ptr != null ? ptr[key] : void 0;
+          if (ptr === void 0)
+            return ptr;
+        }
+        return ptr;
+      }
+      function set(obj, key, val) {
+        var fallback = typeof key === "number" ? [] : {};
+        var finalObj = obj == null ? fallback : obj;
+        if (finalObj[key] === val)
+          return finalObj;
+        var obj2 = clone(finalObj);
+        obj2[key] = val;
+        return obj2;
+      }
+      function doSetIn(obj, path, val, idx) {
+        var newValue = void 0;
+        var key = path[idx];
+        if (idx === path.length - 1) {
+          newValue = val;
+        } else {
+          var nestedObj = isObject(obj) && isObject(obj[key]) ? obj[key] : typeof path[idx + 1] === "number" ? [] : {};
+          newValue = doSetIn(nestedObj, path, val, idx + 1);
+        }
+        return set(obj, key, newValue);
+      }
+      function setIn(obj, path, val) {
+        if (!path.length)
+          return val;
+        return doSetIn(obj, path, val, 0);
+      }
+      function update(obj, key, fnUpdate) {
+        var prevVal = obj == null ? void 0 : obj[key];
+        var nextVal = fnUpdate(prevVal);
+        return set(obj, key, nextVal);
+      }
+      function updateIn(obj, path, fnUpdate) {
+        var prevVal = getIn(obj, path);
+        var nextVal = fnUpdate(prevVal);
+        return setIn(obj, path, nextVal);
+      }
+      function merge(a, b, c, d, e, f) {
+        for (var _len2 = arguments.length, rest = Array(_len2 > 6 ? _len2 - 6 : 0), _key2 = 6; _key2 < _len2; _key2++) {
+          rest[_key2 - 6] = arguments[_key2];
+        }
+        return rest.length ? doMerge.call.apply(doMerge, [null, false, false, a, b, c, d, e, f].concat(rest)) : doMerge(false, false, a, b, c, d, e, f);
+      }
+      function mergeDeep(a, b, c, d, e, f) {
+        for (var _len3 = arguments.length, rest = Array(_len3 > 6 ? _len3 - 6 : 0), _key3 = 6; _key3 < _len3; _key3++) {
+          rest[_key3 - 6] = arguments[_key3];
+        }
+        return rest.length ? doMerge.call.apply(doMerge, [null, false, true, a, b, c, d, e, f].concat(rest)) : doMerge(false, true, a, b, c, d, e, f);
+      }
+      function mergeIn(a, path, b, c, d, e, f) {
+        var prevVal = getIn(a, path);
+        if (prevVal == null)
+          prevVal = {};
+        var nextVal = void 0;
+        for (var _len4 = arguments.length, rest = Array(_len4 > 7 ? _len4 - 7 : 0), _key4 = 7; _key4 < _len4; _key4++) {
+          rest[_key4 - 7] = arguments[_key4];
+        }
+        if (rest.length) {
+          nextVal = doMerge.call.apply(doMerge, [null, false, false, prevVal, b, c, d, e, f].concat(rest));
+        } else {
+          nextVal = doMerge(false, false, prevVal, b, c, d, e, f);
+        }
+        return setIn(a, path, nextVal);
+      }
+      function omit(obj, attrs) {
+        var omitList = Array.isArray(attrs) ? attrs : [attrs];
+        var fDoSomething = false;
+        for (var i = 0; i < omitList.length; i++) {
+          if (hasOwnProperty.call(obj, omitList[i])) {
+            fDoSomething = true;
+            break;
+          }
+        }
+        if (!fDoSomething)
+          return obj;
+        var out = {};
+        var keys = getKeysAndSymbols(obj);
+        for (var _i = 0; _i < keys.length; _i++) {
+          var key = keys[_i];
+          if (omitList.indexOf(key) >= 0)
+            continue;
+          out[key] = obj[key];
+        }
+        return out;
+      }
+      function addDefaults(a, b, c, d, e, f) {
+        for (var _len5 = arguments.length, rest = Array(_len5 > 6 ? _len5 - 6 : 0), _key5 = 6; _key5 < _len5; _key5++) {
+          rest[_key5 - 6] = arguments[_key5];
+        }
+        return rest.length ? doMerge.call.apply(doMerge, [null, true, false, a, b, c, d, e, f].concat(rest)) : doMerge(true, false, a, b, c, d, e, f);
+      }
+      var timm = {
+        clone,
+        addLast,
+        addFirst,
+        removeLast,
+        removeFirst,
+        insert,
+        removeAt,
+        replaceAt,
+        getIn,
+        // eslint-disable-next-line object-shorthand
+        set,
+        // so that flow doesn't complain
+        setIn,
+        update,
