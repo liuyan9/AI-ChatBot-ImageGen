@@ -4231,3 +4231,435 @@
         // so that flow doesn't complain
         setIn,
         update,
+        updateIn,
+        merge,
+        mergeDeep,
+        mergeIn,
+        omit,
+        addDefaults
+      };
+      exports.default = timm;
+    }
+  });
+
+  // packages/systems/ix2/engine/reducers/IX2RequestReducer.js
+  var require_IX2RequestReducer = __commonJS({
+    "packages/systems/ix2/engine/reducers/IX2RequestReducer.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ixRequest = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _constants = require_constants();
+      var _timm = require_timm();
+      var {
+        IX2_PREVIEW_REQUESTED,
+        IX2_PLAYBACK_REQUESTED,
+        IX2_STOP_REQUESTED,
+        IX2_CLEAR_REQUESTED
+      } = _constants.IX2EngineActionTypes;
+      var initialState = {
+        preview: {},
+        playback: {},
+        stop: {},
+        clear: {}
+      };
+      var stateKeys = Object.create(null, {
+        [IX2_PREVIEW_REQUESTED]: {
+          value: "preview"
+        },
+        [IX2_PLAYBACK_REQUESTED]: {
+          value: "playback"
+        },
+        [IX2_STOP_REQUESTED]: {
+          value: "stop"
+        },
+        [IX2_CLEAR_REQUESTED]: {
+          value: "clear"
+        }
+      });
+      var ixRequest = (state = initialState, action) => {
+        if (action.type in stateKeys) {
+          const key = [stateKeys[action.type]];
+          return (0, _timm.setIn)(state, [key], (0, _extends2.default)({}, action.payload));
+        }
+        return state;
+      };
+      exports.ixRequest = ixRequest;
+    }
+  });
+
+  // packages/systems/ix2/engine/reducers/IX2SessionReducer.js
+  var require_IX2SessionReducer = __commonJS({
+    "packages/systems/ix2/engine/reducers/IX2SessionReducer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ixSession = void 0;
+      var _constants = require_constants();
+      var _timm = require_timm();
+      var {
+        IX2_SESSION_INITIALIZED,
+        IX2_SESSION_STARTED,
+        IX2_TEST_FRAME_RENDERED,
+        IX2_SESSION_STOPPED,
+        IX2_EVENT_LISTENER_ADDED,
+        IX2_EVENT_STATE_CHANGED,
+        IX2_ANIMATION_FRAME_CHANGED,
+        IX2_ACTION_LIST_PLAYBACK_CHANGED,
+        IX2_VIEWPORT_WIDTH_CHANGED,
+        IX2_MEDIA_QUERIES_DEFINED
+      } = _constants.IX2EngineActionTypes;
+      var initialState = {
+        active: false,
+        tick: 0,
+        eventListeners: [],
+        eventState: {},
+        playbackState: {},
+        viewportWidth: 0,
+        mediaQueryKey: null,
+        hasBoundaryNodes: false,
+        hasDefinedMediaQueries: false,
+        reducedMotion: false
+      };
+      var TEST_FRAME_STEPS_SIZE = 20;
+      var ixSession = (state = initialState, action) => {
+        switch (action.type) {
+          case IX2_SESSION_INITIALIZED: {
+            const {
+              hasBoundaryNodes,
+              reducedMotion
+            } = action.payload;
+            return (0, _timm.merge)(state, {
+              hasBoundaryNodes,
+              reducedMotion
+            });
+          }
+          case IX2_SESSION_STARTED: {
+            return (0, _timm.set)(state, "active", true);
+          }
+          case IX2_TEST_FRAME_RENDERED: {
+            const {
+              payload: {
+                step = TEST_FRAME_STEPS_SIZE
+              }
+            } = action;
+            return (0, _timm.set)(state, "tick", state.tick + step);
+          }
+          case IX2_SESSION_STOPPED: {
+            return initialState;
+          }
+          case IX2_ANIMATION_FRAME_CHANGED: {
+            const {
+              payload: {
+                now
+              }
+            } = action;
+            return (0, _timm.set)(state, "tick", now);
+          }
+          case IX2_EVENT_LISTENER_ADDED: {
+            const eventListeners = (0, _timm.addLast)(state.eventListeners, action.payload);
+            return (0, _timm.set)(state, "eventListeners", eventListeners);
+          }
+          case IX2_EVENT_STATE_CHANGED: {
+            const {
+              stateKey,
+              newState
+            } = action.payload;
+            return (0, _timm.setIn)(state, ["eventState", stateKey], newState);
+          }
+          case IX2_ACTION_LIST_PLAYBACK_CHANGED: {
+            const {
+              actionListId,
+              isPlaying
+            } = action.payload;
+            return (0, _timm.setIn)(state, ["playbackState", actionListId], isPlaying);
+          }
+          case IX2_VIEWPORT_WIDTH_CHANGED: {
+            const {
+              width,
+              mediaQueries
+            } = action.payload;
+            const mediaQueryCount = mediaQueries.length;
+            let mediaQueryKey = null;
+            for (let i = 0; i < mediaQueryCount; i++) {
+              const {
+                key,
+                min,
+                max
+              } = mediaQueries[i];
+              if (width >= min && width <= max) {
+                mediaQueryKey = key;
+                break;
+              }
+            }
+            return (0, _timm.merge)(state, {
+              viewportWidth: width,
+              mediaQueryKey
+            });
+          }
+          case IX2_MEDIA_QUERIES_DEFINED: {
+            return (0, _timm.set)(state, "hasDefinedMediaQueries", true);
+          }
+          default: {
+            return state;
+          }
+        }
+      };
+      exports.ixSession = ixSession;
+    }
+  });
+
+  // node_modules/lodash/_listCacheClear.js
+  var require_listCacheClear = __commonJS({
+    "node_modules/lodash/_listCacheClear.js"(exports, module) {
+      function listCacheClear() {
+        this.__data__ = [];
+        this.size = 0;
+      }
+      module.exports = listCacheClear;
+    }
+  });
+
+  // node_modules/lodash/eq.js
+  var require_eq = __commonJS({
+    "node_modules/lodash/eq.js"(exports, module) {
+      function eq(value, other) {
+        return value === other || value !== value && other !== other;
+      }
+      module.exports = eq;
+    }
+  });
+
+  // node_modules/lodash/_assocIndexOf.js
+  var require_assocIndexOf = __commonJS({
+    "node_modules/lodash/_assocIndexOf.js"(exports, module) {
+      var eq = require_eq();
+      function assocIndexOf(array, key) {
+        var length = array.length;
+        while (length--) {
+          if (eq(array[length][0], key)) {
+            return length;
+          }
+        }
+        return -1;
+      }
+      module.exports = assocIndexOf;
+    }
+  });
+
+  // node_modules/lodash/_listCacheDelete.js
+  var require_listCacheDelete = __commonJS({
+    "node_modules/lodash/_listCacheDelete.js"(exports, module) {
+      var assocIndexOf = require_assocIndexOf();
+      var arrayProto = Array.prototype;
+      var splice = arrayProto.splice;
+      function listCacheDelete(key) {
+        var data = this.__data__, index = assocIndexOf(data, key);
+        if (index < 0) {
+          return false;
+        }
+        var lastIndex = data.length - 1;
+        if (index == lastIndex) {
+          data.pop();
+        } else {
+          splice.call(data, index, 1);
+        }
+        --this.size;
+        return true;
+      }
+      module.exports = listCacheDelete;
+    }
+  });
+
+  // node_modules/lodash/_listCacheGet.js
+  var require_listCacheGet = __commonJS({
+    "node_modules/lodash/_listCacheGet.js"(exports, module) {
+      var assocIndexOf = require_assocIndexOf();
+      function listCacheGet(key) {
+        var data = this.__data__, index = assocIndexOf(data, key);
+        return index < 0 ? void 0 : data[index][1];
+      }
+      module.exports = listCacheGet;
+    }
+  });
+
+  // node_modules/lodash/_listCacheHas.js
+  var require_listCacheHas = __commonJS({
+    "node_modules/lodash/_listCacheHas.js"(exports, module) {
+      var assocIndexOf = require_assocIndexOf();
+      function listCacheHas(key) {
+        return assocIndexOf(this.__data__, key) > -1;
+      }
+      module.exports = listCacheHas;
+    }
+  });
+
+  // node_modules/lodash/_listCacheSet.js
+  var require_listCacheSet = __commonJS({
+    "node_modules/lodash/_listCacheSet.js"(exports, module) {
+      var assocIndexOf = require_assocIndexOf();
+      function listCacheSet(key, value) {
+        var data = this.__data__, index = assocIndexOf(data, key);
+        if (index < 0) {
+          ++this.size;
+          data.push([key, value]);
+        } else {
+          data[index][1] = value;
+        }
+        return this;
+      }
+      module.exports = listCacheSet;
+    }
+  });
+
+  // node_modules/lodash/_ListCache.js
+  var require_ListCache = __commonJS({
+    "node_modules/lodash/_ListCache.js"(exports, module) {
+      var listCacheClear = require_listCacheClear();
+      var listCacheDelete = require_listCacheDelete();
+      var listCacheGet = require_listCacheGet();
+      var listCacheHas = require_listCacheHas();
+      var listCacheSet = require_listCacheSet();
+      function ListCache(entries) {
+        var index = -1, length = entries == null ? 0 : entries.length;
+        this.clear();
+        while (++index < length) {
+          var entry = entries[index];
+          this.set(entry[0], entry[1]);
+        }
+      }
+      ListCache.prototype.clear = listCacheClear;
+      ListCache.prototype["delete"] = listCacheDelete;
+      ListCache.prototype.get = listCacheGet;
+      ListCache.prototype.has = listCacheHas;
+      ListCache.prototype.set = listCacheSet;
+      module.exports = ListCache;
+    }
+  });
+
+  // node_modules/lodash/_stackClear.js
+  var require_stackClear = __commonJS({
+    "node_modules/lodash/_stackClear.js"(exports, module) {
+      var ListCache = require_ListCache();
+      function stackClear() {
+        this.__data__ = new ListCache();
+        this.size = 0;
+      }
+      module.exports = stackClear;
+    }
+  });
+
+  // node_modules/lodash/_stackDelete.js
+  var require_stackDelete = __commonJS({
+    "node_modules/lodash/_stackDelete.js"(exports, module) {
+      function stackDelete(key) {
+        var data = this.__data__, result = data["delete"](key);
+        this.size = data.size;
+        return result;
+      }
+      module.exports = stackDelete;
+    }
+  });
+
+  // node_modules/lodash/_stackGet.js
+  var require_stackGet = __commonJS({
+    "node_modules/lodash/_stackGet.js"(exports, module) {
+      function stackGet(key) {
+        return this.__data__.get(key);
+      }
+      module.exports = stackGet;
+    }
+  });
+
+  // node_modules/lodash/_stackHas.js
+  var require_stackHas = __commonJS({
+    "node_modules/lodash/_stackHas.js"(exports, module) {
+      function stackHas(key) {
+        return this.__data__.has(key);
+      }
+      module.exports = stackHas;
+    }
+  });
+
+  // node_modules/lodash/_freeGlobal.js
+  var require_freeGlobal2 = __commonJS({
+    "node_modules/lodash/_freeGlobal.js"(exports, module) {
+      var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
+      module.exports = freeGlobal;
+    }
+  });
+
+  // node_modules/lodash/_root.js
+  var require_root2 = __commonJS({
+    "node_modules/lodash/_root.js"(exports, module) {
+      var freeGlobal = require_freeGlobal2();
+      var freeSelf = typeof self == "object" && self && self.Object === Object && self;
+      var root = freeGlobal || freeSelf || Function("return this")();
+      module.exports = root;
+    }
+  });
+
+  // node_modules/lodash/_Symbol.js
+  var require_Symbol2 = __commonJS({
+    "node_modules/lodash/_Symbol.js"(exports, module) {
+      var root = require_root2();
+      var Symbol2 = root.Symbol;
+      module.exports = Symbol2;
+    }
+  });
+
+  // node_modules/lodash/_getRawTag.js
+  var require_getRawTag2 = __commonJS({
+    "node_modules/lodash/_getRawTag.js"(exports, module) {
+      var Symbol2 = require_Symbol2();
+      var objectProto = Object.prototype;
+      var hasOwnProperty = objectProto.hasOwnProperty;
+      var nativeObjectToString = objectProto.toString;
+      var symToStringTag = Symbol2 ? Symbol2.toStringTag : void 0;
+      function getRawTag(value) {
+        var isOwn = hasOwnProperty.call(value, symToStringTag), tag = value[symToStringTag];
+        try {
+          value[symToStringTag] = void 0;
+          var unmasked = true;
+        } catch (e) {
+        }
+        var result = nativeObjectToString.call(value);
+        if (unmasked) {
+          if (isOwn) {
+            value[symToStringTag] = tag;
+          } else {
+            delete value[symToStringTag];
+          }
+        }
+        return result;
+      }
+      module.exports = getRawTag;
+    }
+  });
+
+  // node_modules/lodash/_objectToString.js
+  var require_objectToString2 = __commonJS({
+    "node_modules/lodash/_objectToString.js"(exports, module) {
+      var objectProto = Object.prototype;
+      var nativeObjectToString = objectProto.toString;
+      function objectToString(value) {
+        return nativeObjectToString.call(value);
+      }
+      module.exports = objectToString;
+    }
+  });
+
+  // node_modules/lodash/_baseGetTag.js
+  var require_baseGetTag2 = __commonJS({
+    "node_modules/lodash/_baseGetTag.js"(exports, module) {
+      var Symbol2 = require_Symbol2();
+      var getRawTag = require_getRawTag2();
+      var objectToString = require_objectToString2();
+      var nullTag = "[object Null]";
+      var undefinedTag = "[object Undefined]";
+      var symToStringTag = Symbol2 ? Symbol2.toStringTag : void 0;
+      function baseGetTag(value) {
