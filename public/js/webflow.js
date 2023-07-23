@@ -7416,3 +7416,473 @@
         }
         if (typeof objA !== "object" || objA === null || typeof objB !== "object" || objB === null) {
           return false;
+        }
+        const keysA = Object.keys(objA);
+        const keysB = Object.keys(objB);
+        if (keysA.length !== keysB.length) {
+          return false;
+        }
+        for (let i = 0; i < keysA.length; i++) {
+          if (!hasOwnProperty.call(objB, keysA[i]) || !is(objA[keysA[i]], objB[keysA[i]])) {
+            return false;
+          }
+        }
+        return true;
+      }
+      var _default = shallowEqual;
+      exports.default = _default;
+    }
+  });
+
+  // packages/systems/ix2/shared/logic/IX2VanillaUtils.js
+  var require_IX2VanillaUtils = __commonJS({
+    "packages/systems/ix2/shared/logic/IX2VanillaUtils.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.cleanupHTMLElement = cleanupHTMLElement;
+      exports.clearAllStyles = clearAllStyles;
+      exports.getActionListProgress = getActionListProgress;
+      exports.getAffectedElements = getAffectedElements;
+      exports.getComputedStyle = getComputedStyle;
+      exports.getDestinationValues = getDestinationValues;
+      exports.getElementId = getElementId;
+      exports.getInstanceId = getInstanceId;
+      exports.getInstanceOrigin = getInstanceOrigin;
+      exports.getItemConfigByKey = void 0;
+      exports.getMaxDurationItemIndex = getMaxDurationItemIndex;
+      exports.getNamespacedParameterId = getNamespacedParameterId;
+      exports.getRenderType = getRenderType;
+      exports.getStyleProp = getStyleProp;
+      exports.mediaQueriesEqual = mediaQueriesEqual;
+      exports.observeStore = observeStore;
+      exports.reduceListToGroup = reduceListToGroup;
+      exports.reifyState = reifyState;
+      exports.renderHTMLElement = renderHTMLElement;
+      Object.defineProperty(exports, "shallowEqual", {
+        enumerable: true,
+        get: function() {
+          return _shallowEqual.default;
+        }
+      });
+      exports.shouldAllowMediaQuery = shouldAllowMediaQuery;
+      exports.shouldNamespaceEventParameter = shouldNamespaceEventParameter;
+      exports.stringifyTarget = stringifyTarget;
+      var _defaultTo = _interopRequireDefault(require_defaultTo());
+      var _reduce = _interopRequireDefault(require_reduce());
+      var _findLast = _interopRequireDefault(require_findLast());
+      var _timm = require_timm();
+      var _constants = require_constants();
+      var _shallowEqual = _interopRequireDefault(require_shallowEqual());
+      var _IX2EasingUtils = require_IX2EasingUtils();
+      var _IX2VanillaPlugins = require_IX2VanillaPlugins();
+      var _IX2BrowserSupport = require_IX2BrowserSupport();
+      var {
+        BACKGROUND,
+        TRANSFORM,
+        TRANSLATE_3D,
+        SCALE_3D,
+        ROTATE_X,
+        ROTATE_Y,
+        ROTATE_Z,
+        SKEW,
+        PRESERVE_3D,
+        FLEX,
+        OPACITY,
+        FILTER,
+        FONT_VARIATION_SETTINGS,
+        WIDTH,
+        HEIGHT,
+        BACKGROUND_COLOR,
+        BORDER_COLOR,
+        COLOR,
+        CHILDREN,
+        IMMEDIATE_CHILDREN,
+        SIBLINGS,
+        PARENT,
+        DISPLAY,
+        WILL_CHANGE,
+        AUTO,
+        COMMA_DELIMITER,
+        COLON_DELIMITER,
+        BAR_DELIMITER,
+        RENDER_TRANSFORM,
+        RENDER_GENERAL,
+        RENDER_STYLE,
+        RENDER_PLUGIN
+      } = _constants.IX2EngineConstants;
+      var {
+        TRANSFORM_MOVE,
+        TRANSFORM_SCALE,
+        TRANSFORM_ROTATE,
+        TRANSFORM_SKEW,
+        STYLE_OPACITY,
+        STYLE_FILTER,
+        STYLE_FONT_VARIATION,
+        STYLE_SIZE,
+        STYLE_BACKGROUND_COLOR,
+        STYLE_BORDER,
+        STYLE_TEXT_COLOR,
+        GENERAL_DISPLAY
+      } = _constants.ActionTypeConsts;
+      var OBJECT_VALUE = "OBJECT_VALUE";
+      var trim = (v) => v.trim();
+      var colorStyleProps = Object.freeze({
+        [STYLE_BACKGROUND_COLOR]: BACKGROUND_COLOR,
+        [STYLE_BORDER]: BORDER_COLOR,
+        [STYLE_TEXT_COLOR]: COLOR
+      });
+      var willChangeProps = Object.freeze({
+        // $FlowFixMe
+        [_IX2BrowserSupport.TRANSFORM_PREFIXED]: TRANSFORM,
+        [BACKGROUND_COLOR]: BACKGROUND,
+        [OPACITY]: OPACITY,
+        [FILTER]: FILTER,
+        [WIDTH]: WIDTH,
+        [HEIGHT]: HEIGHT,
+        [FONT_VARIATION_SETTINGS]: FONT_VARIATION_SETTINGS
+      });
+      var objectCache = {};
+      var instanceCount = 1;
+      function getInstanceId() {
+        return "i" + instanceCount++;
+      }
+      var elementCount = 1;
+      function getElementId(ixElements, ref) {
+        for (const key in ixElements) {
+          const ixEl = ixElements[key];
+          if (ixEl && ixEl.ref === ref) {
+            return ixEl.id;
+          }
+        }
+        return "e" + elementCount++;
+      }
+      function reifyState({
+        events,
+        actionLists,
+        site
+      } = {}) {
+        const eventTypeMap = (0, _reduce.default)(events, (result, event) => {
+          const {
+            eventTypeId
+          } = event;
+          if (!result[eventTypeId]) {
+            result[eventTypeId] = {};
+          }
+          result[eventTypeId][event.id] = event;
+          return result;
+        }, {});
+        let mediaQueries = site && site.mediaQueries;
+        let mediaQueryKeys = [];
+        if (mediaQueries) {
+          mediaQueryKeys = mediaQueries.map((mq) => mq.key);
+        } else {
+          mediaQueries = [];
+          console.warn(`IX2 missing mediaQueries in site data`);
+        }
+        return {
+          ixData: {
+            events,
+            actionLists,
+            eventTypeMap,
+            mediaQueries,
+            mediaQueryKeys
+          }
+        };
+      }
+      var strictEqual = (a, b) => a === b;
+      function observeStore({
+        store,
+        select,
+        onChange,
+        comparator = strictEqual
+      }) {
+        const {
+          getState,
+          subscribe
+        } = store;
+        const unsubscribe = subscribe(handleChange);
+        let currentState = select(getState());
+        function handleChange() {
+          const nextState = select(getState());
+          if (nextState == null) {
+            unsubscribe();
+            return;
+          }
+          if (!comparator(nextState, currentState)) {
+            currentState = nextState;
+            onChange(currentState, store);
+          }
+        }
+        return unsubscribe;
+      }
+      function normalizeTarget(target) {
+        const type = typeof target;
+        if (type === "string") {
+          return {
+            id: target
+          };
+        } else if (target != null && type === "object") {
+          const {
+            id,
+            objectId,
+            selector,
+            selectorGuids,
+            appliesTo,
+            useEventTarget
+          } = target;
+          return {
+            id,
+            objectId,
+            selector,
+            selectorGuids,
+            appliesTo,
+            useEventTarget
+          };
+        }
+        return {};
+      }
+      function getAffectedElements({
+        config,
+        event,
+        eventTarget,
+        elementRoot,
+        elementApi
+      }) {
+        var _event$action$config$, _event$action, _event$action$config;
+        if (!elementApi) {
+          throw new Error("IX2 missing elementApi");
+        }
+        const {
+          targets
+        } = config;
+        if (Array.isArray(targets) && targets.length > 0) {
+          return targets.reduce((accumulator, target2) => accumulator.concat(getAffectedElements({
+            config: {
+              target: target2
+            },
+            event,
+            eventTarget,
+            elementRoot,
+            elementApi
+          })), []);
+        }
+        const {
+          getValidDocument,
+          getQuerySelector,
+          queryDocument,
+          getChildElements,
+          getSiblingElements,
+          matchSelector,
+          elementContains,
+          isSiblingNode
+        } = elementApi;
+        const {
+          target
+        } = config;
+        if (!target) {
+          return [];
+        }
+        const {
+          id,
+          // $FlowFixMe
+          objectId,
+          // $FlowFixMe
+          selector,
+          // $FlowFixMe
+          selectorGuids,
+          // $FlowFixMe
+          appliesTo,
+          // $FlowFixMe
+          useEventTarget
+        } = normalizeTarget(target);
+        if (objectId) {
+          const ref = objectCache[objectId] || (objectCache[objectId] = {});
+          return [ref];
+        }
+        if (appliesTo === _constants.EventAppliesTo.PAGE) {
+          const doc = getValidDocument(id);
+          return doc ? [doc] : [];
+        }
+        const overrides = (_event$action$config$ = event === null || event === void 0 ? void 0 : (_event$action = event.action) === null || _event$action === void 0 ? void 0 : (_event$action$config = _event$action.config) === null || _event$action$config === void 0 ? void 0 : _event$action$config.affectedElements) !== null && _event$action$config$ !== void 0 ? _event$action$config$ : {};
+        const override = overrides[id || selector] || {};
+        const validOverride = Boolean(override.id || override.selector);
+        let limitAffectedElements;
+        let baseSelector;
+        let finalSelector;
+        const eventTargetSelector = event && getQuerySelector(normalizeTarget(event.target));
+        if (validOverride) {
+          limitAffectedElements = override.limitAffectedElements;
+          baseSelector = eventTargetSelector;
+          finalSelector = getQuerySelector(override);
+        } else {
+          baseSelector = finalSelector = getQuerySelector({
+            id,
+            selector,
+            selectorGuids
+          });
+        }
+        if (event && useEventTarget) {
+          const eventTargets = eventTarget && (finalSelector || useEventTarget === true) ? [eventTarget] : queryDocument(eventTargetSelector);
+          if (finalSelector) {
+            if (useEventTarget === PARENT) {
+              return queryDocument(finalSelector).filter((parentElement) => eventTargets.some((targetElement) => elementContains(parentElement, targetElement)));
+            }
+            if (useEventTarget === CHILDREN) {
+              return queryDocument(finalSelector).filter((childElement) => eventTargets.some((targetElement) => elementContains(targetElement, childElement)));
+            }
+            if (useEventTarget === SIBLINGS) {
+              return queryDocument(finalSelector).filter((siblingElement) => eventTargets.some((targetElement) => isSiblingNode(targetElement, siblingElement)));
+            }
+          }
+          return eventTargets;
+        }
+        if (baseSelector == null || finalSelector == null) {
+          return [];
+        }
+        if (_IX2BrowserSupport.IS_BROWSER_ENV && elementRoot) {
+          return queryDocument(finalSelector).filter((element) => elementRoot.contains(element));
+        }
+        if (limitAffectedElements === CHILDREN) {
+          return queryDocument(baseSelector, finalSelector);
+        } else if (limitAffectedElements === IMMEDIATE_CHILDREN) {
+          return getChildElements(queryDocument(baseSelector)).filter(matchSelector(finalSelector));
+        } else if (limitAffectedElements === SIBLINGS) {
+          return getSiblingElements(queryDocument(baseSelector)).filter(matchSelector(finalSelector));
+        } else {
+          return queryDocument(finalSelector);
+        }
+      }
+      function getComputedStyle({
+        element,
+        actionItem
+      }) {
+        if (!_IX2BrowserSupport.IS_BROWSER_ENV) {
+          return {};
+        }
+        const {
+          actionTypeId
+        } = actionItem;
+        switch (actionTypeId) {
+          case STYLE_SIZE:
+          case STYLE_BACKGROUND_COLOR:
+          case STYLE_BORDER:
+          case STYLE_TEXT_COLOR:
+          case GENERAL_DISPLAY:
+            return window.getComputedStyle(element);
+          default:
+            return {};
+        }
+      }
+      var pxValueRegex = /px/;
+      var getFilterDefaults = (actionState, filters) => filters.reduce((result, filter) => {
+        if (result[filter.type] == null) {
+          result[filter.type] = filterDefaults[
+            // $FlowFixMe - property `saturation` (did you mean `saturate`?) is missing in `filterDefaults`
+            filter.type
+          ];
+        }
+        return result;
+      }, actionState || {});
+      var getFontVariationDefaults = (actionState, fontVariations) => fontVariations.reduce((result, fontVariation) => {
+        if (result[fontVariation.type] == null) {
+          result[fontVariation.type] = fontVariationDefaults[fontVariation.type] || fontVariation.defaultValue || 0;
+        }
+        return result;
+      }, actionState || {});
+      function getInstanceOrigin(element, refState = {}, computedStyle = {}, actionItem, elementApi) {
+        const {
+          getStyle
+        } = elementApi;
+        const {
+          actionTypeId
+        } = actionItem;
+        if ((0, _IX2VanillaPlugins.isPluginType)(actionTypeId)) {
+          return (0, _IX2VanillaPlugins.getPluginOrigin)(actionTypeId)(refState[actionTypeId]);
+        }
+        switch (actionItem.actionTypeId) {
+          case TRANSFORM_MOVE:
+          case TRANSFORM_SCALE:
+          case TRANSFORM_ROTATE:
+          case TRANSFORM_SKEW: {
+            return refState[actionItem.actionTypeId] || transformDefaults[actionItem.actionTypeId];
+          }
+          case STYLE_FILTER:
+            return getFilterDefaults(refState[actionItem.actionTypeId], actionItem.config.filters);
+          case STYLE_FONT_VARIATION:
+            return getFontVariationDefaults(refState[actionItem.actionTypeId], actionItem.config.fontVariations);
+          case STYLE_OPACITY:
+            return {
+              value: (0, _defaultTo.default)(parseFloat(getStyle(element, OPACITY)), 1)
+            };
+          case STYLE_SIZE: {
+            const inlineWidth = getStyle(element, WIDTH);
+            const inlineHeight = getStyle(element, HEIGHT);
+            let widthValue;
+            let heightValue;
+            if (actionItem.config.widthUnit === AUTO) {
+              widthValue = pxValueRegex.test(inlineWidth) ? parseFloat(inlineWidth) : parseFloat(computedStyle.width);
+            } else {
+              widthValue = (0, _defaultTo.default)(parseFloat(inlineWidth), parseFloat(computedStyle.width));
+            }
+            if (actionItem.config.heightUnit === AUTO) {
+              heightValue = pxValueRegex.test(inlineHeight) ? parseFloat(inlineHeight) : parseFloat(computedStyle.height);
+            } else {
+              heightValue = (0, _defaultTo.default)(parseFloat(inlineHeight), parseFloat(computedStyle.height));
+            }
+            return {
+              widthValue,
+              heightValue
+            };
+          }
+          case STYLE_BACKGROUND_COLOR:
+          case STYLE_BORDER:
+          case STYLE_TEXT_COLOR:
+            return parseColor({
+              element,
+              actionTypeId: actionItem.actionTypeId,
+              computedStyle,
+              getStyle
+            });
+          case GENERAL_DISPLAY:
+            return {
+              value: (0, _defaultTo.default)(getStyle(element, DISPLAY), computedStyle.display)
+            };
+          case OBJECT_VALUE:
+            return refState[actionItem.actionTypeId] || {
+              value: 0
+            };
+          default: {
+            return;
+          }
+        }
+      }
+      var reduceFilters = (result, filter) => {
+        if (filter) {
+          result[filter.type] = filter.value || 0;
+        }
+        return result;
+      };
+      var reduceFontVariations = (result, fontVariation) => {
+        if (fontVariation) {
+          result[fontVariation.type] = fontVariation.value || 0;
+        }
+        return result;
+      };
+      var getItemConfigByKey = (actionTypeId, key, config) => {
+        if ((0, _IX2VanillaPlugins.isPluginType)(actionTypeId)) {
+          return (0, _IX2VanillaPlugins.getPluginConfig)(actionTypeId)(config, key);
+        }
+        switch (actionTypeId) {
+          case STYLE_FILTER: {
+            const filter = (0, _findLast.default)(config.filters, ({
+              type
+            }) => type === key);
+            return filter ? filter.value : 0;
+          }
+          case STYLE_FONT_VARIATION: {
+            const fontVariation = (0, _findLast.default)(config.fontVariations, ({
+              type
+            }) => type === key);
