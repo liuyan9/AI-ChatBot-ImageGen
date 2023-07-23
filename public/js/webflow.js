@@ -6955,3 +6955,464 @@
           return 7.5625 * pos * pos;
         } else if (pos < 2 / 2.75) {
           return 7.5625 * (pos -= 1.5 / 2.75) * pos + 0.75;
+        } else if (pos < 2.5 / 2.75) {
+          return 7.5625 * (pos -= 2.25 / 2.75) * pos + 0.9375;
+        } else {
+          return 7.5625 * (pos -= 2.625 / 2.75) * pos + 0.984375;
+        }
+      }
+      function bouncePast(pos) {
+        if (pos < 1 / 2.75) {
+          return 7.5625 * pos * pos;
+        } else if (pos < 2 / 2.75) {
+          return 2 - (7.5625 * (pos -= 1.5 / 2.75) * pos + 0.75);
+        } else if (pos < 2.5 / 2.75) {
+          return 2 - (7.5625 * (pos -= 2.25 / 2.75) * pos + 0.9375);
+        } else {
+          return 2 - (7.5625 * (pos -= 2.625 / 2.75) * pos + 0.984375);
+        }
+      }
+    }
+  });
+
+  // packages/systems/ix2/shared/logic/IX2EasingUtils.js
+  var require_IX2EasingUtils = __commonJS({
+    "packages/systems/ix2/shared/logic/IX2EasingUtils.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      var _interopRequireWildcard = require_interopRequireWildcard().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.applyEasing = applyEasing;
+      exports.createBezierEasing = createBezierEasing;
+      exports.optimizeFloat = optimizeFloat;
+      var easings = _interopRequireWildcard(require_IX2Easings());
+      var _bezierEasing = _interopRequireDefault(require_src());
+      function optimizeFloat(value, digits = 5, base = 10) {
+        const pow = Math.pow(base, digits);
+        const float = Number(Math.round(value * pow) / pow);
+        return Math.abs(float) > 1e-4 ? float : 0;
+      }
+      function createBezierEasing(easing) {
+        return (0, _bezierEasing.default)(...easing);
+      }
+      function applyEasing(easing, position, customEasingFn) {
+        if (position === 0) {
+          return 0;
+        }
+        if (position === 1) {
+          return 1;
+        }
+        if (customEasingFn) {
+          return optimizeFloat(position > 0 ? customEasingFn(position) : position);
+        }
+        return optimizeFloat(position > 0 && easing && easings[easing] ? easings[easing](position) : position);
+      }
+    }
+  });
+
+  // packages/systems/ix2/shared/reducers/IX2ElementsReducer.js
+  var require_IX2ElementsReducer = __commonJS({
+    "packages/systems/ix2/shared/reducers/IX2ElementsReducer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.createElementState = createElementState;
+      exports.ixElements = void 0;
+      exports.mergeActionState = mergeActionState;
+      var _timm = require_timm();
+      var _constants = require_constants();
+      var {
+        HTML_ELEMENT,
+        PLAIN_OBJECT,
+        ABSTRACT_NODE,
+        CONFIG_X_VALUE,
+        CONFIG_Y_VALUE,
+        CONFIG_Z_VALUE,
+        CONFIG_VALUE,
+        CONFIG_X_UNIT,
+        CONFIG_Y_UNIT,
+        CONFIG_Z_UNIT,
+        CONFIG_UNIT
+      } = _constants.IX2EngineConstants;
+      var {
+        IX2_SESSION_STOPPED,
+        IX2_INSTANCE_ADDED,
+        IX2_ELEMENT_STATE_CHANGED
+      } = _constants.IX2EngineActionTypes;
+      var initialState = {};
+      var refState = "refState";
+      var ixElements = (state = initialState, action = {}) => {
+        switch (action.type) {
+          case IX2_SESSION_STOPPED: {
+            return initialState;
+          }
+          case IX2_INSTANCE_ADDED: {
+            const {
+              elementId,
+              element: ref,
+              origin,
+              actionItem,
+              refType
+            } = action.payload;
+            const {
+              actionTypeId
+            } = actionItem;
+            let newState = state;
+            if ((0, _timm.getIn)(newState, [elementId, ref]) !== ref) {
+              newState = createElementState(newState, ref, refType, elementId, actionItem);
+            }
+            return mergeActionState(newState, elementId, actionTypeId, origin, actionItem);
+          }
+          case IX2_ELEMENT_STATE_CHANGED: {
+            const {
+              elementId,
+              actionTypeId,
+              current,
+              actionItem
+            } = action.payload;
+            return mergeActionState(state, elementId, actionTypeId, current, actionItem);
+          }
+          default: {
+            return state;
+          }
+        }
+      };
+      exports.ixElements = ixElements;
+      function createElementState(state, ref, refType, elementId, actionItem) {
+        const refId = refType === PLAIN_OBJECT ? (0, _timm.getIn)(actionItem, ["config", "target", "objectId"]) : null;
+        return (0, _timm.mergeIn)(state, [elementId], {
+          id: elementId,
+          ref,
+          refId,
+          refType
+        });
+      }
+      function mergeActionState(state, elementId, actionTypeId, actionState, actionItem) {
+        const units = pickUnits(actionItem);
+        const mergePath = [elementId, refState, actionTypeId];
+        return (0, _timm.mergeIn)(state, mergePath, actionState, units);
+      }
+      var valueUnitPairs = [[CONFIG_X_VALUE, CONFIG_X_UNIT], [CONFIG_Y_VALUE, CONFIG_Y_UNIT], [CONFIG_Z_VALUE, CONFIG_Z_UNIT], [CONFIG_VALUE, CONFIG_UNIT]];
+      function pickUnits(actionItem) {
+        const {
+          config
+        } = actionItem;
+        return valueUnitPairs.reduce((result, pair) => {
+          const valueKey = pair[0];
+          const unitKey = pair[1];
+          const configValue = config[valueKey];
+          const configUnit = config[unitKey];
+          if (configValue != null && configUnit != null) {
+            result[unitKey] = configUnit;
+          }
+          return result;
+        }, {});
+      }
+    }
+  });
+
+  // packages/systems/ix2/lottie/IX2LottieUtils.js
+  var require_IX2LottieUtils = __commonJS({
+    "packages/systems/ix2/lottie/IX2LottieUtils.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.renderPlugin = exports.getPluginOrigin = exports.getPluginDuration = exports.getPluginDestination = exports.getPluginConfig = exports.createPluginInstance = exports.clearPlugin = void 0;
+      var getPluginConfig = (actionItemConfig) => {
+        return actionItemConfig.value;
+      };
+      exports.getPluginConfig = getPluginConfig;
+      var getPluginDuration = (element, actionItem) => {
+        if (actionItem.config.duration !== "auto") {
+          return null;
+        }
+        const duration = parseFloat(element.getAttribute("data-duration"));
+        if (duration > 0) {
+          return duration * 1e3;
+        }
+        return parseFloat(element.getAttribute("data-default-duration")) * 1e3;
+      };
+      exports.getPluginDuration = getPluginDuration;
+      var getPluginOrigin = (refState) => {
+        return refState || {
+          value: 0
+        };
+      };
+      exports.getPluginOrigin = getPluginOrigin;
+      var getPluginDestination = (actionItemConfig) => {
+        return {
+          value: actionItemConfig.value
+        };
+      };
+      exports.getPluginDestination = getPluginDestination;
+      var createPluginInstance = (element) => {
+        const instance = window.Webflow.require("lottie").createInstance(element);
+        instance.stop();
+        instance.setSubframe(true);
+        return instance;
+      };
+      exports.createPluginInstance = createPluginInstance;
+      var renderPlugin = (pluginInstance, refState, actionItem) => {
+        if (!pluginInstance) {
+          return;
+        }
+        const percent = refState[actionItem.actionTypeId].value / 100;
+        pluginInstance.goToFrame(pluginInstance.frames * percent);
+      };
+      exports.renderPlugin = renderPlugin;
+      var clearPlugin = (element) => {
+        const instance = window.Webflow.require("lottie").createInstance(element);
+        instance.stop();
+      };
+      exports.clearPlugin = clearPlugin;
+    }
+  });
+
+  // packages/systems/ix2/shared/logic/IX2VanillaPlugins.js
+  var require_IX2VanillaPlugins = __commonJS({
+    "packages/systems/ix2/shared/logic/IX2VanillaPlugins.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.getPluginOrigin = exports.getPluginDuration = exports.getPluginDestination = exports.getPluginConfig = exports.createPluginInstance = exports.clearPlugin = void 0;
+      exports.isPluginType = isPluginType;
+      exports.renderPlugin = void 0;
+      var _IX2LottieUtils = require_IX2LottieUtils();
+      var _constants = require_constants();
+      var _IX2BrowserSupport = require_IX2BrowserSupport();
+      var pluginMethodMap = {
+        [_constants.ActionTypeConsts.PLUGIN_LOTTIE]: {
+          getConfig: _IX2LottieUtils.getPluginConfig,
+          getOrigin: _IX2LottieUtils.getPluginOrigin,
+          getDuration: _IX2LottieUtils.getPluginDuration,
+          getDestination: _IX2LottieUtils.getPluginDestination,
+          createInstance: _IX2LottieUtils.createPluginInstance,
+          render: _IX2LottieUtils.renderPlugin,
+          clear: _IX2LottieUtils.clearPlugin
+        }
+      };
+      function isPluginType(actionTypeId) {
+        return actionTypeId === _constants.ActionTypeConsts.PLUGIN_LOTTIE;
+      }
+      var pluginMethod = (methodName) => (actionTypeId) => {
+        if (!_IX2BrowserSupport.IS_BROWSER_ENV) {
+          return () => null;
+        }
+        const plugin = pluginMethodMap[actionTypeId];
+        if (!plugin) {
+          throw new Error(`IX2 no plugin configured for: ${actionTypeId}`);
+        }
+        const method = plugin[methodName];
+        if (!method) {
+          throw new Error(`IX2 invalid plugin method: ${methodName}`);
+        }
+        return method;
+      };
+      var getPluginConfig = pluginMethod("getConfig");
+      exports.getPluginConfig = getPluginConfig;
+      var getPluginOrigin = pluginMethod("getOrigin");
+      exports.getPluginOrigin = getPluginOrigin;
+      var getPluginDuration = pluginMethod("getDuration");
+      exports.getPluginDuration = getPluginDuration;
+      var getPluginDestination = pluginMethod("getDestination");
+      exports.getPluginDestination = getPluginDestination;
+      var createPluginInstance = pluginMethod("createInstance");
+      exports.createPluginInstance = createPluginInstance;
+      var renderPlugin = pluginMethod("render");
+      exports.renderPlugin = renderPlugin;
+      var clearPlugin = pluginMethod("clear");
+      exports.clearPlugin = clearPlugin;
+    }
+  });
+
+  // node_modules/lodash/defaultTo.js
+  var require_defaultTo = __commonJS({
+    "node_modules/lodash/defaultTo.js"(exports, module) {
+      function defaultTo(value, defaultValue) {
+        return value == null || value !== value ? defaultValue : value;
+      }
+      module.exports = defaultTo;
+    }
+  });
+
+  // node_modules/lodash/_arrayReduce.js
+  var require_arrayReduce = __commonJS({
+    "node_modules/lodash/_arrayReduce.js"(exports, module) {
+      function arrayReduce(array, iteratee, accumulator, initAccum) {
+        var index = -1, length = array == null ? 0 : array.length;
+        if (initAccum && length) {
+          accumulator = array[++index];
+        }
+        while (++index < length) {
+          accumulator = iteratee(accumulator, array[index], index, array);
+        }
+        return accumulator;
+      }
+      module.exports = arrayReduce;
+    }
+  });
+
+  // node_modules/lodash/_createBaseFor.js
+  var require_createBaseFor = __commonJS({
+    "node_modules/lodash/_createBaseFor.js"(exports, module) {
+      function createBaseFor(fromRight) {
+        return function(object, iteratee, keysFunc) {
+          var index = -1, iterable = Object(object), props = keysFunc(object), length = props.length;
+          while (length--) {
+            var key = props[fromRight ? length : ++index];
+            if (iteratee(iterable[key], key, iterable) === false) {
+              break;
+            }
+          }
+          return object;
+        };
+      }
+      module.exports = createBaseFor;
+    }
+  });
+
+  // node_modules/lodash/_baseFor.js
+  var require_baseFor = __commonJS({
+    "node_modules/lodash/_baseFor.js"(exports, module) {
+      var createBaseFor = require_createBaseFor();
+      var baseFor = createBaseFor();
+      module.exports = baseFor;
+    }
+  });
+
+  // node_modules/lodash/_baseForOwn.js
+  var require_baseForOwn = __commonJS({
+    "node_modules/lodash/_baseForOwn.js"(exports, module) {
+      var baseFor = require_baseFor();
+      var keys = require_keys();
+      function baseForOwn(object, iteratee) {
+        return object && baseFor(object, iteratee, keys);
+      }
+      module.exports = baseForOwn;
+    }
+  });
+
+  // node_modules/lodash/_createBaseEach.js
+  var require_createBaseEach = __commonJS({
+    "node_modules/lodash/_createBaseEach.js"(exports, module) {
+      var isArrayLike = require_isArrayLike();
+      function createBaseEach(eachFunc, fromRight) {
+        return function(collection, iteratee) {
+          if (collection == null) {
+            return collection;
+          }
+          if (!isArrayLike(collection)) {
+            return eachFunc(collection, iteratee);
+          }
+          var length = collection.length, index = fromRight ? length : -1, iterable = Object(collection);
+          while (fromRight ? index-- : ++index < length) {
+            if (iteratee(iterable[index], index, iterable) === false) {
+              break;
+            }
+          }
+          return collection;
+        };
+      }
+      module.exports = createBaseEach;
+    }
+  });
+
+  // node_modules/lodash/_baseEach.js
+  var require_baseEach = __commonJS({
+    "node_modules/lodash/_baseEach.js"(exports, module) {
+      var baseForOwn = require_baseForOwn();
+      var createBaseEach = require_createBaseEach();
+      var baseEach = createBaseEach(baseForOwn);
+      module.exports = baseEach;
+    }
+  });
+
+  // node_modules/lodash/_baseReduce.js
+  var require_baseReduce = __commonJS({
+    "node_modules/lodash/_baseReduce.js"(exports, module) {
+      function baseReduce(collection, iteratee, accumulator, initAccum, eachFunc) {
+        eachFunc(collection, function(value, index, collection2) {
+          accumulator = initAccum ? (initAccum = false, value) : iteratee(accumulator, value, index, collection2);
+        });
+        return accumulator;
+      }
+      module.exports = baseReduce;
+    }
+  });
+
+  // node_modules/lodash/reduce.js
+  var require_reduce = __commonJS({
+    "node_modules/lodash/reduce.js"(exports, module) {
+      var arrayReduce = require_arrayReduce();
+      var baseEach = require_baseEach();
+      var baseIteratee = require_baseIteratee();
+      var baseReduce = require_baseReduce();
+      var isArray = require_isArray();
+      function reduce(collection, iteratee, accumulator) {
+        var func = isArray(collection) ? arrayReduce : baseReduce, initAccum = arguments.length < 3;
+        return func(collection, baseIteratee(iteratee, 4), accumulator, initAccum, baseEach);
+      }
+      module.exports = reduce;
+    }
+  });
+
+  // node_modules/lodash/findLastIndex.js
+  var require_findLastIndex = __commonJS({
+    "node_modules/lodash/findLastIndex.js"(exports, module) {
+      var baseFindIndex = require_baseFindIndex();
+      var baseIteratee = require_baseIteratee();
+      var toInteger = require_toInteger();
+      var nativeMax = Math.max;
+      var nativeMin = Math.min;
+      function findLastIndex(array, predicate, fromIndex) {
+        var length = array == null ? 0 : array.length;
+        if (!length) {
+          return -1;
+        }
+        var index = length - 1;
+        if (fromIndex !== void 0) {
+          index = toInteger(fromIndex);
+          index = fromIndex < 0 ? nativeMax(length + index, 0) : nativeMin(index, length - 1);
+        }
+        return baseFindIndex(array, baseIteratee(predicate, 3), index, true);
+      }
+      module.exports = findLastIndex;
+    }
+  });
+
+  // node_modules/lodash/findLast.js
+  var require_findLast = __commonJS({
+    "node_modules/lodash/findLast.js"(exports, module) {
+      var createFind = require_createFind();
+      var findLastIndex = require_findLastIndex();
+      var findLast = createFind(findLastIndex);
+      module.exports = findLast;
+    }
+  });
+
+  // packages/systems/ix2/shared/logic/shallowEqual.js
+  var require_shallowEqual = __commonJS({
+    "packages/systems/ix2/shared/logic/shallowEqual.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = void 0;
+      var hasOwnProperty = Object.prototype.hasOwnProperty;
+      function is(x, y) {
+        if (x === y) {
+          return x !== 0 || y !== 0 || 1 / x === 1 / y;
+        }
+        return x !== x && y !== y;
+      }
+      function shallowEqual(objA, objB) {
+        if (is(objA, objB)) {
+          return true;
+        }
+        if (typeof objA !== "object" || objA === null || typeof objB !== "object" || objB === null) {
+          return false;
