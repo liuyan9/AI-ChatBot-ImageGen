@@ -7886,3 +7886,453 @@
             const fontVariation = (0, _findLast.default)(config.fontVariations, ({
               type
             }) => type === key);
+            return fontVariation ? fontVariation.value : 0;
+          }
+          default:
+            return config[key];
+        }
+      };
+      exports.getItemConfigByKey = getItemConfigByKey;
+      function getDestinationValues({
+        element,
+        actionItem,
+        elementApi
+      }) {
+        if ((0, _IX2VanillaPlugins.isPluginType)(actionItem.actionTypeId)) {
+          return (0, _IX2VanillaPlugins.getPluginDestination)(actionItem.actionTypeId)(actionItem.config);
+        }
+        switch (actionItem.actionTypeId) {
+          case TRANSFORM_MOVE:
+          case TRANSFORM_SCALE:
+          case TRANSFORM_ROTATE:
+          case TRANSFORM_SKEW: {
+            const {
+              xValue,
+              yValue,
+              zValue
+            } = actionItem.config;
+            return {
+              xValue,
+              yValue,
+              zValue
+            };
+          }
+          case STYLE_SIZE: {
+            const {
+              getStyle,
+              setStyle,
+              getProperty
+            } = elementApi;
+            const {
+              widthUnit,
+              heightUnit
+            } = actionItem.config;
+            let {
+              widthValue,
+              heightValue
+            } = actionItem.config;
+            if (!_IX2BrowserSupport.IS_BROWSER_ENV) {
+              return {
+                widthValue,
+                heightValue
+              };
+            }
+            if (widthUnit === AUTO) {
+              const temp = getStyle(element, WIDTH);
+              setStyle(element, WIDTH, "");
+              widthValue = getProperty(element, "offsetWidth");
+              setStyle(element, WIDTH, temp);
+            }
+            if (heightUnit === AUTO) {
+              const temp = getStyle(element, HEIGHT);
+              setStyle(element, HEIGHT, "");
+              heightValue = getProperty(element, "offsetHeight");
+              setStyle(element, HEIGHT, temp);
+            }
+            return {
+              widthValue,
+              heightValue
+            };
+          }
+          case STYLE_BACKGROUND_COLOR:
+          case STYLE_BORDER:
+          case STYLE_TEXT_COLOR: {
+            const {
+              rValue,
+              gValue,
+              bValue,
+              aValue
+            } = actionItem.config;
+            return {
+              rValue,
+              gValue,
+              bValue,
+              aValue
+            };
+          }
+          case STYLE_FILTER: {
+            return actionItem.config.filters.reduce(reduceFilters, {});
+          }
+          case STYLE_FONT_VARIATION: {
+            return actionItem.config.fontVariations.reduce(reduceFontVariations, {});
+          }
+          default: {
+            const {
+              value
+            } = actionItem.config;
+            return {
+              value
+            };
+          }
+        }
+      }
+      function getRenderType(actionTypeId) {
+        if (/^TRANSFORM_/.test(actionTypeId)) {
+          return RENDER_TRANSFORM;
+        }
+        if (/^STYLE_/.test(actionTypeId)) {
+          return RENDER_STYLE;
+        }
+        if (/^GENERAL_/.test(actionTypeId)) {
+          return RENDER_GENERAL;
+        }
+        if (/^PLUGIN_/.test(actionTypeId)) {
+          return RENDER_PLUGIN;
+        }
+      }
+      function getStyleProp(renderType, actionTypeId) {
+        return renderType === RENDER_STYLE ? actionTypeId.replace("STYLE_", "").toLowerCase() : null;
+      }
+      function renderHTMLElement(element, refState, actionState, eventId, actionItem, styleProp, elementApi, renderType, pluginInstance) {
+        switch (renderType) {
+          case RENDER_TRANSFORM: {
+            return renderTransform(element, refState, actionState, actionItem, elementApi);
+          }
+          case RENDER_STYLE: {
+            return renderStyle(element, refState, actionState, actionItem, styleProp, elementApi);
+          }
+          case RENDER_GENERAL: {
+            return renderGeneral(element, actionItem, elementApi);
+          }
+          case RENDER_PLUGIN: {
+            const {
+              actionTypeId
+            } = actionItem;
+            if ((0, _IX2VanillaPlugins.isPluginType)(actionTypeId)) {
+              return (0, _IX2VanillaPlugins.renderPlugin)(actionTypeId)(pluginInstance, refState, actionItem);
+            }
+          }
+        }
+      }
+      var transformDefaults = {
+        [TRANSFORM_MOVE]: Object.freeze({
+          xValue: 0,
+          yValue: 0,
+          zValue: 0
+        }),
+        [TRANSFORM_SCALE]: Object.freeze({
+          xValue: 1,
+          yValue: 1,
+          zValue: 1
+        }),
+        [TRANSFORM_ROTATE]: Object.freeze({
+          xValue: 0,
+          yValue: 0,
+          zValue: 0
+        }),
+        [TRANSFORM_SKEW]: Object.freeze({
+          xValue: 0,
+          yValue: 0
+        })
+      };
+      var filterDefaults = Object.freeze({
+        blur: 0,
+        "hue-rotate": 0,
+        invert: 0,
+        grayscale: 0,
+        saturate: 100,
+        sepia: 0,
+        contrast: 100,
+        brightness: 100
+      });
+      var fontVariationDefaults = Object.freeze({
+        wght: 0,
+        opsz: 0,
+        wdth: 0,
+        slnt: 0
+      });
+      var getFilterUnit = (filterType, actionItemConfig) => {
+        const filter = (0, _findLast.default)(actionItemConfig.filters, ({
+          type
+        }) => type === filterType);
+        if (filter && filter.unit) {
+          return filter.unit;
+        }
+        switch (filterType) {
+          case "blur":
+            return "px";
+          case "hue-rotate":
+            return "deg";
+          default:
+            return "%";
+        }
+      };
+      var transformKeys = Object.keys(transformDefaults);
+      function renderTransform(element, refState, actionState, actionItem, elementApi) {
+        const newTransform = transformKeys.map((actionTypeId) => {
+          const defaults = transformDefaults[actionTypeId];
+          const {
+            xValue = defaults.xValue,
+            yValue = defaults.yValue,
+            // $FlowFixMe
+            zValue = defaults.zValue,
+            xUnit = "",
+            yUnit = "",
+            zUnit = ""
+          } = refState[actionTypeId] || {};
+          switch (actionTypeId) {
+            case TRANSFORM_MOVE:
+              return `${TRANSLATE_3D}(${xValue}${xUnit}, ${yValue}${yUnit}, ${zValue}${zUnit})`;
+            case TRANSFORM_SCALE:
+              return `${SCALE_3D}(${xValue}${xUnit}, ${yValue}${yUnit}, ${zValue}${zUnit})`;
+            case TRANSFORM_ROTATE:
+              return `${ROTATE_X}(${xValue}${xUnit}) ${ROTATE_Y}(${yValue}${yUnit}) ${ROTATE_Z}(${zValue}${zUnit})`;
+            case TRANSFORM_SKEW:
+              return `${SKEW}(${xValue}${xUnit}, ${yValue}${yUnit})`;
+            default:
+              return "";
+          }
+        }).join(" ");
+        const {
+          setStyle
+        } = elementApi;
+        addWillChange(element, _IX2BrowserSupport.TRANSFORM_PREFIXED, elementApi);
+        setStyle(element, _IX2BrowserSupport.TRANSFORM_PREFIXED, newTransform);
+        if (hasDefined3dTransform(actionItem, actionState)) {
+          setStyle(element, _IX2BrowserSupport.TRANSFORM_STYLE_PREFIXED, PRESERVE_3D);
+        }
+      }
+      function renderFilter(element, actionState, actionItemConfig, elementApi) {
+        const filterValue = (0, _reduce.default)(actionState, (result, value, type) => `${result} ${type}(${value}${getFilterUnit(type, actionItemConfig)})`, "");
+        const {
+          setStyle
+        } = elementApi;
+        addWillChange(element, FILTER, elementApi);
+        setStyle(element, FILTER, filterValue);
+      }
+      function renderFontVariation(element, actionState, actionItemConfig, elementApi) {
+        const fontVariationValue = (0, _reduce.default)(actionState, (result, value, type) => {
+          result.push(`"${type}" ${value}`);
+          return result;
+        }, []).join(", ");
+        const {
+          setStyle
+        } = elementApi;
+        addWillChange(element, FONT_VARIATION_SETTINGS, elementApi);
+        setStyle(element, FONT_VARIATION_SETTINGS, fontVariationValue);
+      }
+      function hasDefined3dTransform({
+        actionTypeId
+      }, {
+        xValue,
+        yValue,
+        zValue
+      }) {
+        return actionTypeId === TRANSFORM_MOVE && zValue !== void 0 || // SCALE_Z
+        actionTypeId === TRANSFORM_SCALE && zValue !== void 0 || // ROTATE_X or ROTATE_Y
+        actionTypeId === TRANSFORM_ROTATE && (xValue !== void 0 || yValue !== void 0);
+      }
+      var paramCapture = "\\(([^)]+)\\)";
+      var rgbValidRegex = /^rgb/;
+      var rgbMatchRegex = RegExp(`rgba?${paramCapture}`);
+      function getFirstMatch(regex, value) {
+        const match = regex.exec(value);
+        return match ? match[1] : "";
+      }
+      function parseColor({
+        element,
+        actionTypeId,
+        computedStyle,
+        getStyle
+      }) {
+        const prop = colorStyleProps[actionTypeId];
+        const inlineValue = getStyle(element, prop);
+        const value = rgbValidRegex.test(inlineValue) ? inlineValue : computedStyle[prop];
+        const matches = getFirstMatch(rgbMatchRegex, value).split(COMMA_DELIMITER);
+        return {
+          rValue: (0, _defaultTo.default)(parseInt(matches[0], 10), 255),
+          gValue: (0, _defaultTo.default)(parseInt(matches[1], 10), 255),
+          bValue: (0, _defaultTo.default)(parseInt(matches[2], 10), 255),
+          aValue: (0, _defaultTo.default)(parseFloat(matches[3]), 1)
+        };
+      }
+      function renderStyle(element, refState, actionState, actionItem, styleProp, elementApi) {
+        const {
+          setStyle
+        } = elementApi;
+        switch (actionItem.actionTypeId) {
+          case STYLE_SIZE: {
+            let {
+              widthUnit = "",
+              heightUnit = ""
+            } = actionItem.config;
+            const {
+              widthValue,
+              heightValue
+            } = actionState;
+            if (widthValue !== void 0) {
+              if (widthUnit === AUTO) {
+                widthUnit = "px";
+              }
+              addWillChange(element, WIDTH, elementApi);
+              setStyle(element, WIDTH, widthValue + widthUnit);
+            }
+            if (heightValue !== void 0) {
+              if (heightUnit === AUTO) {
+                heightUnit = "px";
+              }
+              addWillChange(element, HEIGHT, elementApi);
+              setStyle(element, HEIGHT, heightValue + heightUnit);
+            }
+            break;
+          }
+          case STYLE_FILTER: {
+            renderFilter(element, actionState, actionItem.config, elementApi);
+            break;
+          }
+          case STYLE_FONT_VARIATION: {
+            renderFontVariation(element, actionState, actionItem.config, elementApi);
+            break;
+          }
+          case STYLE_BACKGROUND_COLOR:
+          case STYLE_BORDER:
+          case STYLE_TEXT_COLOR: {
+            const prop = colorStyleProps[actionItem.actionTypeId];
+            const rValue = Math.round(actionState.rValue);
+            const gValue = Math.round(actionState.gValue);
+            const bValue = Math.round(actionState.bValue);
+            const aValue = actionState.aValue;
+            addWillChange(element, prop, elementApi);
+            setStyle(element, prop, aValue >= 1 ? `rgb(${rValue},${gValue},${bValue})` : `rgba(${rValue},${gValue},${bValue},${aValue})`);
+            break;
+          }
+          default: {
+            const {
+              unit = ""
+            } = actionItem.config;
+            addWillChange(element, styleProp, elementApi);
+            setStyle(element, styleProp, actionState.value + unit);
+            break;
+          }
+        }
+      }
+      function renderGeneral(element, actionItem, elementApi) {
+        const {
+          setStyle
+        } = elementApi;
+        switch (actionItem.actionTypeId) {
+          case GENERAL_DISPLAY: {
+            const {
+              value
+            } = actionItem.config;
+            if (value === FLEX && _IX2BrowserSupport.IS_BROWSER_ENV) {
+              setStyle(element, DISPLAY, _IX2BrowserSupport.FLEX_PREFIXED);
+            } else {
+              setStyle(element, DISPLAY, value);
+            }
+            return;
+          }
+        }
+      }
+      function addWillChange(element, prop, elementApi) {
+        if (!_IX2BrowserSupport.IS_BROWSER_ENV) {
+          return;
+        }
+        const validProp = willChangeProps[prop];
+        if (!validProp) {
+          return;
+        }
+        const {
+          getStyle,
+          setStyle
+        } = elementApi;
+        const value = getStyle(element, WILL_CHANGE);
+        if (!value) {
+          setStyle(element, WILL_CHANGE, validProp);
+          return;
+        }
+        const values = value.split(COMMA_DELIMITER).map(trim);
+        if (values.indexOf(validProp) === -1) {
+          setStyle(element, WILL_CHANGE, values.concat(validProp).join(COMMA_DELIMITER));
+        }
+      }
+      function removeWillChange(element, prop, elementApi) {
+        if (!_IX2BrowserSupport.IS_BROWSER_ENV) {
+          return;
+        }
+        const validProp = willChangeProps[prop];
+        if (!validProp) {
+          return;
+        }
+        const {
+          getStyle,
+          setStyle
+        } = elementApi;
+        const value = getStyle(element, WILL_CHANGE);
+        if (!value || value.indexOf(validProp) === -1) {
+          return;
+        }
+        setStyle(element, WILL_CHANGE, value.split(COMMA_DELIMITER).map(trim).filter((v) => v !== validProp).join(COMMA_DELIMITER));
+      }
+      function clearAllStyles({
+        store,
+        elementApi
+      }) {
+        const {
+          ixData
+        } = store.getState();
+        const {
+          events = {},
+          actionLists = {}
+        } = ixData;
+        Object.keys(events).forEach((eventId) => {
+          const event = events[eventId];
+          const {
+            config
+          } = event.action;
+          const {
+            actionListId
+          } = config;
+          const actionList = actionLists[actionListId];
+          if (actionList) {
+            clearActionListStyles({
+              actionList,
+              event,
+              elementApi
+            });
+          }
+        });
+        Object.keys(actionLists).forEach((actionListId) => {
+          clearActionListStyles({
+            actionList: actionLists[actionListId],
+            elementApi
+          });
+        });
+      }
+      function clearActionListStyles({
+        actionList = {},
+        event,
+        elementApi
+      }) {
+        const {
+          actionItemGroups,
+          continuousParameterGroups
+        } = actionList;
+        actionItemGroups && actionItemGroups.forEach((actionGroup) => {
+          clearActionGroupStyles({
+            actionGroup,
+            event,
+            elementApi
+          });
+        });
+        continuousParameterGroups && continuousParameterGroups.forEach((paramGroup) => {
