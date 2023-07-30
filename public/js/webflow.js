@@ -8336,3 +8336,498 @@
           });
         });
         continuousParameterGroups && continuousParameterGroups.forEach((paramGroup) => {
+          const {
+            continuousActionGroups
+          } = paramGroup;
+          continuousActionGroups.forEach((actionGroup) => {
+            clearActionGroupStyles({
+              actionGroup,
+              event,
+              elementApi
+            });
+          });
+        });
+      }
+      function clearActionGroupStyles({
+        actionGroup,
+        event,
+        elementApi
+      }) {
+        const {
+          actionItems
+        } = actionGroup;
+        actionItems.forEach(({
+          actionTypeId,
+          config
+        }) => {
+          let clearElement;
+          if ((0, _IX2VanillaPlugins.isPluginType)(actionTypeId)) {
+            clearElement = (0, _IX2VanillaPlugins.clearPlugin)(actionTypeId);
+          } else {
+            clearElement = processElementByType({
+              effect: clearStyleProp,
+              actionTypeId,
+              elementApi
+            });
+          }
+          getAffectedElements({
+            config,
+            event,
+            elementApi
+          }).forEach(clearElement);
+        });
+      }
+      function cleanupHTMLElement(element, actionItem, elementApi) {
+        const {
+          setStyle,
+          getStyle
+        } = elementApi;
+        const {
+          actionTypeId
+        } = actionItem;
+        if (actionTypeId === STYLE_SIZE) {
+          const {
+            config
+          } = actionItem;
+          if (config.widthUnit === AUTO) {
+            setStyle(element, WIDTH, "");
+          }
+          if (config.heightUnit === AUTO) {
+            setStyle(element, HEIGHT, "");
+          }
+        }
+        if (getStyle(element, WILL_CHANGE)) {
+          processElementByType({
+            effect: removeWillChange,
+            actionTypeId,
+            elementApi
+          })(element);
+        }
+      }
+      var processElementByType = ({
+        effect,
+        actionTypeId,
+        elementApi
+      }) => (element) => {
+        switch (actionTypeId) {
+          case TRANSFORM_MOVE:
+          case TRANSFORM_SCALE:
+          case TRANSFORM_ROTATE:
+          case TRANSFORM_SKEW:
+            effect(element, _IX2BrowserSupport.TRANSFORM_PREFIXED, elementApi);
+            break;
+          case STYLE_FILTER:
+            effect(element, FILTER, elementApi);
+            break;
+          case STYLE_FONT_VARIATION:
+            effect(element, FONT_VARIATION_SETTINGS, elementApi);
+            break;
+          case STYLE_OPACITY:
+            effect(element, OPACITY, elementApi);
+            break;
+          case STYLE_SIZE:
+            effect(element, WIDTH, elementApi);
+            effect(element, HEIGHT, elementApi);
+            break;
+          case STYLE_BACKGROUND_COLOR:
+          case STYLE_BORDER:
+          case STYLE_TEXT_COLOR:
+            effect(element, colorStyleProps[actionTypeId], elementApi);
+            break;
+          case GENERAL_DISPLAY:
+            effect(element, DISPLAY, elementApi);
+            break;
+        }
+      };
+      function clearStyleProp(element, prop, elementApi) {
+        const {
+          setStyle
+        } = elementApi;
+        removeWillChange(element, prop, elementApi);
+        setStyle(element, prop, "");
+        if (prop === _IX2BrowserSupport.TRANSFORM_PREFIXED) {
+          setStyle(element, _IX2BrowserSupport.TRANSFORM_STYLE_PREFIXED, "");
+        }
+      }
+      function getMaxDurationItemIndex(actionItems) {
+        let maxDuration = 0;
+        let resultIndex = 0;
+        actionItems.forEach((actionItem, index) => {
+          const {
+            config
+          } = actionItem;
+          const total = config.delay + config.duration;
+          if (total >= maxDuration) {
+            maxDuration = total;
+            resultIndex = index;
+          }
+        });
+        return resultIndex;
+      }
+      function getActionListProgress(actionList, instance) {
+        const {
+          actionItemGroups,
+          useFirstGroupAsInitialState
+        } = actionList;
+        const {
+          actionItem: instanceItem,
+          verboseTimeElapsed = 0
+        } = instance;
+        let totalDuration = 0;
+        let elapsedDuration = 0;
+        actionItemGroups.forEach((group, index) => {
+          if (useFirstGroupAsInitialState && index === 0) {
+            return;
+          }
+          const {
+            actionItems
+          } = group;
+          const carrierItem = actionItems[getMaxDurationItemIndex(actionItems)];
+          const {
+            config,
+            actionTypeId
+          } = carrierItem;
+          if (instanceItem.id === carrierItem.id) {
+            elapsedDuration = totalDuration + verboseTimeElapsed;
+          }
+          const duration = getRenderType(actionTypeId) === RENDER_GENERAL ? 0 : config.duration;
+          totalDuration += config.delay + duration;
+        });
+        return totalDuration > 0 ? (0, _IX2EasingUtils.optimizeFloat)(elapsedDuration / totalDuration) : 0;
+      }
+      function reduceListToGroup({
+        actionList,
+        actionItemId,
+        rawData
+      }) {
+        const {
+          actionItemGroups,
+          continuousParameterGroups
+        } = actionList;
+        const newActionItems = [];
+        const takeItemUntilMatch = (actionItem) => {
+          newActionItems.push((0, _timm.mergeIn)(actionItem, ["config"], {
+            delay: 0,
+            duration: 0
+          }));
+          return actionItem.id === actionItemId;
+        };
+        actionItemGroups && actionItemGroups.some(({
+          actionItems
+        }) => {
+          return actionItems.some(takeItemUntilMatch);
+        });
+        continuousParameterGroups && continuousParameterGroups.some((paramGroup) => {
+          const {
+            continuousActionGroups
+          } = paramGroup;
+          return continuousActionGroups.some(({
+            actionItems
+          }) => {
+            return actionItems.some(takeItemUntilMatch);
+          });
+        });
+        return (0, _timm.setIn)(rawData, ["actionLists"], {
+          [actionList.id]: {
+            id: actionList.id,
+            actionItemGroups: [{
+              actionItems: newActionItems
+            }]
+          }
+        });
+      }
+      function shouldNamespaceEventParameter(eventTypeId, {
+        basedOn
+      }) {
+        return eventTypeId === _constants.EventTypeConsts.SCROLLING_IN_VIEW && (basedOn === _constants.EventBasedOn.ELEMENT || basedOn == null) || eventTypeId === _constants.EventTypeConsts.MOUSE_MOVE && basedOn === _constants.EventBasedOn.ELEMENT;
+      }
+      function getNamespacedParameterId(eventStateKey, continuousParameterGroupId) {
+        const namespacedParameterId = eventStateKey + COLON_DELIMITER + continuousParameterGroupId;
+        return namespacedParameterId;
+      }
+      function shouldAllowMediaQuery(mediaQueries, mediaQueryKey) {
+        if (mediaQueryKey == null) {
+          return true;
+        }
+        return mediaQueries.indexOf(mediaQueryKey) !== -1;
+      }
+      function mediaQueriesEqual(listA, listB) {
+        return (0, _shallowEqual.default)(listA && listA.sort(), listB && listB.sort());
+      }
+      function stringifyTarget(target) {
+        if (typeof target === "string") {
+          return target;
+        }
+        const {
+          id = "",
+          selector = "",
+          useEventTarget = ""
+        } = target;
+        return id + BAR_DELIMITER + selector + BAR_DELIMITER + useEventTarget;
+      }
+    }
+  });
+
+  // packages/systems/ix2/shared/index.js
+  var require_shared2 = __commonJS({
+    "packages/systems/ix2/shared/index.js"(exports) {
+      "use strict";
+      var _interopRequireWildcard = require_interopRequireWildcard().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.IX2VanillaUtils = exports.IX2VanillaPlugins = exports.IX2ElementsReducer = exports.IX2Easings = exports.IX2EasingUtils = exports.IX2BrowserSupport = void 0;
+      var IX2BrowserSupport = _interopRequireWildcard(require_IX2BrowserSupport());
+      exports.IX2BrowserSupport = IX2BrowserSupport;
+      var IX2Easings = _interopRequireWildcard(require_IX2Easings());
+      exports.IX2Easings = IX2Easings;
+      var IX2EasingUtils = _interopRequireWildcard(require_IX2EasingUtils());
+      exports.IX2EasingUtils = IX2EasingUtils;
+      var IX2ElementsReducer = _interopRequireWildcard(require_IX2ElementsReducer());
+      exports.IX2ElementsReducer = IX2ElementsReducer;
+      var IX2VanillaPlugins = _interopRequireWildcard(require_IX2VanillaPlugins());
+      exports.IX2VanillaPlugins = IX2VanillaPlugins;
+      var IX2VanillaUtils = _interopRequireWildcard(require_IX2VanillaUtils());
+      exports.IX2VanillaUtils = IX2VanillaUtils;
+    }
+  });
+
+  // packages/systems/ix2/engine/reducers/IX2InstancesReducer.js
+  var require_IX2InstancesReducer = __commonJS({
+    "packages/systems/ix2/engine/reducers/IX2InstancesReducer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ixInstances = void 0;
+      var _constants = require_constants();
+      var _shared = require_shared2();
+      var _timm = require_timm();
+      var {
+        IX2_RAW_DATA_IMPORTED,
+        IX2_SESSION_STOPPED,
+        IX2_INSTANCE_ADDED,
+        IX2_INSTANCE_STARTED,
+        IX2_INSTANCE_REMOVED,
+        IX2_ANIMATION_FRAME_CHANGED
+      } = _constants.IX2EngineActionTypes;
+      var {
+        optimizeFloat,
+        applyEasing,
+        createBezierEasing
+      } = _shared.IX2EasingUtils;
+      var {
+        RENDER_GENERAL
+      } = _constants.IX2EngineConstants;
+      var {
+        getItemConfigByKey,
+        getRenderType,
+        getStyleProp
+      } = _shared.IX2VanillaUtils;
+      var continuousInstance = (state, action) => {
+        const {
+          position: lastPosition,
+          parameterId,
+          actionGroups,
+          destinationKeys,
+          smoothing,
+          restingValue,
+          actionTypeId,
+          customEasingFn,
+          skipMotion,
+          skipToValue
+        } = state;
+        const {
+          parameters
+        } = action.payload;
+        let velocity = Math.max(1 - smoothing, 0.01);
+        let paramValue = parameters[parameterId];
+        if (paramValue == null) {
+          velocity = 1;
+          paramValue = restingValue;
+        }
+        const nextPosition = Math.max(paramValue, 0) || 0;
+        const positionDiff = optimizeFloat(nextPosition - lastPosition);
+        const position = skipMotion ? skipToValue : optimizeFloat(lastPosition + positionDiff * velocity);
+        const keyframePosition = position * 100;
+        if (position === lastPosition && state.current) {
+          return state;
+        }
+        let fromActionItem;
+        let toActionItem;
+        let positionOffset;
+        let positionRange;
+        for (let i = 0, {
+          length
+        } = actionGroups; i < length; i++) {
+          const {
+            keyframe,
+            actionItems
+          } = actionGroups[i];
+          if (i === 0) {
+            fromActionItem = actionItems[0];
+          }
+          if (keyframePosition >= keyframe) {
+            fromActionItem = actionItems[0];
+            const nextGroup = actionGroups[i + 1];
+            const hasNextItem = nextGroup && keyframePosition !== keyframe;
+            toActionItem = hasNextItem ? nextGroup.actionItems[0] : null;
+            if (hasNextItem) {
+              positionOffset = keyframe / 100;
+              positionRange = (nextGroup.keyframe - keyframe) / 100;
+            }
+          }
+        }
+        const current = {};
+        if (fromActionItem && !toActionItem) {
+          for (let i = 0, {
+            length
+          } = destinationKeys; i < length; i++) {
+            const key = destinationKeys[i];
+            current[key] = getItemConfigByKey(actionTypeId, key, fromActionItem.config);
+          }
+        } else if (fromActionItem && toActionItem && positionOffset !== void 0 && positionRange !== void 0) {
+          const localPosition = (position - positionOffset) / positionRange;
+          const easing = fromActionItem.config.easing;
+          const eased = applyEasing(easing, localPosition, customEasingFn);
+          for (let i = 0, {
+            length
+          } = destinationKeys; i < length; i++) {
+            const key = destinationKeys[i];
+            const fromVal = getItemConfigByKey(actionTypeId, key, fromActionItem.config);
+            const toVal = getItemConfigByKey(actionTypeId, key, toActionItem.config);
+            const diff = toVal - fromVal;
+            const value = diff * eased + fromVal;
+            current[key] = value;
+          }
+        }
+        return (0, _timm.merge)(state, {
+          position,
+          current
+        });
+      };
+      var timedInstance = (state, action) => {
+        const {
+          active,
+          origin,
+          start,
+          immediate,
+          renderType,
+          verbose,
+          actionItem,
+          destination,
+          destinationKeys,
+          pluginDuration,
+          instanceDelay,
+          customEasingFn,
+          skipMotion
+        } = state;
+        const easing = actionItem.config.easing;
+        let {
+          duration,
+          delay
+        } = actionItem.config;
+        if (pluginDuration != null) {
+          duration = pluginDuration;
+        }
+        delay = instanceDelay != null ? instanceDelay : delay;
+        if (renderType === RENDER_GENERAL) {
+          duration = 0;
+        } else if (immediate || skipMotion) {
+          duration = delay = 0;
+        }
+        const {
+          now
+        } = action.payload;
+        if (active && origin) {
+          const delta = now - (start + delay);
+          if (verbose) {
+            const verboseDelta = now - start;
+            const verboseDuration = duration + delay;
+            const verbosePosition = optimizeFloat(Math.min(Math.max(0, verboseDelta / verboseDuration), 1));
+            state = (0, _timm.set)(state, "verboseTimeElapsed", verboseDuration * verbosePosition);
+          }
+          if (delta < 0) {
+            return state;
+          }
+          const position = optimizeFloat(Math.min(Math.max(0, delta / duration), 1));
+          const eased = applyEasing(easing, position, customEasingFn);
+          const newProps = {};
+          let current = null;
+          if (destinationKeys.length) {
+            current = destinationKeys.reduce((result, key) => {
+              const destValue = destination[key];
+              const originVal = parseFloat(origin[key]) || 0;
+              const diff = parseFloat(destValue) - originVal;
+              const value = diff * eased + originVal;
+              result[key] = value;
+              return result;
+            }, {});
+          }
+          newProps.current = current;
+          newProps.position = position;
+          if (position === 1) {
+            newProps.active = false;
+            newProps.complete = true;
+          }
+          return (0, _timm.merge)(state, newProps);
+        }
+        return state;
+      };
+      var ixInstances = (state = Object.freeze({}), action) => {
+        switch (action.type) {
+          case IX2_RAW_DATA_IMPORTED: {
+            return action.payload.ixInstances || Object.freeze({});
+          }
+          case IX2_SESSION_STOPPED: {
+            return Object.freeze({});
+          }
+          case IX2_INSTANCE_ADDED: {
+            const {
+              instanceId,
+              elementId,
+              actionItem,
+              eventId,
+              eventTarget,
+              eventStateKey,
+              actionListId,
+              groupIndex,
+              isCarrier,
+              origin,
+              destination,
+              immediate,
+              verbose,
+              continuous,
+              parameterId,
+              actionGroups,
+              smoothing,
+              restingValue,
+              pluginInstance,
+              pluginDuration,
+              instanceDelay,
+              skipMotion,
+              skipToValue
+            } = action.payload;
+            const {
+              actionTypeId
+            } = actionItem;
+            const renderType = getRenderType(actionTypeId);
+            const styleProp = getStyleProp(renderType, actionTypeId);
+            const destinationKeys = Object.keys(destination).filter((key) => destination[key] != null);
+            const {
+              easing
+            } = actionItem.config;
+            return (0, _timm.set)(state, instanceId, {
+              id: instanceId,
+              elementId,
+              active: false,
+              position: 0,
+              start: 0,
+              origin,
+              destination,
+              destinationKeys,
+              immediate,
+              verbose,
+              current: null,
+              actionItem,
+              actionTypeId,
