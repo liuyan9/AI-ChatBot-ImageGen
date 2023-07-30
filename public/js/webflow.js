@@ -8831,3 +8831,449 @@
               current: null,
               actionItem,
               actionTypeId,
+              eventId,
+              eventTarget,
+              eventStateKey,
+              actionListId,
+              groupIndex,
+              renderType,
+              isCarrier,
+              styleProp,
+              continuous,
+              parameterId,
+              actionGroups,
+              smoothing,
+              restingValue,
+              pluginInstance,
+              pluginDuration,
+              instanceDelay,
+              skipMotion,
+              skipToValue,
+              customEasingFn: Array.isArray(easing) && easing.length === 4 ? createBezierEasing(easing) : void 0
+            });
+          }
+          case IX2_INSTANCE_STARTED: {
+            const {
+              instanceId,
+              time
+            } = action.payload;
+            return (0, _timm.mergeIn)(state, [instanceId], {
+              active: true,
+              complete: false,
+              start: time
+            });
+          }
+          case IX2_INSTANCE_REMOVED: {
+            const {
+              instanceId
+            } = action.payload;
+            if (!state[instanceId]) {
+              return state;
+            }
+            const newState = {};
+            const keys = Object.keys(state);
+            const {
+              length
+            } = keys;
+            for (let i = 0; i < length; i++) {
+              const key = keys[i];
+              if (key !== instanceId) {
+                newState[key] = state[key];
+              }
+            }
+            return newState;
+          }
+          case IX2_ANIMATION_FRAME_CHANGED: {
+            let newState = state;
+            const keys = Object.keys(state);
+            const {
+              length
+            } = keys;
+            for (let i = 0; i < length; i++) {
+              const key = keys[i];
+              const instance = state[key];
+              const reducer = instance.continuous ? continuousInstance : timedInstance;
+              newState = (0, _timm.set)(newState, key, reducer(instance, action));
+            }
+            return newState;
+          }
+          default: {
+            return state;
+          }
+        }
+      };
+      exports.ixInstances = ixInstances;
+    }
+  });
+
+  // packages/systems/ix2/engine/reducers/IX2ParametersReducer.js
+  var require_IX2ParametersReducer = __commonJS({
+    "packages/systems/ix2/engine/reducers/IX2ParametersReducer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ixParameters = void 0;
+      var _constants = require_constants();
+      var {
+        IX2_RAW_DATA_IMPORTED,
+        IX2_SESSION_STOPPED,
+        IX2_PARAMETER_CHANGED
+      } = _constants.IX2EngineActionTypes;
+      var ixParameters = (state = {
+        /*mutable flat state*/
+      }, action) => {
+        switch (action.type) {
+          case IX2_RAW_DATA_IMPORTED: {
+            return action.payload.ixParameters || {
+              /*mutable flat state*/
+            };
+          }
+          case IX2_SESSION_STOPPED: {
+            return {
+              /*mutable flat state*/
+            };
+          }
+          case IX2_PARAMETER_CHANGED: {
+            const {
+              key,
+              value
+            } = action.payload;
+            state[key] = value;
+            return state;
+          }
+          default: {
+            return state;
+          }
+        }
+      };
+      exports.ixParameters = ixParameters;
+    }
+  });
+
+  // packages/systems/ix2/engine/reducers/IX2Reducer.js
+  var require_IX2Reducer = __commonJS({
+    "packages/systems/ix2/engine/reducers/IX2Reducer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = void 0;
+      var _redux = require_lib2();
+      var _IX2DataReducer = require_IX2DataReducer();
+      var _IX2RequestReducer = require_IX2RequestReducer();
+      var _IX2SessionReducer = require_IX2SessionReducer();
+      var _shared = require_shared2();
+      var _IX2InstancesReducer = require_IX2InstancesReducer();
+      var _IX2ParametersReducer = require_IX2ParametersReducer();
+      var {
+        ixElements
+      } = _shared.IX2ElementsReducer;
+      var _default = (0, _redux.combineReducers)({
+        ixData: _IX2DataReducer.ixData,
+        ixRequest: _IX2RequestReducer.ixRequest,
+        ixSession: _IX2SessionReducer.ixSession,
+        ixElements,
+        ixInstances: _IX2InstancesReducer.ixInstances,
+        ixParameters: _IX2ParametersReducer.ixParameters
+      });
+      exports.default = _default;
+    }
+  });
+
+  // node_modules/@babel/runtime/helpers/objectWithoutPropertiesLoose.js
+  var require_objectWithoutPropertiesLoose = __commonJS({
+    "node_modules/@babel/runtime/helpers/objectWithoutPropertiesLoose.js"(exports, module) {
+      function _objectWithoutPropertiesLoose(source, excluded) {
+        if (source == null)
+          return {};
+        var target = {};
+        var sourceKeys = Object.keys(source);
+        var key, i;
+        for (i = 0; i < sourceKeys.length; i++) {
+          key = sourceKeys[i];
+          if (excluded.indexOf(key) >= 0)
+            continue;
+          target[key] = source[key];
+        }
+        return target;
+      }
+      module.exports = _objectWithoutPropertiesLoose, module.exports.__esModule = true, module.exports["default"] = module.exports;
+    }
+  });
+
+  // node_modules/lodash/isString.js
+  var require_isString = __commonJS({
+    "node_modules/lodash/isString.js"(exports, module) {
+      var baseGetTag = require_baseGetTag2();
+      var isArray = require_isArray();
+      var isObjectLike = require_isObjectLike2();
+      var stringTag = "[object String]";
+      function isString(value) {
+        return typeof value == "string" || !isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag;
+      }
+      module.exports = isString;
+    }
+  });
+
+  // node_modules/lodash/_asciiSize.js
+  var require_asciiSize = __commonJS({
+    "node_modules/lodash/_asciiSize.js"(exports, module) {
+      var baseProperty = require_baseProperty();
+      var asciiSize = baseProperty("length");
+      module.exports = asciiSize;
+    }
+  });
+
+  // node_modules/lodash/_hasUnicode.js
+  var require_hasUnicode = __commonJS({
+    "node_modules/lodash/_hasUnicode.js"(exports, module) {
+      var rsAstralRange = "\\ud800-\\udfff";
+      var rsComboMarksRange = "\\u0300-\\u036f";
+      var reComboHalfMarksRange = "\\ufe20-\\ufe2f";
+      var rsComboSymbolsRange = "\\u20d0-\\u20ff";
+      var rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange;
+      var rsVarRange = "\\ufe0e\\ufe0f";
+      var rsZWJ = "\\u200d";
+      var reHasUnicode = RegExp("[" + rsZWJ + rsAstralRange + rsComboRange + rsVarRange + "]");
+      function hasUnicode(string) {
+        return reHasUnicode.test(string);
+      }
+      module.exports = hasUnicode;
+    }
+  });
+
+  // node_modules/lodash/_unicodeSize.js
+  var require_unicodeSize = __commonJS({
+    "node_modules/lodash/_unicodeSize.js"(exports, module) {
+      var rsAstralRange = "\\ud800-\\udfff";
+      var rsComboMarksRange = "\\u0300-\\u036f";
+      var reComboHalfMarksRange = "\\ufe20-\\ufe2f";
+      var rsComboSymbolsRange = "\\u20d0-\\u20ff";
+      var rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange;
+      var rsVarRange = "\\ufe0e\\ufe0f";
+      var rsAstral = "[" + rsAstralRange + "]";
+      var rsCombo = "[" + rsComboRange + "]";
+      var rsFitz = "\\ud83c[\\udffb-\\udfff]";
+      var rsModifier = "(?:" + rsCombo + "|" + rsFitz + ")";
+      var rsNonAstral = "[^" + rsAstralRange + "]";
+      var rsRegional = "(?:\\ud83c[\\udde6-\\uddff]){2}";
+      var rsSurrPair = "[\\ud800-\\udbff][\\udc00-\\udfff]";
+      var rsZWJ = "\\u200d";
+      var reOptMod = rsModifier + "?";
+      var rsOptVar = "[" + rsVarRange + "]?";
+      var rsOptJoin = "(?:" + rsZWJ + "(?:" + [rsNonAstral, rsRegional, rsSurrPair].join("|") + ")" + rsOptVar + reOptMod + ")*";
+      var rsSeq = rsOptVar + reOptMod + rsOptJoin;
+      var rsSymbol = "(?:" + [rsNonAstral + rsCombo + "?", rsCombo, rsRegional, rsSurrPair, rsAstral].join("|") + ")";
+      var reUnicode = RegExp(rsFitz + "(?=" + rsFitz + ")|" + rsSymbol + rsSeq, "g");
+      function unicodeSize(string) {
+        var result = reUnicode.lastIndex = 0;
+        while (reUnicode.test(string)) {
+          ++result;
+        }
+        return result;
+      }
+      module.exports = unicodeSize;
+    }
+  });
+
+  // node_modules/lodash/_stringSize.js
+  var require_stringSize = __commonJS({
+    "node_modules/lodash/_stringSize.js"(exports, module) {
+      var asciiSize = require_asciiSize();
+      var hasUnicode = require_hasUnicode();
+      var unicodeSize = require_unicodeSize();
+      function stringSize(string) {
+        return hasUnicode(string) ? unicodeSize(string) : asciiSize(string);
+      }
+      module.exports = stringSize;
+    }
+  });
+
+  // node_modules/lodash/size.js
+  var require_size = __commonJS({
+    "node_modules/lodash/size.js"(exports, module) {
+      var baseKeys = require_baseKeys();
+      var getTag = require_getTag();
+      var isArrayLike = require_isArrayLike();
+      var isString = require_isString();
+      var stringSize = require_stringSize();
+      var mapTag = "[object Map]";
+      var setTag = "[object Set]";
+      function size(collection) {
+        if (collection == null) {
+          return 0;
+        }
+        if (isArrayLike(collection)) {
+          return isString(collection) ? stringSize(collection) : collection.length;
+        }
+        var tag = getTag(collection);
+        if (tag == mapTag || tag == setTag) {
+          return collection.size;
+        }
+        return baseKeys(collection).length;
+      }
+      module.exports = size;
+    }
+  });
+
+  // node_modules/lodash/negate.js
+  var require_negate = __commonJS({
+    "node_modules/lodash/negate.js"(exports, module) {
+      var FUNC_ERROR_TEXT = "Expected a function";
+      function negate(predicate) {
+        if (typeof predicate != "function") {
+          throw new TypeError(FUNC_ERROR_TEXT);
+        }
+        return function() {
+          var args = arguments;
+          switch (args.length) {
+            case 0:
+              return !predicate.call(this);
+            case 1:
+              return !predicate.call(this, args[0]);
+            case 2:
+              return !predicate.call(this, args[0], args[1]);
+            case 3:
+              return !predicate.call(this, args[0], args[1], args[2]);
+          }
+          return !predicate.apply(this, args);
+        };
+      }
+      module.exports = negate;
+    }
+  });
+
+  // node_modules/lodash/_defineProperty.js
+  var require_defineProperty = __commonJS({
+    "node_modules/lodash/_defineProperty.js"(exports, module) {
+      var getNative = require_getNative();
+      var defineProperty = function() {
+        try {
+          var func = getNative(Object, "defineProperty");
+          func({}, "", {});
+          return func;
+        } catch (e) {
+        }
+      }();
+      module.exports = defineProperty;
+    }
+  });
+
+  // node_modules/lodash/_baseAssignValue.js
+  var require_baseAssignValue = __commonJS({
+    "node_modules/lodash/_baseAssignValue.js"(exports, module) {
+      var defineProperty = require_defineProperty();
+      function baseAssignValue(object, key, value) {
+        if (key == "__proto__" && defineProperty) {
+          defineProperty(object, key, {
+            "configurable": true,
+            "enumerable": true,
+            "value": value,
+            "writable": true
+          });
+        } else {
+          object[key] = value;
+        }
+      }
+      module.exports = baseAssignValue;
+    }
+  });
+
+  // node_modules/lodash/_assignValue.js
+  var require_assignValue = __commonJS({
+    "node_modules/lodash/_assignValue.js"(exports, module) {
+      var baseAssignValue = require_baseAssignValue();
+      var eq = require_eq();
+      var objectProto = Object.prototype;
+      var hasOwnProperty = objectProto.hasOwnProperty;
+      function assignValue(object, key, value) {
+        var objValue = object[key];
+        if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) || value === void 0 && !(key in object)) {
+          baseAssignValue(object, key, value);
+        }
+      }
+      module.exports = assignValue;
+    }
+  });
+
+  // node_modules/lodash/_baseSet.js
+  var require_baseSet = __commonJS({
+    "node_modules/lodash/_baseSet.js"(exports, module) {
+      var assignValue = require_assignValue();
+      var castPath = require_castPath();
+      var isIndex = require_isIndex();
+      var isObject = require_isObject();
+      var toKey = require_toKey();
+      function baseSet(object, path, value, customizer) {
+        if (!isObject(object)) {
+          return object;
+        }
+        path = castPath(path, object);
+        var index = -1, length = path.length, lastIndex = length - 1, nested = object;
+        while (nested != null && ++index < length) {
+          var key = toKey(path[index]), newValue = value;
+          if (key === "__proto__" || key === "constructor" || key === "prototype") {
+            return object;
+          }
+          if (index != lastIndex) {
+            var objValue = nested[key];
+            newValue = customizer ? customizer(objValue, key, nested) : void 0;
+            if (newValue === void 0) {
+              newValue = isObject(objValue) ? objValue : isIndex(path[index + 1]) ? [] : {};
+            }
+          }
+          assignValue(nested, key, newValue);
+          nested = nested[key];
+        }
+        return object;
+      }
+      module.exports = baseSet;
+    }
+  });
+
+  // node_modules/lodash/_basePickBy.js
+  var require_basePickBy = __commonJS({
+    "node_modules/lodash/_basePickBy.js"(exports, module) {
+      var baseGet = require_baseGet();
+      var baseSet = require_baseSet();
+      var castPath = require_castPath();
+      function basePickBy(object, paths, predicate) {
+        var index = -1, length = paths.length, result = {};
+        while (++index < length) {
+          var path = paths[index], value = baseGet(object, path);
+          if (predicate(value, path)) {
+            baseSet(result, castPath(path, object), value);
+          }
+        }
+        return result;
+      }
+      module.exports = basePickBy;
+    }
+  });
+
+  // node_modules/lodash/_getPrototype.js
+  var require_getPrototype2 = __commonJS({
+    "node_modules/lodash/_getPrototype.js"(exports, module) {
+      var overArg = require_overArg2();
+      var getPrototype = overArg(Object.getPrototypeOf, Object);
+      module.exports = getPrototype;
+    }
+  });
+
+  // node_modules/lodash/_getSymbolsIn.js
+  var require_getSymbolsIn = __commonJS({
+    "node_modules/lodash/_getSymbolsIn.js"(exports, module) {
+      var arrayPush = require_arrayPush();
+      var getPrototype = require_getPrototype2();
+      var getSymbols = require_getSymbols();
+      var stubArray = require_stubArray();
+      var nativeGetSymbols = Object.getOwnPropertySymbols;
+      var getSymbolsIn = !nativeGetSymbols ? stubArray : function(object) {
+        var result = [];
+        while (object) {
+          arrayPush(result, getSymbols(object));
+          object = getPrototype(object);
+        }
+        return result;
+      };
