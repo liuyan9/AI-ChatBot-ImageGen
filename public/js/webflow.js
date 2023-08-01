@@ -9277,3 +9277,466 @@
         }
         return result;
       };
+      module.exports = getSymbolsIn;
+    }
+  });
+
+  // node_modules/lodash/_nativeKeysIn.js
+  var require_nativeKeysIn = __commonJS({
+    "node_modules/lodash/_nativeKeysIn.js"(exports, module) {
+      function nativeKeysIn(object) {
+        var result = [];
+        if (object != null) {
+          for (var key in Object(object)) {
+            result.push(key);
+          }
+        }
+        return result;
+      }
+      module.exports = nativeKeysIn;
+    }
+  });
+
+  // node_modules/lodash/_baseKeysIn.js
+  var require_baseKeysIn = __commonJS({
+    "node_modules/lodash/_baseKeysIn.js"(exports, module) {
+      var isObject = require_isObject();
+      var isPrototype = require_isPrototype();
+      var nativeKeysIn = require_nativeKeysIn();
+      var objectProto = Object.prototype;
+      var hasOwnProperty = objectProto.hasOwnProperty;
+      function baseKeysIn(object) {
+        if (!isObject(object)) {
+          return nativeKeysIn(object);
+        }
+        var isProto = isPrototype(object), result = [];
+        for (var key in object) {
+          if (!(key == "constructor" && (isProto || !hasOwnProperty.call(object, key)))) {
+            result.push(key);
+          }
+        }
+        return result;
+      }
+      module.exports = baseKeysIn;
+    }
+  });
+
+  // node_modules/lodash/keysIn.js
+  var require_keysIn = __commonJS({
+    "node_modules/lodash/keysIn.js"(exports, module) {
+      var arrayLikeKeys = require_arrayLikeKeys();
+      var baseKeysIn = require_baseKeysIn();
+      var isArrayLike = require_isArrayLike();
+      function keysIn(object) {
+        return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
+      }
+      module.exports = keysIn;
+    }
+  });
+
+  // node_modules/lodash/_getAllKeysIn.js
+  var require_getAllKeysIn = __commonJS({
+    "node_modules/lodash/_getAllKeysIn.js"(exports, module) {
+      var baseGetAllKeys = require_baseGetAllKeys();
+      var getSymbolsIn = require_getSymbolsIn();
+      var keysIn = require_keysIn();
+      function getAllKeysIn(object) {
+        return baseGetAllKeys(object, keysIn, getSymbolsIn);
+      }
+      module.exports = getAllKeysIn;
+    }
+  });
+
+  // node_modules/lodash/pickBy.js
+  var require_pickBy = __commonJS({
+    "node_modules/lodash/pickBy.js"(exports, module) {
+      var arrayMap = require_arrayMap();
+      var baseIteratee = require_baseIteratee();
+      var basePickBy = require_basePickBy();
+      var getAllKeysIn = require_getAllKeysIn();
+      function pickBy(object, predicate) {
+        if (object == null) {
+          return {};
+        }
+        var props = arrayMap(getAllKeysIn(object), function(prop) {
+          return [prop];
+        });
+        predicate = baseIteratee(predicate);
+        return basePickBy(object, props, function(value, path) {
+          return predicate(value, path[0]);
+        });
+      }
+      module.exports = pickBy;
+    }
+  });
+
+  // node_modules/lodash/omitBy.js
+  var require_omitBy = __commonJS({
+    "node_modules/lodash/omitBy.js"(exports, module) {
+      var baseIteratee = require_baseIteratee();
+      var negate = require_negate();
+      var pickBy = require_pickBy();
+      function omitBy(object, predicate) {
+        return pickBy(object, negate(baseIteratee(predicate)));
+      }
+      module.exports = omitBy;
+    }
+  });
+
+  // node_modules/lodash/isEmpty.js
+  var require_isEmpty = __commonJS({
+    "node_modules/lodash/isEmpty.js"(exports, module) {
+      var baseKeys = require_baseKeys();
+      var getTag = require_getTag();
+      var isArguments = require_isArguments();
+      var isArray = require_isArray();
+      var isArrayLike = require_isArrayLike();
+      var isBuffer = require_isBuffer();
+      var isPrototype = require_isPrototype();
+      var isTypedArray = require_isTypedArray();
+      var mapTag = "[object Map]";
+      var setTag = "[object Set]";
+      var objectProto = Object.prototype;
+      var hasOwnProperty = objectProto.hasOwnProperty;
+      function isEmpty(value) {
+        if (value == null) {
+          return true;
+        }
+        if (isArrayLike(value) && (isArray(value) || typeof value == "string" || typeof value.splice == "function" || isBuffer(value) || isTypedArray(value) || isArguments(value))) {
+          return !value.length;
+        }
+        var tag = getTag(value);
+        if (tag == mapTag || tag == setTag) {
+          return !value.size;
+        }
+        if (isPrototype(value)) {
+          return !baseKeys(value).length;
+        }
+        for (var key in value) {
+          if (hasOwnProperty.call(value, key)) {
+            return false;
+          }
+        }
+        return true;
+      }
+      module.exports = isEmpty;
+    }
+  });
+
+  // node_modules/lodash/mapValues.js
+  var require_mapValues = __commonJS({
+    "node_modules/lodash/mapValues.js"(exports, module) {
+      var baseAssignValue = require_baseAssignValue();
+      var baseForOwn = require_baseForOwn();
+      var baseIteratee = require_baseIteratee();
+      function mapValues(object, iteratee) {
+        var result = {};
+        iteratee = baseIteratee(iteratee, 3);
+        baseForOwn(object, function(value, key, object2) {
+          baseAssignValue(result, key, iteratee(value, key, object2));
+        });
+        return result;
+      }
+      module.exports = mapValues;
+    }
+  });
+
+  // node_modules/lodash/_arrayEach.js
+  var require_arrayEach = __commonJS({
+    "node_modules/lodash/_arrayEach.js"(exports, module) {
+      function arrayEach(array, iteratee) {
+        var index = -1, length = array == null ? 0 : array.length;
+        while (++index < length) {
+          if (iteratee(array[index], index, array) === false) {
+            break;
+          }
+        }
+        return array;
+      }
+      module.exports = arrayEach;
+    }
+  });
+
+  // node_modules/lodash/_castFunction.js
+  var require_castFunction = __commonJS({
+    "node_modules/lodash/_castFunction.js"(exports, module) {
+      var identity = require_identity();
+      function castFunction(value) {
+        return typeof value == "function" ? value : identity;
+      }
+      module.exports = castFunction;
+    }
+  });
+
+  // node_modules/lodash/forEach.js
+  var require_forEach = __commonJS({
+    "node_modules/lodash/forEach.js"(exports, module) {
+      var arrayEach = require_arrayEach();
+      var baseEach = require_baseEach();
+      var castFunction = require_castFunction();
+      var isArray = require_isArray();
+      function forEach(collection, iteratee) {
+        var func = isArray(collection) ? arrayEach : baseEach;
+        return func(collection, castFunction(iteratee));
+      }
+      module.exports = forEach;
+    }
+  });
+
+  // node_modules/lodash/now.js
+  var require_now = __commonJS({
+    "node_modules/lodash/now.js"(exports, module) {
+      var root = require_root2();
+      var now = function() {
+        return root.Date.now();
+      };
+      module.exports = now;
+    }
+  });
+
+  // node_modules/lodash/debounce.js
+  var require_debounce = __commonJS({
+    "node_modules/lodash/debounce.js"(exports, module) {
+      var isObject = require_isObject();
+      var now = require_now();
+      var toNumber = require_toNumber();
+      var FUNC_ERROR_TEXT = "Expected a function";
+      var nativeMax = Math.max;
+      var nativeMin = Math.min;
+      function debounce(func, wait, options) {
+        var lastArgs, lastThis, maxWait, result, timerId, lastCallTime, lastInvokeTime = 0, leading = false, maxing = false, trailing = true;
+        if (typeof func != "function") {
+          throw new TypeError(FUNC_ERROR_TEXT);
+        }
+        wait = toNumber(wait) || 0;
+        if (isObject(options)) {
+          leading = !!options.leading;
+          maxing = "maxWait" in options;
+          maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
+          trailing = "trailing" in options ? !!options.trailing : trailing;
+        }
+        function invokeFunc(time) {
+          var args = lastArgs, thisArg = lastThis;
+          lastArgs = lastThis = void 0;
+          lastInvokeTime = time;
+          result = func.apply(thisArg, args);
+          return result;
+        }
+        function leadingEdge(time) {
+          lastInvokeTime = time;
+          timerId = setTimeout(timerExpired, wait);
+          return leading ? invokeFunc(time) : result;
+        }
+        function remainingWait(time) {
+          var timeSinceLastCall = time - lastCallTime, timeSinceLastInvoke = time - lastInvokeTime, timeWaiting = wait - timeSinceLastCall;
+          return maxing ? nativeMin(timeWaiting, maxWait - timeSinceLastInvoke) : timeWaiting;
+        }
+        function shouldInvoke(time) {
+          var timeSinceLastCall = time - lastCallTime, timeSinceLastInvoke = time - lastInvokeTime;
+          return lastCallTime === void 0 || timeSinceLastCall >= wait || timeSinceLastCall < 0 || maxing && timeSinceLastInvoke >= maxWait;
+        }
+        function timerExpired() {
+          var time = now();
+          if (shouldInvoke(time)) {
+            return trailingEdge(time);
+          }
+          timerId = setTimeout(timerExpired, remainingWait(time));
+        }
+        function trailingEdge(time) {
+          timerId = void 0;
+          if (trailing && lastArgs) {
+            return invokeFunc(time);
+          }
+          lastArgs = lastThis = void 0;
+          return result;
+        }
+        function cancel() {
+          if (timerId !== void 0) {
+            clearTimeout(timerId);
+          }
+          lastInvokeTime = 0;
+          lastArgs = lastCallTime = lastThis = timerId = void 0;
+        }
+        function flush() {
+          return timerId === void 0 ? result : trailingEdge(now());
+        }
+        function debounced() {
+          var time = now(), isInvoking = shouldInvoke(time);
+          lastArgs = arguments;
+          lastThis = this;
+          lastCallTime = time;
+          if (isInvoking) {
+            if (timerId === void 0) {
+              return leadingEdge(lastCallTime);
+            }
+            if (maxing) {
+              clearTimeout(timerId);
+              timerId = setTimeout(timerExpired, wait);
+              return invokeFunc(lastCallTime);
+            }
+          }
+          if (timerId === void 0) {
+            timerId = setTimeout(timerExpired, wait);
+          }
+          return result;
+        }
+        debounced.cancel = cancel;
+        debounced.flush = flush;
+        return debounced;
+      }
+      module.exports = debounce;
+    }
+  });
+
+  // node_modules/lodash/throttle.js
+  var require_throttle = __commonJS({
+    "node_modules/lodash/throttle.js"(exports, module) {
+      var debounce = require_debounce();
+      var isObject = require_isObject();
+      var FUNC_ERROR_TEXT = "Expected a function";
+      function throttle(func, wait, options) {
+        var leading = true, trailing = true;
+        if (typeof func != "function") {
+          throw new TypeError(FUNC_ERROR_TEXT);
+        }
+        if (isObject(options)) {
+          leading = "leading" in options ? !!options.leading : leading;
+          trailing = "trailing" in options ? !!options.trailing : trailing;
+        }
+        return debounce(func, wait, {
+          "leading": leading,
+          "maxWait": wait,
+          "trailing": trailing
+        });
+      }
+      module.exports = throttle;
+    }
+  });
+
+  // packages/systems/ix2/engine/actions/IX2EngineActions.js
+  var require_IX2EngineActions = __commonJS({
+    "packages/systems/ix2/engine/actions/IX2EngineActions.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.viewportWidthChanged = exports.testFrameRendered = exports.stopRequested = exports.sessionStopped = exports.sessionStarted = exports.sessionInitialized = exports.rawDataImported = exports.previewRequested = exports.playbackRequested = exports.parameterChanged = exports.mediaQueriesDefined = exports.instanceStarted = exports.instanceRemoved = exports.instanceAdded = exports.eventStateChanged = exports.eventListenerAdded = exports.elementStateChanged = exports.clearRequested = exports.animationFrameChanged = exports.actionListPlaybackChanged = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _constants = require_constants();
+      var _shared = require_shared2();
+      var {
+        IX2_RAW_DATA_IMPORTED,
+        IX2_SESSION_INITIALIZED,
+        IX2_SESSION_STARTED,
+        IX2_SESSION_STOPPED,
+        IX2_PREVIEW_REQUESTED,
+        IX2_PLAYBACK_REQUESTED,
+        IX2_STOP_REQUESTED,
+        IX2_CLEAR_REQUESTED,
+        IX2_EVENT_LISTENER_ADDED,
+        IX2_TEST_FRAME_RENDERED,
+        IX2_EVENT_STATE_CHANGED,
+        IX2_ANIMATION_FRAME_CHANGED,
+        IX2_PARAMETER_CHANGED,
+        IX2_INSTANCE_ADDED,
+        IX2_INSTANCE_STARTED,
+        IX2_INSTANCE_REMOVED,
+        IX2_ELEMENT_STATE_CHANGED,
+        IX2_ACTION_LIST_PLAYBACK_CHANGED,
+        IX2_VIEWPORT_WIDTH_CHANGED,
+        IX2_MEDIA_QUERIES_DEFINED
+      } = _constants.IX2EngineActionTypes;
+      var {
+        reifyState
+      } = _shared.IX2VanillaUtils;
+      var rawDataImported = (rawData) => ({
+        type: IX2_RAW_DATA_IMPORTED,
+        payload: (0, _extends2.default)({}, reifyState(rawData))
+      });
+      exports.rawDataImported = rawDataImported;
+      var sessionInitialized = ({
+        hasBoundaryNodes,
+        reducedMotion
+      }) => ({
+        type: IX2_SESSION_INITIALIZED,
+        payload: {
+          hasBoundaryNodes,
+          reducedMotion
+        }
+      });
+      exports.sessionInitialized = sessionInitialized;
+      var sessionStarted = () => ({
+        type: IX2_SESSION_STARTED
+      });
+      exports.sessionStarted = sessionStarted;
+      var sessionStopped = () => ({
+        type: IX2_SESSION_STOPPED
+      });
+      exports.sessionStopped = sessionStopped;
+      var previewRequested = ({
+        rawData,
+        defer
+      }) => ({
+        type: IX2_PREVIEW_REQUESTED,
+        payload: {
+          defer,
+          rawData
+        }
+      });
+      exports.previewRequested = previewRequested;
+      var playbackRequested = ({
+        actionTypeId = _constants.ActionTypeConsts.GENERAL_START_ACTION,
+        actionListId,
+        actionItemId,
+        eventId,
+        allowEvents,
+        immediate,
+        testManual,
+        verbose,
+        rawData
+      }) => ({
+        type: IX2_PLAYBACK_REQUESTED,
+        payload: {
+          actionTypeId,
+          actionListId,
+          actionItemId,
+          testManual,
+          eventId,
+          allowEvents,
+          immediate,
+          verbose,
+          rawData
+        }
+      });
+      exports.playbackRequested = playbackRequested;
+      var stopRequested = (actionListId) => ({
+        type: IX2_STOP_REQUESTED,
+        payload: {
+          actionListId
+        }
+      });
+      exports.stopRequested = stopRequested;
+      var clearRequested = () => ({
+        type: IX2_CLEAR_REQUESTED
+      });
+      exports.clearRequested = clearRequested;
+      var eventListenerAdded = (target, listenerParams) => ({
+        type: IX2_EVENT_LISTENER_ADDED,
+        payload: {
+          target,
+          listenerParams
+        }
+      });
+      exports.eventListenerAdded = eventListenerAdded;
+      var testFrameRendered = (step = 1) => ({
+        type: IX2_TEST_FRAME_RENDERED,
+        payload: {
+          step
+        }
+      });
+      exports.testFrameRendered = testFrameRendered;
+      var eventStateChanged = (stateKey, newState) => ({
+        type: IX2_EVENT_STATE_CHANGED,
+        payload: {
+          stateKey,
