@@ -9740,3 +9740,455 @@
         type: IX2_EVENT_STATE_CHANGED,
         payload: {
           stateKey,
+          newState
+        }
+      });
+      exports.eventStateChanged = eventStateChanged;
+      var animationFrameChanged = (now, parameters) => ({
+        type: IX2_ANIMATION_FRAME_CHANGED,
+        payload: {
+          now,
+          parameters
+        }
+      });
+      exports.animationFrameChanged = animationFrameChanged;
+      var parameterChanged = (key, value) => ({
+        type: IX2_PARAMETER_CHANGED,
+        payload: {
+          key,
+          value
+        }
+      });
+      exports.parameterChanged = parameterChanged;
+      var instanceAdded = (options) => ({
+        type: IX2_INSTANCE_ADDED,
+        payload: (0, _extends2.default)({}, options)
+      });
+      exports.instanceAdded = instanceAdded;
+      var instanceStarted = (instanceId, time) => ({
+        type: IX2_INSTANCE_STARTED,
+        payload: {
+          instanceId,
+          time
+        }
+      });
+      exports.instanceStarted = instanceStarted;
+      var instanceRemoved = (instanceId) => ({
+        type: IX2_INSTANCE_REMOVED,
+        payload: {
+          instanceId
+        }
+      });
+      exports.instanceRemoved = instanceRemoved;
+      var elementStateChanged = (elementId, actionTypeId, current, actionItem) => ({
+        type: IX2_ELEMENT_STATE_CHANGED,
+        payload: {
+          elementId,
+          actionTypeId,
+          current,
+          actionItem
+        }
+      });
+      exports.elementStateChanged = elementStateChanged;
+      var actionListPlaybackChanged = ({
+        actionListId,
+        isPlaying
+      }) => ({
+        type: IX2_ACTION_LIST_PLAYBACK_CHANGED,
+        payload: {
+          actionListId,
+          isPlaying
+        }
+      });
+      exports.actionListPlaybackChanged = actionListPlaybackChanged;
+      var viewportWidthChanged = ({
+        width,
+        mediaQueries
+      }) => ({
+        type: IX2_VIEWPORT_WIDTH_CHANGED,
+        payload: {
+          width,
+          mediaQueries
+        }
+      });
+      exports.viewportWidthChanged = viewportWidthChanged;
+      var mediaQueriesDefined = () => ({
+        type: IX2_MEDIA_QUERIES_DEFINED
+      });
+      exports.mediaQueriesDefined = mediaQueriesDefined;
+    }
+  });
+
+  // packages/systems/ix2/engine/logic/IX2BrowserApi.js
+  var require_IX2BrowserApi = __commonJS({
+    "packages/systems/ix2/engine/logic/IX2BrowserApi.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.elementContains = elementContains;
+      exports.getChildElements = getChildElements;
+      exports.getClosestElement = void 0;
+      exports.getProperty = getProperty;
+      exports.getQuerySelector = getQuerySelector;
+      exports.getRefType = getRefType;
+      exports.getSiblingElements = getSiblingElements;
+      exports.getStyle = getStyle;
+      exports.getValidDocument = getValidDocument;
+      exports.isSiblingNode = isSiblingNode;
+      exports.matchSelector = matchSelector;
+      exports.queryDocument = queryDocument;
+      exports.setStyle = setStyle;
+      var _shared = require_shared2();
+      var _constants = require_constants();
+      var {
+        ELEMENT_MATCHES
+      } = _shared.IX2BrowserSupport;
+      var {
+        IX2_ID_DELIMITER,
+        HTML_ELEMENT,
+        PLAIN_OBJECT,
+        WF_PAGE
+      } = _constants.IX2EngineConstants;
+      function setStyle(element, prop, value) {
+        element.style[prop] = value;
+      }
+      function getStyle(element, prop) {
+        return element.style[prop];
+      }
+      function getProperty(element, prop) {
+        return element[prop];
+      }
+      function matchSelector(selector) {
+        return (element) => element[ELEMENT_MATCHES](selector);
+      }
+      function getQuerySelector({
+        id,
+        selector
+      }) {
+        if (id) {
+          let nodeId = id;
+          if (id.indexOf(IX2_ID_DELIMITER) !== -1) {
+            const pair = id.split(IX2_ID_DELIMITER);
+            const pageId = pair[0];
+            nodeId = pair[1];
+            if (pageId !== document.documentElement.getAttribute(WF_PAGE)) {
+              return null;
+            }
+          }
+          return `[data-w-id="${nodeId}"], [data-w-id^="${nodeId}_instance"]`;
+        }
+        return selector;
+      }
+      function getValidDocument(pageId) {
+        if (pageId == null || // $FlowIgnore — if documentElement is null crash
+        pageId === document.documentElement.getAttribute(WF_PAGE)) {
+          return document;
+        }
+        return null;
+      }
+      function queryDocument(baseSelector, descendantSelector) {
+        return Array.prototype.slice.call(document.querySelectorAll(descendantSelector ? baseSelector + " " + descendantSelector : baseSelector));
+      }
+      function elementContains(parent, child) {
+        return parent.contains(child);
+      }
+      function isSiblingNode(a, b) {
+        return a !== b && a.parentNode === b.parentNode;
+      }
+      function getChildElements(sourceElements) {
+        const childElements = [];
+        for (let i = 0, {
+          length
+        } = sourceElements || []; i < length; i++) {
+          const {
+            children
+          } = sourceElements[i];
+          const {
+            length: childCount
+          } = children;
+          if (!childCount) {
+            continue;
+          }
+          for (let j = 0; j < childCount; j++) {
+            childElements.push(children[j]);
+          }
+        }
+        return childElements;
+      }
+      function getSiblingElements(sourceElements = []) {
+        const elements = [];
+        const parentCache = [];
+        for (let i = 0, {
+          length
+        } = sourceElements; i < length; i++) {
+          const {
+            parentNode
+          } = sourceElements[i];
+          if (!parentNode || !parentNode.children || !parentNode.children.length) {
+            continue;
+          }
+          if (parentCache.indexOf(parentNode) !== -1) {
+            continue;
+          }
+          parentCache.push(parentNode);
+          let el = parentNode.firstElementChild;
+          while (el != null) {
+            if (sourceElements.indexOf(el) === -1) {
+              elements.push(el);
+            }
+            el = el.nextElementSibling;
+          }
+        }
+        return elements;
+      }
+      var getClosestElement = Element.prototype.closest ? (element, selector) => {
+        if (!document.documentElement.contains(element)) {
+          return null;
+        }
+        return element.closest(selector);
+      } : (element, selector) => {
+        if (!document.documentElement.contains(element)) {
+          return null;
+        }
+        let el = element;
+        do {
+          if (el[ELEMENT_MATCHES] && el[ELEMENT_MATCHES](selector)) {
+            return el;
+          }
+          el = el.parentNode;
+        } while (el != null);
+        return null;
+      };
+      exports.getClosestElement = getClosestElement;
+      function getRefType(ref) {
+        if (ref != null && typeof ref == "object") {
+          return ref instanceof Element ? HTML_ELEMENT : PLAIN_OBJECT;
+        }
+        return null;
+      }
+    }
+  });
+
+  // node_modules/lodash/_baseCreate.js
+  var require_baseCreate = __commonJS({
+    "node_modules/lodash/_baseCreate.js"(exports, module) {
+      var isObject = require_isObject();
+      var objectCreate = Object.create;
+      var baseCreate = function() {
+        function object() {
+        }
+        return function(proto) {
+          if (!isObject(proto)) {
+            return {};
+          }
+          if (objectCreate) {
+            return objectCreate(proto);
+          }
+          object.prototype = proto;
+          var result = new object();
+          object.prototype = void 0;
+          return result;
+        };
+      }();
+      module.exports = baseCreate;
+    }
+  });
+
+  // node_modules/lodash/_baseLodash.js
+  var require_baseLodash = __commonJS({
+    "node_modules/lodash/_baseLodash.js"(exports, module) {
+      function baseLodash() {
+      }
+      module.exports = baseLodash;
+    }
+  });
+
+  // node_modules/lodash/_LodashWrapper.js
+  var require_LodashWrapper = __commonJS({
+    "node_modules/lodash/_LodashWrapper.js"(exports, module) {
+      var baseCreate = require_baseCreate();
+      var baseLodash = require_baseLodash();
+      function LodashWrapper(value, chainAll) {
+        this.__wrapped__ = value;
+        this.__actions__ = [];
+        this.__chain__ = !!chainAll;
+        this.__index__ = 0;
+        this.__values__ = void 0;
+      }
+      LodashWrapper.prototype = baseCreate(baseLodash.prototype);
+      LodashWrapper.prototype.constructor = LodashWrapper;
+      module.exports = LodashWrapper;
+    }
+  });
+
+  // node_modules/lodash/_isFlattenable.js
+  var require_isFlattenable = __commonJS({
+    "node_modules/lodash/_isFlattenable.js"(exports, module) {
+      var Symbol2 = require_Symbol2();
+      var isArguments = require_isArguments();
+      var isArray = require_isArray();
+      var spreadableSymbol = Symbol2 ? Symbol2.isConcatSpreadable : void 0;
+      function isFlattenable(value) {
+        return isArray(value) || isArguments(value) || !!(spreadableSymbol && value && value[spreadableSymbol]);
+      }
+      module.exports = isFlattenable;
+    }
+  });
+
+  // node_modules/lodash/_baseFlatten.js
+  var require_baseFlatten = __commonJS({
+    "node_modules/lodash/_baseFlatten.js"(exports, module) {
+      var arrayPush = require_arrayPush();
+      var isFlattenable = require_isFlattenable();
+      function baseFlatten(array, depth, predicate, isStrict, result) {
+        var index = -1, length = array.length;
+        predicate || (predicate = isFlattenable);
+        result || (result = []);
+        while (++index < length) {
+          var value = array[index];
+          if (depth > 0 && predicate(value)) {
+            if (depth > 1) {
+              baseFlatten(value, depth - 1, predicate, isStrict, result);
+            } else {
+              arrayPush(result, value);
+            }
+          } else if (!isStrict) {
+            result[result.length] = value;
+          }
+        }
+        return result;
+      }
+      module.exports = baseFlatten;
+    }
+  });
+
+  // node_modules/lodash/flatten.js
+  var require_flatten = __commonJS({
+    "node_modules/lodash/flatten.js"(exports, module) {
+      var baseFlatten = require_baseFlatten();
+      function flatten(array) {
+        var length = array == null ? 0 : array.length;
+        return length ? baseFlatten(array, 1) : [];
+      }
+      module.exports = flatten;
+    }
+  });
+
+  // node_modules/lodash/_apply.js
+  var require_apply = __commonJS({
+    "node_modules/lodash/_apply.js"(exports, module) {
+      function apply(func, thisArg, args) {
+        switch (args.length) {
+          case 0:
+            return func.call(thisArg);
+          case 1:
+            return func.call(thisArg, args[0]);
+          case 2:
+            return func.call(thisArg, args[0], args[1]);
+          case 3:
+            return func.call(thisArg, args[0], args[1], args[2]);
+        }
+        return func.apply(thisArg, args);
+      }
+      module.exports = apply;
+    }
+  });
+
+  // node_modules/lodash/_overRest.js
+  var require_overRest = __commonJS({
+    "node_modules/lodash/_overRest.js"(exports, module) {
+      var apply = require_apply();
+      var nativeMax = Math.max;
+      function overRest(func, start, transform) {
+        start = nativeMax(start === void 0 ? func.length - 1 : start, 0);
+        return function() {
+          var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array(length);
+          while (++index < length) {
+            array[index] = args[start + index];
+          }
+          index = -1;
+          var otherArgs = Array(start + 1);
+          while (++index < start) {
+            otherArgs[index] = args[index];
+          }
+          otherArgs[start] = transform(array);
+          return apply(func, this, otherArgs);
+        };
+      }
+      module.exports = overRest;
+    }
+  });
+
+  // node_modules/lodash/constant.js
+  var require_constant = __commonJS({
+    "node_modules/lodash/constant.js"(exports, module) {
+      function constant(value) {
+        return function() {
+          return value;
+        };
+      }
+      module.exports = constant;
+    }
+  });
+
+  // node_modules/lodash/_baseSetToString.js
+  var require_baseSetToString = __commonJS({
+    "node_modules/lodash/_baseSetToString.js"(exports, module) {
+      var constant = require_constant();
+      var defineProperty = require_defineProperty();
+      var identity = require_identity();
+      var baseSetToString = !defineProperty ? identity : function(func, string) {
+        return defineProperty(func, "toString", {
+          "configurable": true,
+          "enumerable": false,
+          "value": constant(string),
+          "writable": true
+        });
+      };
+      module.exports = baseSetToString;
+    }
+  });
+
+  // node_modules/lodash/_shortOut.js
+  var require_shortOut = __commonJS({
+    "node_modules/lodash/_shortOut.js"(exports, module) {
+      var HOT_COUNT = 800;
+      var HOT_SPAN = 16;
+      var nativeNow = Date.now;
+      function shortOut(func) {
+        var count = 0, lastCalled = 0;
+        return function() {
+          var stamp = nativeNow(), remaining = HOT_SPAN - (stamp - lastCalled);
+          lastCalled = stamp;
+          if (remaining > 0) {
+            if (++count >= HOT_COUNT) {
+              return arguments[0];
+            }
+          } else {
+            count = 0;
+          }
+          return func.apply(void 0, arguments);
+        };
+      }
+      module.exports = shortOut;
+    }
+  });
+
+  // node_modules/lodash/_setToString.js
+  var require_setToString = __commonJS({
+    "node_modules/lodash/_setToString.js"(exports, module) {
+      var baseSetToString = require_baseSetToString();
+      var shortOut = require_shortOut();
+      var setToString = shortOut(baseSetToString);
+      module.exports = setToString;
+    }
+  });
+
+  // node_modules/lodash/_flatRest.js
+  var require_flatRest = __commonJS({
+    "node_modules/lodash/_flatRest.js"(exports, module) {
+      var flatten = require_flatten();
+      var overRest = require_overRest();
+      var setToString = require_setToString();
+      function flatRest(func) {
