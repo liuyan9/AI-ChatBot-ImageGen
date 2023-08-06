@@ -11128,3 +11128,466 @@
       exports.startActionGroup = startActionGroup;
       exports.startEngine = startEngine;
       exports.stopActionGroup = stopActionGroup;
+      exports.stopAllActionGroups = stopAllActionGroups;
+      exports.stopEngine = stopEngine;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require_objectWithoutPropertiesLoose());
+      var _find = _interopRequireDefault(require_find());
+      var _get = _interopRequireDefault(require_get());
+      var _size = _interopRequireDefault(require_size());
+      var _omitBy = _interopRequireDefault(require_omitBy());
+      var _isEmpty = _interopRequireDefault(require_isEmpty());
+      var _mapValues = _interopRequireDefault(require_mapValues());
+      var _forEach = _interopRequireDefault(require_forEach());
+      var _throttle = _interopRequireDefault(require_throttle());
+      var _constants = require_constants();
+      var _shared = require_shared2();
+      var _IX2EngineActions = require_IX2EngineActions();
+      var elementApi = _interopRequireWildcard(require_IX2BrowserApi());
+      var _IX2VanillaEvents = _interopRequireDefault(require_IX2VanillaEvents());
+      var _excluded = ["store", "computedStyle"];
+      var QuickEffectsIdList = Object.keys(_constants.QuickEffectIds);
+      var isQuickEffect = (actionTypeId) => QuickEffectsIdList.includes(actionTypeId);
+      var {
+        COLON_DELIMITER,
+        BOUNDARY_SELECTOR,
+        HTML_ELEMENT,
+        RENDER_GENERAL,
+        W_MOD_IX
+      } = _constants.IX2EngineConstants;
+      var {
+        getAffectedElements,
+        getElementId,
+        getDestinationValues,
+        observeStore,
+        getInstanceId,
+        renderHTMLElement,
+        clearAllStyles,
+        getMaxDurationItemIndex,
+        getComputedStyle,
+        getInstanceOrigin,
+        reduceListToGroup,
+        shouldNamespaceEventParameter,
+        getNamespacedParameterId,
+        shouldAllowMediaQuery,
+        cleanupHTMLElement,
+        stringifyTarget,
+        mediaQueriesEqual,
+        shallowEqual
+      } = _shared.IX2VanillaUtils;
+      var {
+        isPluginType,
+        createPluginInstance,
+        getPluginDuration
+      } = _shared.IX2VanillaPlugins;
+      var ua = navigator.userAgent;
+      var IS_MOBILE_SAFARI = ua.match(/iPad/i) || ua.match(/iPhone/);
+      var THROTTLED_EVENT_WAIT = 12;
+      function observeRequests(store) {
+        observeStore({
+          store,
+          select: ({
+            ixRequest
+          }) => ixRequest.preview,
+          onChange: handlePreviewRequest
+        });
+        observeStore({
+          store,
+          select: ({
+            ixRequest
+          }) => ixRequest.playback,
+          onChange: handlePlaybackRequest
+        });
+        observeStore({
+          store,
+          select: ({
+            ixRequest
+          }) => ixRequest.stop,
+          onChange: handleStopRequest
+        });
+        observeStore({
+          store,
+          select: ({
+            ixRequest
+          }) => ixRequest.clear,
+          onChange: handleClearRequest
+        });
+      }
+      function observeMediaQueryChange(store) {
+        observeStore({
+          store,
+          select: ({
+            ixSession
+          }) => ixSession.mediaQueryKey,
+          onChange: () => {
+            stopEngine(store);
+            clearAllStyles({
+              store,
+              elementApi
+            });
+            startEngine({
+              store,
+              allowEvents: true
+            });
+            dispatchPageUpdateEvent();
+          }
+        });
+      }
+      function observeOneRenderTick(store, onTick) {
+        const unsubscribe = observeStore({
+          store,
+          select: ({
+            ixSession
+          }) => ixSession.tick,
+          onChange: (tick) => {
+            onTick(tick);
+            unsubscribe();
+          }
+        });
+      }
+      function handlePreviewRequest({
+        rawData,
+        defer
+      }, store) {
+        const start = () => {
+          startEngine({
+            store,
+            rawData,
+            allowEvents: true
+          });
+          dispatchPageUpdateEvent();
+        };
+        defer ? setTimeout(start, 0) : start();
+      }
+      function dispatchPageUpdateEvent() {
+        document.dispatchEvent(new CustomEvent("IX2_PAGE_UPDATE"));
+      }
+      function handlePlaybackRequest(playback, store) {
+        const {
+          actionTypeId,
+          actionListId,
+          actionItemId,
+          eventId,
+          allowEvents,
+          immediate,
+          testManual,
+          verbose = true
+        } = playback;
+        let {
+          rawData
+        } = playback;
+        if (actionListId && actionItemId && rawData && immediate) {
+          const actionList = rawData.actionLists[actionListId];
+          if (actionList) {
+            rawData = reduceListToGroup({
+              actionList,
+              actionItemId,
+              rawData
+            });
+          }
+        }
+        startEngine({
+          store,
+          rawData,
+          allowEvents,
+          testManual
+        });
+        if (actionListId && actionTypeId === _constants.ActionTypeConsts.GENERAL_START_ACTION || isQuickEffect(actionTypeId)) {
+          stopActionGroup({
+            store,
+            actionListId
+          });
+          renderInitialGroup({
+            store,
+            actionListId,
+            eventId
+          });
+          const started = startActionGroup({
+            store,
+            eventId,
+            actionListId,
+            immediate,
+            verbose
+          });
+          if (verbose && started) {
+            store.dispatch((0, _IX2EngineActions.actionListPlaybackChanged)({
+              actionListId,
+              isPlaying: !immediate
+            }));
+          }
+        }
+      }
+      function handleStopRequest({
+        actionListId
+      }, store) {
+        if (actionListId) {
+          stopActionGroup({
+            store,
+            actionListId
+          });
+        } else {
+          stopAllActionGroups({
+            store
+          });
+        }
+        stopEngine(store);
+      }
+      function handleClearRequest(state, store) {
+        stopEngine(store);
+        clearAllStyles({
+          store,
+          elementApi
+        });
+      }
+      function startEngine({
+        store,
+        rawData,
+        allowEvents,
+        testManual
+      }) {
+        const {
+          ixSession
+        } = store.getState();
+        if (rawData) {
+          store.dispatch((0, _IX2EngineActions.rawDataImported)(rawData));
+        }
+        if (!ixSession.active) {
+          store.dispatch((0, _IX2EngineActions.sessionInitialized)({
+            hasBoundaryNodes: Boolean(document.querySelector(BOUNDARY_SELECTOR)),
+            reducedMotion: (
+              // $FlowFixMe - Remove this attribute on beta launch
+              document.body.hasAttribute("data-wf-ix-vacation") && window.matchMedia("(prefers-reduced-motion)").matches
+            )
+          }));
+          if (allowEvents) {
+            bindEvents(store);
+            addDocumentClass();
+            if (store.getState().ixSession.hasDefinedMediaQueries) {
+              observeMediaQueryChange(store);
+            }
+          }
+          store.dispatch((0, _IX2EngineActions.sessionStarted)());
+          startRenderLoop(store, testManual);
+        }
+      }
+      function addDocumentClass() {
+        const {
+          documentElement
+        } = document;
+        if (documentElement.className.indexOf(W_MOD_IX) === -1) {
+          documentElement.className += ` ${W_MOD_IX}`;
+        }
+      }
+      function startRenderLoop(store, testManual) {
+        const handleFrame = (now) => {
+          const {
+            ixSession,
+            ixParameters
+          } = store.getState();
+          if (ixSession.active) {
+            store.dispatch((0, _IX2EngineActions.animationFrameChanged)(now, ixParameters));
+            if (testManual) {
+              observeOneRenderTick(store, handleFrame);
+            } else {
+              requestAnimationFrame(handleFrame);
+            }
+          }
+        };
+        handleFrame(window.performance.now());
+      }
+      function stopEngine(store) {
+        const {
+          ixSession
+        } = store.getState();
+        if (ixSession.active) {
+          const {
+            eventListeners
+          } = ixSession;
+          eventListeners.forEach(clearEventListener);
+          store.dispatch((0, _IX2EngineActions.sessionStopped)());
+        }
+      }
+      function clearEventListener({
+        target,
+        listenerParams
+      }) {
+        target.removeEventListener.apply(target, listenerParams);
+      }
+      function createGroupInstances({
+        store,
+        eventStateKey,
+        eventTarget,
+        eventId,
+        eventConfig,
+        actionListId,
+        parameterGroup,
+        smoothing,
+        restingValue
+      }) {
+        const {
+          ixData,
+          ixSession
+        } = store.getState();
+        const {
+          events
+        } = ixData;
+        const event = events[eventId];
+        const {
+          eventTypeId
+        } = event;
+        const targetCache = {};
+        const instanceActionGroups = {};
+        const instanceConfigs = [];
+        const {
+          continuousActionGroups
+        } = parameterGroup;
+        let {
+          id: parameterId
+        } = parameterGroup;
+        if (shouldNamespaceEventParameter(eventTypeId, eventConfig)) {
+          parameterId = getNamespacedParameterId(eventStateKey, parameterId);
+        }
+        const eventElementRoot = ixSession.hasBoundaryNodes && eventTarget ? elementApi.getClosestElement(eventTarget, BOUNDARY_SELECTOR) : null;
+        continuousActionGroups.forEach((actionGroup) => {
+          const {
+            keyframe,
+            actionItems
+          } = actionGroup;
+          actionItems.forEach((actionItem) => {
+            const {
+              actionTypeId
+            } = actionItem;
+            const {
+              target
+            } = actionItem.config;
+            if (!target) {
+              return;
+            }
+            const elementRoot = target.boundaryMode ? eventElementRoot : null;
+            const key = stringifyTarget(target) + COLON_DELIMITER + actionTypeId;
+            instanceActionGroups[key] = appendActionItem(instanceActionGroups[key], keyframe, actionItem);
+            if (!targetCache[key]) {
+              targetCache[key] = true;
+              const {
+                config
+              } = actionItem;
+              getAffectedElements({
+                config,
+                event,
+                eventTarget,
+                elementRoot,
+                elementApi
+              }).forEach((element) => {
+                instanceConfigs.push({
+                  element,
+                  key
+                });
+              });
+            }
+          });
+        });
+        instanceConfigs.forEach(({
+          element,
+          key
+        }) => {
+          const actionGroups = instanceActionGroups[key];
+          const actionItem = (0, _get.default)(actionGroups, `[0].actionItems[0]`, {});
+          const {
+            actionTypeId
+          } = actionItem;
+          const pluginInstance = isPluginType(actionTypeId) ? (
+            // $FlowFixMe
+            createPluginInstance(actionTypeId)(element, actionItem)
+          ) : null;
+          const destination = getDestinationValues(
+            {
+              element,
+              actionItem,
+              elementApi
+            },
+            // $FlowFixMe
+            pluginInstance
+          );
+          createInstance({
+            store,
+            element,
+            eventId,
+            actionListId,
+            actionItem,
+            destination,
+            continuous: true,
+            parameterId,
+            actionGroups,
+            smoothing,
+            restingValue,
+            pluginInstance
+          });
+        });
+      }
+      function appendActionItem(actionGroups = [], keyframe, actionItem) {
+        const newActionGroups = [...actionGroups];
+        let groupIndex;
+        newActionGroups.some((group, index) => {
+          if (group.keyframe === keyframe) {
+            groupIndex = index;
+            return true;
+          }
+          return false;
+        });
+        if (groupIndex == null) {
+          groupIndex = newActionGroups.length;
+          newActionGroups.push({
+            keyframe,
+            actionItems: []
+          });
+        }
+        newActionGroups[groupIndex].actionItems.push(actionItem);
+        return newActionGroups;
+      }
+      function bindEvents(store) {
+        const {
+          ixData
+        } = store.getState();
+        const {
+          eventTypeMap
+        } = ixData;
+        updateViewportWidth(store);
+        (0, _forEach.default)(eventTypeMap, (events, key) => {
+          const logic = _IX2VanillaEvents.default[key];
+          if (!logic) {
+            console.warn(`IX2 event type not configured: ${key}`);
+            return;
+          }
+          bindEventType({
+            logic,
+            store,
+            events
+          });
+        });
+        const {
+          ixSession
+        } = store.getState();
+        if (ixSession.eventListeners.length) {
+          bindResizeEvents(store);
+        }
+      }
+      var WINDOW_RESIZE_EVENTS = ["resize", "orientationchange"];
+      function bindResizeEvents(store) {
+        const handleResize = () => {
+          updateViewportWidth(store);
+        };
+        WINDOW_RESIZE_EVENTS.forEach((type) => {
+          window.addEventListener(type, handleResize);
+          store.dispatch((0, _IX2EngineActions.eventListenerAdded)(window, [type, handleResize]));
+        });
+        handleResize();
+      }
+      function updateViewportWidth(store) {
+        const {
+          ixSession,
+          ixData
+        } = store.getState();
+        const width = window.innerWidth;
+        if (width !== ixSession.viewportWidth) {
+          const {
+            mediaQueries
