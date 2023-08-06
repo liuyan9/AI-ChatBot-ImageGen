@@ -10654,3 +10654,477 @@
           // $FlowFixMe
           scrollWidth: rootElement.scrollWidth,
           // $FlowFixMe
+          scrollHeight: rootElement.scrollHeight,
+          // $FlowFixMe
+          clientWidth: rootElement.clientWidth,
+          // $FlowFixMe
+          clientHeight: rootElement.clientHeight,
+          innerWidth: window.innerWidth,
+          innerHeight: window.innerHeight
+        });
+      })();
+      var areBoxesIntersecting = (a, b) => !(a.left > b.right || a.right < b.left || a.top > b.bottom || a.bottom < b.top);
+      var isElementHovered = ({
+        element,
+        nativeEvent
+      }) => {
+        const {
+          type,
+          target,
+          relatedTarget
+        } = nativeEvent;
+        const containsTarget = element.contains(target);
+        if (type === "mouseover" && containsTarget) {
+          return true;
+        }
+        const containsRelated = element.contains(relatedTarget);
+        if (type === "mouseout" && containsTarget && containsRelated) {
+          return true;
+        }
+        return false;
+      };
+      var isElementVisible = (options) => {
+        const {
+          element,
+          event: {
+            config
+          }
+        } = options;
+        const {
+          clientWidth,
+          clientHeight
+        } = getDocumentState();
+        const scrollOffsetValue = config.scrollOffsetValue;
+        const scrollOffsetUnit = config.scrollOffsetUnit;
+        const isPX = scrollOffsetUnit === "PX";
+        const offsetPadding = isPX ? scrollOffsetValue : clientHeight * (scrollOffsetValue || 0) / 100;
+        return areBoxesIntersecting(element.getBoundingClientRect(), {
+          left: 0,
+          top: offsetPadding,
+          right: clientWidth,
+          bottom: clientHeight - offsetPadding
+        });
+      };
+      var whenComponentActiveChange = (handler) => (options, oldState) => {
+        const {
+          type
+        } = options.nativeEvent;
+        const isActive = [COMPONENT_ACTIVE, COMPONENT_INACTIVE].indexOf(type) !== -1 ? type === COMPONENT_ACTIVE : oldState.isActive;
+        const newState = (0, _extends2.default)({}, oldState, {
+          isActive
+        });
+        if (!oldState || newState.isActive !== oldState.isActive) {
+          return handler(options, newState) || newState;
+        }
+        return newState;
+      };
+      var whenElementHoverChange = (handler) => (options, oldState) => {
+        const newState = {
+          elementHovered: isElementHovered(options)
+        };
+        if (oldState ? newState.elementHovered !== oldState.elementHovered : newState.elementHovered) {
+          return handler(options, newState) || newState;
+        }
+        return newState;
+      };
+      var whenElementVisibiltyChange = (handler) => (options, oldState) => {
+        const newState = (0, _extends2.default)({}, oldState, {
+          elementVisible: isElementVisible(options)
+        });
+        if (oldState ? newState.elementVisible !== oldState.elementVisible : newState.elementVisible) {
+          return handler(options, newState) || newState;
+        }
+        return newState;
+      };
+      var whenScrollDirectionChange = (handler) => (
+        // $FlowFixMe
+        (options, oldState = {}) => {
+          const {
+            stiffScrollTop: scrollTop,
+            scrollHeight,
+            innerHeight
+          } = getDocumentState();
+          const {
+            event: {
+              config,
+              eventTypeId
+            }
+          } = options;
+          const {
+            scrollOffsetValue,
+            scrollOffsetUnit
+          } = config;
+          const isPX = scrollOffsetUnit === "PX";
+          const scrollHeightBounds = scrollHeight - innerHeight;
+          const percentTop = Number((scrollTop / scrollHeightBounds).toFixed(2));
+          if (oldState && oldState.percentTop === percentTop) {
+            return oldState;
+          }
+          const scrollTopPadding = (isPX ? scrollOffsetValue : innerHeight * (scrollOffsetValue || 0) / 100) / scrollHeightBounds;
+          let scrollingDown;
+          let scrollDirectionChanged;
+          let anchorTop = 0;
+          if (oldState) {
+            scrollingDown = percentTop > oldState.percentTop;
+            scrollDirectionChanged = oldState.scrollingDown !== scrollingDown;
+            anchorTop = scrollDirectionChanged ? percentTop : oldState.anchorTop;
+          }
+          const inBounds = eventTypeId === PAGE_SCROLL_DOWN ? percentTop >= anchorTop + scrollTopPadding : percentTop <= anchorTop - scrollTopPadding;
+          const newState = (0, _extends2.default)({}, oldState, {
+            percentTop,
+            inBounds,
+            anchorTop,
+            scrollingDown
+          });
+          if (oldState && inBounds && (scrollDirectionChanged || newState.inBounds !== oldState.inBounds)) {
+            return handler(options, newState) || newState;
+          }
+          return newState;
+        }
+      );
+      var pointIntersects = (point, rect) => point.left > rect.left && point.left < rect.right && point.top > rect.top && point.top < rect.bottom;
+      var whenPageLoadFinish = (handler) => (options, oldState) => {
+        const newState = {
+          finished: document.readyState === "complete"
+        };
+        if (newState.finished && !(oldState && oldState.finshed)) {
+          handler(options);
+        }
+        return newState;
+      };
+      var whenPageLoadStart = (handler) => (options, oldState) => {
+        const newState = {
+          started: true
+        };
+        if (!oldState) {
+          handler(options);
+        }
+        return newState;
+      };
+      var whenClickCountChange = (handler) => (options, oldState = {
+        clickCount: 0
+      }) => {
+        const newState = {
+          clickCount: oldState.clickCount % 2 + 1
+        };
+        if (newState.clickCount !== oldState.clickCount) {
+          return handler(options, newState) || newState;
+        }
+        return newState;
+      };
+      var getComponentActiveOptions = (allowNestedChildrenEvents = true) => (0, _extends2.default)({}, baseActivityActionGroupOptions, {
+        handler: withFilter(allowNestedChildrenEvents ? isOrContainsElement : isElement, whenComponentActiveChange((options, state) => {
+          return state.isActive ? baseActionGroupOptions.handler(options, state) : state;
+        }))
+      });
+      var getComponentInactiveOptions = (allowNestedChildrenEvents = true) => (0, _extends2.default)({}, baseActivityActionGroupOptions, {
+        handler: withFilter(allowNestedChildrenEvents ? isOrContainsElement : isElement, whenComponentActiveChange((options, state) => {
+          return !state.isActive ? baseActionGroupOptions.handler(options, state) : state;
+        }))
+      });
+      var scrollIntoOutOfViewOptions = (0, _extends2.default)({}, baseScrollActionGroupOptions, {
+        handler: whenElementVisibiltyChange((options, state) => {
+          const {
+            elementVisible
+          } = state;
+          const {
+            event,
+            store
+          } = options;
+          const {
+            ixData
+          } = store.getState();
+          const {
+            events
+          } = ixData;
+          if (!events[event.action.config.autoStopEventId] && state.triggered) {
+            return state;
+          }
+          if (event.eventTypeId === SCROLL_INTO_VIEW === elementVisible) {
+            actionGroupCreator(options);
+            return (0, _extends2.default)({}, state, {
+              triggered: true
+            });
+          } else {
+            return state;
+          }
+        })
+      });
+      var MOUSE_OUT_ROUND_THRESHOLD = 0.05;
+      var _default = {
+        [SLIDER_ACTIVE]: getComponentActiveOptions(),
+        [SLIDER_INACTIVE]: getComponentInactiveOptions(),
+        [DROPDOWN_OPEN]: getComponentActiveOptions(),
+        [DROPDOWN_CLOSE]: getComponentInactiveOptions(),
+        // navbar elements may contain nested components in the menu. To prevent activity misfires, only listed for activity
+        // events where the target is the navbar element, and ignore children that dispatch activitiy events.
+        [NAVBAR_OPEN]: getComponentActiveOptions(false),
+        [NAVBAR_CLOSE]: getComponentInactiveOptions(false),
+        [TAB_ACTIVE]: getComponentActiveOptions(),
+        [TAB_INACTIVE]: getComponentInactiveOptions(),
+        [ECOMMERCE_CART_OPEN]: {
+          types: "ecommerce-cart-open",
+          handler: withFilter(isOrContainsElement, actionGroupCreator)
+        },
+        [ECOMMERCE_CART_CLOSE]: {
+          types: "ecommerce-cart-close",
+          handler: withFilter(isOrContainsElement, actionGroupCreator)
+        },
+        [MOUSE_CLICK]: {
+          types: "click",
+          handler: withFilter(isOrContainsElement, whenClickCountChange((options, {
+            clickCount
+          }) => {
+            if (hasAutoStopEvent(options)) {
+              clickCount === 1 && actionGroupCreator(options);
+            } else {
+              actionGroupCreator(options);
+            }
+          }))
+        },
+        [MOUSE_SECOND_CLICK]: {
+          types: "click",
+          handler: withFilter(isOrContainsElement, whenClickCountChange((options, {
+            clickCount
+          }) => {
+            if (clickCount === 2) {
+              actionGroupCreator(options);
+            }
+          }))
+        },
+        [MOUSE_DOWN]: (0, _extends2.default)({}, baseActionGroupOptions, {
+          types: "mousedown"
+        }),
+        [MOUSE_UP]: (0, _extends2.default)({}, baseActionGroupOptions, {
+          types: "mouseup"
+        }),
+        [MOUSE_OVER]: {
+          types: MOUSE_OVER_OUT_TYPES,
+          handler: withFilter(isOrContainsElement, whenElementHoverChange((options, state) => {
+            if (state.elementHovered) {
+              actionGroupCreator(options);
+            }
+          }))
+        },
+        [MOUSE_OUT]: {
+          types: MOUSE_OVER_OUT_TYPES,
+          handler: withFilter(isOrContainsElement, whenElementHoverChange((options, state) => {
+            if (!state.elementHovered) {
+              actionGroupCreator(options);
+            }
+          }))
+        },
+        [MOUSE_MOVE]: {
+          types: "mousemove mouseout scroll",
+          handler: ({
+            store,
+            element,
+            eventConfig,
+            nativeEvent,
+            eventStateKey
+          }, state = {
+            clientX: 0,
+            clientY: 0,
+            pageX: 0,
+            pageY: 0
+          }) => {
+            const {
+              basedOn,
+              selectedAxis,
+              continuousParameterGroupId,
+              reverse,
+              restingState = 0
+            } = eventConfig;
+            const {
+              clientX = state.clientX,
+              clientY = state.clientY,
+              pageX = state.pageX,
+              pageY = state.pageY
+            } = nativeEvent;
+            const isXAxis = selectedAxis === "X_AXIS";
+            const isMouseOut = nativeEvent.type === "mouseout";
+            let value = restingState / 100;
+            let namespacedParameterId = continuousParameterGroupId;
+            let elementHovered = false;
+            switch (basedOn) {
+              case _constants.EventBasedOn.VIEWPORT: {
+                value = isXAxis ? Math.min(clientX, window.innerWidth) / window.innerWidth : Math.min(clientY, window.innerHeight) / window.innerHeight;
+                break;
+              }
+              case _constants.EventBasedOn.PAGE: {
+                const {
+                  scrollLeft,
+                  scrollTop,
+                  scrollWidth,
+                  scrollHeight
+                } = getDocumentState();
+                value = isXAxis ? Math.min(scrollLeft + pageX, scrollWidth) / scrollWidth : Math.min(scrollTop + pageY, scrollHeight) / scrollHeight;
+                break;
+              }
+              case _constants.EventBasedOn.ELEMENT:
+              default: {
+                namespacedParameterId = getNamespacedParameterId(eventStateKey, continuousParameterGroupId);
+                const isMouseEvent = nativeEvent.type.indexOf("mouse") === 0;
+                if (isMouseEvent && isOrContainsElement({
+                  element,
+                  nativeEvent
+                }) !== true) {
+                  break;
+                }
+                const rect = element.getBoundingClientRect();
+                const {
+                  left,
+                  top,
+                  width,
+                  height
+                } = rect;
+                if (!isMouseEvent && !pointIntersects({
+                  left: clientX,
+                  top: clientY
+                }, rect)) {
+                  break;
+                }
+                elementHovered = true;
+                value = isXAxis ? (clientX - left) / width : (clientY - top) / height;
+                break;
+              }
+            }
+            if (isMouseOut && (value > 1 - MOUSE_OUT_ROUND_THRESHOLD || value < MOUSE_OUT_ROUND_THRESHOLD)) {
+              value = Math.round(value);
+            }
+            if (basedOn !== _constants.EventBasedOn.ELEMENT || elementHovered || // $FlowFixMe
+            elementHovered !== state.elementHovered) {
+              value = reverse ? 1 - value : value;
+              store.dispatch((0, _IX2EngineActions.parameterChanged)(namespacedParameterId, value));
+            }
+            return {
+              elementHovered,
+              clientX,
+              clientY,
+              pageX,
+              pageY
+            };
+          }
+        },
+        [PAGE_SCROLL]: {
+          types: SCROLL_EVENT_TYPES,
+          // $FlowFixMe
+          handler: ({
+            store,
+            eventConfig
+          }) => {
+            const {
+              continuousParameterGroupId,
+              reverse
+            } = eventConfig;
+            const {
+              scrollTop,
+              scrollHeight,
+              clientHeight
+            } = getDocumentState();
+            let value = scrollTop / (scrollHeight - clientHeight);
+            value = reverse ? 1 - value : value;
+            store.dispatch((0, _IX2EngineActions.parameterChanged)(continuousParameterGroupId, value));
+          }
+        },
+        [SCROLLING_IN_VIEW]: {
+          types: SCROLL_EVENT_TYPES,
+          handler: ({
+            element,
+            store,
+            eventConfig,
+            eventStateKey
+          }, state = {
+            scrollPercent: 0
+          }) => {
+            const {
+              scrollLeft,
+              scrollTop,
+              scrollWidth,
+              scrollHeight,
+              clientHeight: visibleHeight
+            } = getDocumentState();
+            const {
+              basedOn,
+              selectedAxis,
+              continuousParameterGroupId,
+              startsEntering,
+              startsExiting,
+              addEndOffset,
+              addStartOffset,
+              addOffsetValue = 0,
+              endOffsetValue = 0
+            } = eventConfig;
+            const isXAxis = selectedAxis === "X_AXIS";
+            if (basedOn === _constants.EventBasedOn.VIEWPORT) {
+              const value = isXAxis ? scrollLeft / scrollWidth : scrollTop / scrollHeight;
+              if (value !== state.scrollPercent) {
+                store.dispatch((0, _IX2EngineActions.parameterChanged)(continuousParameterGroupId, value));
+              }
+              return {
+                scrollPercent: value
+              };
+            } else {
+              const namespacedParameterId = getNamespacedParameterId(eventStateKey, continuousParameterGroupId);
+              const elementRect = element.getBoundingClientRect();
+              let offsetStartPerc = (addStartOffset ? addOffsetValue : 0) / 100;
+              let offsetEndPerc = (addEndOffset ? endOffsetValue : 0) / 100;
+              offsetStartPerc = startsEntering ? offsetStartPerc : 1 - offsetStartPerc;
+              offsetEndPerc = startsExiting ? offsetEndPerc : 1 - offsetEndPerc;
+              const offsetElementTop = elementRect.top + Math.min(elementRect.height * offsetStartPerc, visibleHeight);
+              const offsetElementBottom = elementRect.top + elementRect.height * offsetEndPerc;
+              const offsetHeight = offsetElementBottom - offsetElementTop;
+              const fixedScrollHeight = Math.min(visibleHeight + offsetHeight, scrollHeight);
+              const fixedScrollTop = Math.min(Math.max(0, visibleHeight - offsetElementTop), fixedScrollHeight);
+              const fixedScrollPerc = fixedScrollTop / fixedScrollHeight;
+              if (fixedScrollPerc !== state.scrollPercent) {
+                store.dispatch((0, _IX2EngineActions.parameterChanged)(namespacedParameterId, fixedScrollPerc));
+              }
+              return {
+                scrollPercent: fixedScrollPerc
+              };
+            }
+          }
+        },
+        [SCROLL_INTO_VIEW]: scrollIntoOutOfViewOptions,
+        [SCROLL_OUT_OF_VIEW]: scrollIntoOutOfViewOptions,
+        [PAGE_SCROLL_DOWN]: (0, _extends2.default)({}, baseScrollActionGroupOptions, {
+          handler: whenScrollDirectionChange((options, state) => {
+            if (state.scrollingDown) {
+              actionGroupCreator(options);
+            }
+          })
+        }),
+        [PAGE_SCROLL_UP]: (0, _extends2.default)({}, baseScrollActionGroupOptions, {
+          handler: whenScrollDirectionChange((options, state) => {
+            if (!state.scrollingDown) {
+              actionGroupCreator(options);
+            }
+          })
+        }),
+        [PAGE_FINISH]: {
+          types: "readystatechange IX2_PAGE_UPDATE",
+          handler: withFilter(isElement, whenPageLoadFinish(actionGroupCreator))
+        },
+        [PAGE_START]: {
+          types: "readystatechange IX2_PAGE_UPDATE",
+          handler: withFilter(isElement, whenPageLoadStart(actionGroupCreator))
+        }
+      };
+      exports.default = _default;
+    }
+  });
+
+  // packages/systems/ix2/engine/logic/IX2VanillaEngine.js
+  var require_IX2VanillaEngine = __commonJS({
+    "packages/systems/ix2/engine/logic/IX2VanillaEngine.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      var _interopRequireWildcard = require_interopRequireWildcard().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.observeRequests = observeRequests;
+      exports.startActionGroup = startActionGroup;
+      exports.startEngine = startEngine;
+      exports.stopActionGroup = stopActionGroup;
