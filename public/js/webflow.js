@@ -10192,3 +10192,465 @@
       var overRest = require_overRest();
       var setToString = require_setToString();
       function flatRest(func) {
+        return setToString(overRest(func, void 0, flatten), func + "");
+      }
+      module.exports = flatRest;
+    }
+  });
+
+  // node_modules/lodash/_metaMap.js
+  var require_metaMap = __commonJS({
+    "node_modules/lodash/_metaMap.js"(exports, module) {
+      var WeakMap2 = require_WeakMap();
+      var metaMap = WeakMap2 && new WeakMap2();
+      module.exports = metaMap;
+    }
+  });
+
+  // node_modules/lodash/noop.js
+  var require_noop = __commonJS({
+    "node_modules/lodash/noop.js"(exports, module) {
+      function noop2() {
+      }
+      module.exports = noop2;
+    }
+  });
+
+  // node_modules/lodash/_getData.js
+  var require_getData = __commonJS({
+    "node_modules/lodash/_getData.js"(exports, module) {
+      var metaMap = require_metaMap();
+      var noop2 = require_noop();
+      var getData = !metaMap ? noop2 : function(func) {
+        return metaMap.get(func);
+      };
+      module.exports = getData;
+    }
+  });
+
+  // node_modules/lodash/_realNames.js
+  var require_realNames = __commonJS({
+    "node_modules/lodash/_realNames.js"(exports, module) {
+      var realNames = {};
+      module.exports = realNames;
+    }
+  });
+
+  // node_modules/lodash/_getFuncName.js
+  var require_getFuncName = __commonJS({
+    "node_modules/lodash/_getFuncName.js"(exports, module) {
+      var realNames = require_realNames();
+      var objectProto = Object.prototype;
+      var hasOwnProperty = objectProto.hasOwnProperty;
+      function getFuncName(func) {
+        var result = func.name + "", array = realNames[result], length = hasOwnProperty.call(realNames, result) ? array.length : 0;
+        while (length--) {
+          var data = array[length], otherFunc = data.func;
+          if (otherFunc == null || otherFunc == func) {
+            return data.name;
+          }
+        }
+        return result;
+      }
+      module.exports = getFuncName;
+    }
+  });
+
+  // node_modules/lodash/_LazyWrapper.js
+  var require_LazyWrapper = __commonJS({
+    "node_modules/lodash/_LazyWrapper.js"(exports, module) {
+      var baseCreate = require_baseCreate();
+      var baseLodash = require_baseLodash();
+      var MAX_ARRAY_LENGTH = 4294967295;
+      function LazyWrapper(value) {
+        this.__wrapped__ = value;
+        this.__actions__ = [];
+        this.__dir__ = 1;
+        this.__filtered__ = false;
+        this.__iteratees__ = [];
+        this.__takeCount__ = MAX_ARRAY_LENGTH;
+        this.__views__ = [];
+      }
+      LazyWrapper.prototype = baseCreate(baseLodash.prototype);
+      LazyWrapper.prototype.constructor = LazyWrapper;
+      module.exports = LazyWrapper;
+    }
+  });
+
+  // node_modules/lodash/_copyArray.js
+  var require_copyArray = __commonJS({
+    "node_modules/lodash/_copyArray.js"(exports, module) {
+      function copyArray(source, array) {
+        var index = -1, length = source.length;
+        array || (array = Array(length));
+        while (++index < length) {
+          array[index] = source[index];
+        }
+        return array;
+      }
+      module.exports = copyArray;
+    }
+  });
+
+  // node_modules/lodash/_wrapperClone.js
+  var require_wrapperClone = __commonJS({
+    "node_modules/lodash/_wrapperClone.js"(exports, module) {
+      var LazyWrapper = require_LazyWrapper();
+      var LodashWrapper = require_LodashWrapper();
+      var copyArray = require_copyArray();
+      function wrapperClone(wrapper) {
+        if (wrapper instanceof LazyWrapper) {
+          return wrapper.clone();
+        }
+        var result = new LodashWrapper(wrapper.__wrapped__, wrapper.__chain__);
+        result.__actions__ = copyArray(wrapper.__actions__);
+        result.__index__ = wrapper.__index__;
+        result.__values__ = wrapper.__values__;
+        return result;
+      }
+      module.exports = wrapperClone;
+    }
+  });
+
+  // node_modules/lodash/wrapperLodash.js
+  var require_wrapperLodash = __commonJS({
+    "node_modules/lodash/wrapperLodash.js"(exports, module) {
+      var LazyWrapper = require_LazyWrapper();
+      var LodashWrapper = require_LodashWrapper();
+      var baseLodash = require_baseLodash();
+      var isArray = require_isArray();
+      var isObjectLike = require_isObjectLike2();
+      var wrapperClone = require_wrapperClone();
+      var objectProto = Object.prototype;
+      var hasOwnProperty = objectProto.hasOwnProperty;
+      function lodash(value) {
+        if (isObjectLike(value) && !isArray(value) && !(value instanceof LazyWrapper)) {
+          if (value instanceof LodashWrapper) {
+            return value;
+          }
+          if (hasOwnProperty.call(value, "__wrapped__")) {
+            return wrapperClone(value);
+          }
+        }
+        return new LodashWrapper(value);
+      }
+      lodash.prototype = baseLodash.prototype;
+      lodash.prototype.constructor = lodash;
+      module.exports = lodash;
+    }
+  });
+
+  // node_modules/lodash/_isLaziable.js
+  var require_isLaziable = __commonJS({
+    "node_modules/lodash/_isLaziable.js"(exports, module) {
+      var LazyWrapper = require_LazyWrapper();
+      var getData = require_getData();
+      var getFuncName = require_getFuncName();
+      var lodash = require_wrapperLodash();
+      function isLaziable(func) {
+        var funcName = getFuncName(func), other = lodash[funcName];
+        if (typeof other != "function" || !(funcName in LazyWrapper.prototype)) {
+          return false;
+        }
+        if (func === other) {
+          return true;
+        }
+        var data = getData(other);
+        return !!data && func === data[0];
+      }
+      module.exports = isLaziable;
+    }
+  });
+
+  // node_modules/lodash/_createFlow.js
+  var require_createFlow = __commonJS({
+    "node_modules/lodash/_createFlow.js"(exports, module) {
+      var LodashWrapper = require_LodashWrapper();
+      var flatRest = require_flatRest();
+      var getData = require_getData();
+      var getFuncName = require_getFuncName();
+      var isArray = require_isArray();
+      var isLaziable = require_isLaziable();
+      var FUNC_ERROR_TEXT = "Expected a function";
+      var WRAP_CURRY_FLAG = 8;
+      var WRAP_PARTIAL_FLAG = 32;
+      var WRAP_ARY_FLAG = 128;
+      var WRAP_REARG_FLAG = 256;
+      function createFlow(fromRight) {
+        return flatRest(function(funcs) {
+          var length = funcs.length, index = length, prereq = LodashWrapper.prototype.thru;
+          if (fromRight) {
+            funcs.reverse();
+          }
+          while (index--) {
+            var func = funcs[index];
+            if (typeof func != "function") {
+              throw new TypeError(FUNC_ERROR_TEXT);
+            }
+            if (prereq && !wrapper && getFuncName(func) == "wrapper") {
+              var wrapper = new LodashWrapper([], true);
+            }
+          }
+          index = wrapper ? index : length;
+          while (++index < length) {
+            func = funcs[index];
+            var funcName = getFuncName(func), data = funcName == "wrapper" ? getData(func) : void 0;
+            if (data && isLaziable(data[0]) && data[1] == (WRAP_ARY_FLAG | WRAP_CURRY_FLAG | WRAP_PARTIAL_FLAG | WRAP_REARG_FLAG) && !data[4].length && data[9] == 1) {
+              wrapper = wrapper[getFuncName(data[0])].apply(wrapper, data[3]);
+            } else {
+              wrapper = func.length == 1 && isLaziable(func) ? wrapper[funcName]() : wrapper.thru(func);
+            }
+          }
+          return function() {
+            var args = arguments, value = args[0];
+            if (wrapper && args.length == 1 && isArray(value)) {
+              return wrapper.plant(value).value();
+            }
+            var index2 = 0, result = length ? funcs[index2].apply(this, args) : value;
+            while (++index2 < length) {
+              result = funcs[index2].call(this, result);
+            }
+            return result;
+          };
+        });
+      }
+      module.exports = createFlow;
+    }
+  });
+
+  // node_modules/lodash/flow.js
+  var require_flow = __commonJS({
+    "node_modules/lodash/flow.js"(exports, module) {
+      var createFlow = require_createFlow();
+      var flow = createFlow();
+      module.exports = flow;
+    }
+  });
+
+  // node_modules/lodash/_baseClamp.js
+  var require_baseClamp = __commonJS({
+    "node_modules/lodash/_baseClamp.js"(exports, module) {
+      function baseClamp(number, lower, upper) {
+        if (number === number) {
+          if (upper !== void 0) {
+            number = number <= upper ? number : upper;
+          }
+          if (lower !== void 0) {
+            number = number >= lower ? number : lower;
+          }
+        }
+        return number;
+      }
+      module.exports = baseClamp;
+    }
+  });
+
+  // node_modules/lodash/clamp.js
+  var require_clamp = __commonJS({
+    "node_modules/lodash/clamp.js"(exports, module) {
+      var baseClamp = require_baseClamp();
+      var toNumber = require_toNumber();
+      function clamp(number, lower, upper) {
+        if (upper === void 0) {
+          upper = lower;
+          lower = void 0;
+        }
+        if (upper !== void 0) {
+          upper = toNumber(upper);
+          upper = upper === upper ? upper : 0;
+        }
+        if (lower !== void 0) {
+          lower = toNumber(lower);
+          lower = lower === lower ? lower : 0;
+        }
+        return baseClamp(toNumber(number), lower, upper);
+      }
+      module.exports = clamp;
+    }
+  });
+
+  // packages/systems/ix2/engine/logic/IX2VanillaEvents.js
+  var require_IX2VanillaEvents = __commonJS({
+    "packages/systems/ix2/engine/logic/IX2VanillaEvents.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _flow = _interopRequireDefault(require_flow());
+      var _get = _interopRequireDefault(require_get());
+      var _clamp = _interopRequireDefault(require_clamp());
+      var _constants = require_constants();
+      var _IX2VanillaEngine = require_IX2VanillaEngine();
+      var _IX2EngineActions = require_IX2EngineActions();
+      var _shared = require_shared2();
+      var {
+        MOUSE_CLICK,
+        MOUSE_SECOND_CLICK,
+        MOUSE_DOWN,
+        MOUSE_UP,
+        MOUSE_OVER,
+        MOUSE_OUT,
+        DROPDOWN_CLOSE,
+        DROPDOWN_OPEN,
+        SLIDER_ACTIVE,
+        SLIDER_INACTIVE,
+        TAB_ACTIVE,
+        TAB_INACTIVE,
+        NAVBAR_CLOSE,
+        NAVBAR_OPEN,
+        MOUSE_MOVE,
+        PAGE_SCROLL_DOWN,
+        SCROLL_INTO_VIEW,
+        SCROLL_OUT_OF_VIEW,
+        PAGE_SCROLL_UP,
+        SCROLLING_IN_VIEW,
+        PAGE_FINISH,
+        ECOMMERCE_CART_CLOSE,
+        ECOMMERCE_CART_OPEN,
+        PAGE_START,
+        PAGE_SCROLL
+      } = _constants.EventTypeConsts;
+      var COMPONENT_ACTIVE = "COMPONENT_ACTIVE";
+      var COMPONENT_INACTIVE = "COMPONENT_INACTIVE";
+      var {
+        COLON_DELIMITER
+      } = _constants.IX2EngineConstants;
+      var {
+        getNamespacedParameterId
+      } = _shared.IX2VanillaUtils;
+      var composableFilter = (predicate) => (options) => {
+        if (typeof options === "object" && predicate(options)) {
+          return true;
+        }
+        return options;
+      };
+      var isElement = composableFilter(({
+        element,
+        nativeEvent
+      }) => {
+        return element === nativeEvent.target;
+      });
+      var containsElement = composableFilter(({
+        element,
+        nativeEvent
+      }) => {
+        return element.contains(nativeEvent.target);
+      });
+      var isOrContainsElement = (0, _flow.default)([isElement, containsElement]);
+      var getAutoStopEvent = (store, autoStopEventId) => {
+        if (autoStopEventId) {
+          const {
+            ixData
+          } = store.getState();
+          const {
+            events
+          } = ixData;
+          const eventToStop = events[autoStopEventId];
+          if (eventToStop && !AUTO_STOP_DISABLED_EVENTS[eventToStop.eventTypeId]) {
+            return eventToStop;
+          }
+        }
+        return null;
+      };
+      var hasAutoStopEvent = ({
+        store,
+        event
+      }) => {
+        const {
+          action: eventAction
+        } = event;
+        const {
+          autoStopEventId
+        } = eventAction.config;
+        return Boolean(getAutoStopEvent(store, autoStopEventId));
+      };
+      var actionGroupCreator = ({
+        store,
+        event,
+        element,
+        eventStateKey
+      }, state) => {
+        const {
+          action: eventAction,
+          id: eventId
+        } = event;
+        const {
+          actionListId,
+          autoStopEventId
+        } = eventAction.config;
+        const eventToStop = getAutoStopEvent(store, autoStopEventId);
+        if (eventToStop) {
+          (0, _IX2VanillaEngine.stopActionGroup)({
+            store,
+            eventId: autoStopEventId,
+            eventTarget: element,
+            eventStateKey: autoStopEventId + COLON_DELIMITER + eventStateKey.split(COLON_DELIMITER)[1],
+            actionListId: (0, _get.default)(eventToStop, "action.config.actionListId")
+          });
+        }
+        (0, _IX2VanillaEngine.stopActionGroup)({
+          store,
+          eventId,
+          eventTarget: element,
+          eventStateKey,
+          actionListId
+        });
+        (0, _IX2VanillaEngine.startActionGroup)({
+          store,
+          eventId,
+          eventTarget: element,
+          eventStateKey,
+          actionListId
+        });
+        return state;
+      };
+      var withFilter = (filter, handler) => (options, state) => (
+        // $FlowFixMe
+        filter(options, state) === true ? handler(options, state) : state
+      );
+      var baseActionGroupOptions = {
+        handler: withFilter(isOrContainsElement, actionGroupCreator)
+      };
+      var baseActivityActionGroupOptions = (0, _extends2.default)({}, baseActionGroupOptions, {
+        types: [COMPONENT_ACTIVE, COMPONENT_INACTIVE].join(" ")
+      });
+      var SCROLL_EVENT_TYPES = [{
+        target: window,
+        types: "resize orientationchange",
+        throttle: true
+      }, {
+        target: document,
+        types: "scroll wheel readystatechange IX2_PAGE_UPDATE",
+        throttle: true
+      }];
+      var MOUSE_OVER_OUT_TYPES = "mouseover mouseout";
+      var baseScrollActionGroupOptions = {
+        types: SCROLL_EVENT_TYPES
+      };
+      var AUTO_STOP_DISABLED_EVENTS = {
+        PAGE_START,
+        PAGE_FINISH
+      };
+      var getDocumentState = (() => {
+        const supportOffset = window.pageXOffset !== void 0;
+        const isCSS1Compat = document.compatMode === "CSS1Compat";
+        const rootElement = isCSS1Compat ? document.documentElement : document.body;
+        return () => ({
+          // $FlowFixMe
+          scrollLeft: supportOffset ? window.pageXOffset : rootElement.scrollLeft,
+          // $FlowFixMe
+          scrollTop: supportOffset ? window.pageYOffset : rootElement.scrollTop,
+          // required to remove elasticity in Safari scrolling.
+          stiffScrollTop: (0, _clamp.default)(
+            // $FlowFixMe
+            supportOffset ? window.pageYOffset : rootElement.scrollTop,
+            0,
+            // $FlowFixMe
+            rootElement.scrollHeight - window.innerHeight
+          ),
+          // $FlowFixMe
+          scrollWidth: rootElement.scrollWidth,
+          // $FlowFixMe
