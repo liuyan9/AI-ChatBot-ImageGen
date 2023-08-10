@@ -11591,3 +11591,415 @@
         if (width !== ixSession.viewportWidth) {
           const {
             mediaQueries
+          } = ixData;
+          store.dispatch((0, _IX2EngineActions.viewportWidthChanged)({
+            width,
+            mediaQueries
+          }));
+        }
+      }
+      var mapFoundValues = (object, iteratee) => (0, _omitBy.default)((0, _mapValues.default)(object, iteratee), _isEmpty.default);
+      var forEachEventTarget = (eventTargets, eventCallback) => {
+        (0, _forEach.default)(eventTargets, (elements, eventId) => {
+          elements.forEach((element, index) => {
+            const eventStateKey = eventId + COLON_DELIMITER + index;
+            eventCallback(element, eventId, eventStateKey);
+          });
+        });
+      };
+      var getAffectedForEvent = (event) => {
+        const config = {
+          target: event.target,
+          targets: event.targets
+        };
+        return getAffectedElements({
+          config,
+          elementApi
+        });
+      };
+      function bindEventType({
+        logic,
+        store,
+        events
+      }) {
+        injectBehaviorCSSFixes(events);
+        const {
+          types: eventTypes,
+          handler: eventHandler
+        } = logic;
+        const {
+          ixData
+        } = store.getState();
+        const {
+          actionLists
+        } = ixData;
+        const eventTargets = mapFoundValues(events, getAffectedForEvent);
+        if (!(0, _size.default)(eventTargets)) {
+          return;
+        }
+        (0, _forEach.default)(eventTargets, (elements, key) => {
+          const event = events[key];
+          const {
+            action: eventAction,
+            id: eventId,
+            mediaQueries = ixData.mediaQueryKeys
+          } = event;
+          const {
+            actionListId
+          } = eventAction.config;
+          if (!mediaQueriesEqual(mediaQueries, ixData.mediaQueryKeys)) {
+            store.dispatch((0, _IX2EngineActions.mediaQueriesDefined)());
+          }
+          if (eventAction.actionTypeId === _constants.ActionTypeConsts.GENERAL_CONTINUOUS_ACTION) {
+            const configs = Array.isArray(event.config) ? event.config : [event.config];
+            configs.forEach((eventConfig) => {
+              const {
+                continuousParameterGroupId
+              } = eventConfig;
+              const paramGroups = (0, _get.default)(actionLists, `${actionListId}.continuousParameterGroups`, []);
+              const parameterGroup = (0, _find.default)(paramGroups, ({
+                id
+              }) => id === continuousParameterGroupId);
+              const smoothing = (eventConfig.smoothing || 0) / 100;
+              const restingValue = (eventConfig.restingState || 0) / 100;
+              if (!parameterGroup) {
+                return;
+              }
+              elements.forEach((eventTarget, index) => {
+                const eventStateKey = eventId + COLON_DELIMITER + index;
+                createGroupInstances({
+                  store,
+                  eventStateKey,
+                  eventTarget,
+                  eventId,
+                  eventConfig,
+                  actionListId,
+                  parameterGroup,
+                  smoothing,
+                  restingValue
+                });
+              });
+            });
+          }
+          if (eventAction.actionTypeId === _constants.ActionTypeConsts.GENERAL_START_ACTION || isQuickEffect(eventAction.actionTypeId)) {
+            renderInitialGroup({
+              store,
+              actionListId,
+              eventId
+            });
+          }
+        });
+        const handleEvent = (nativeEvent) => {
+          const {
+            ixSession
+          } = store.getState();
+          forEachEventTarget(eventTargets, (element, eventId, eventStateKey) => {
+            const event = events[eventId];
+            const oldState = ixSession.eventState[eventStateKey];
+            const {
+              action: eventAction,
+              mediaQueries = ixData.mediaQueryKeys
+            } = event;
+            if (!shouldAllowMediaQuery(mediaQueries, ixSession.mediaQueryKey)) {
+              return;
+            }
+            const handleEventWithConfig = (eventConfig = {}) => {
+              const newState = eventHandler({
+                store,
+                element,
+                event,
+                eventConfig,
+                nativeEvent,
+                eventStateKey
+              }, oldState);
+              if (!shallowEqual(newState, oldState)) {
+                store.dispatch((0, _IX2EngineActions.eventStateChanged)(eventStateKey, newState));
+              }
+            };
+            if (eventAction.actionTypeId === _constants.ActionTypeConsts.GENERAL_CONTINUOUS_ACTION) {
+              const configs = Array.isArray(event.config) ? event.config : [event.config];
+              configs.forEach(handleEventWithConfig);
+            } else {
+              handleEventWithConfig();
+            }
+          });
+        };
+        const handleEventThrottled = (0, _throttle.default)(handleEvent, THROTTLED_EVENT_WAIT);
+        const addListeners = ({
+          target = document,
+          types,
+          throttle: shouldThrottle
+        }) => {
+          types.split(" ").filter(Boolean).forEach((type) => {
+            const handlerFunc = shouldThrottle ? handleEventThrottled : handleEvent;
+            target.addEventListener(type, handlerFunc);
+            store.dispatch((0, _IX2EngineActions.eventListenerAdded)(target, [type, handlerFunc]));
+          });
+        };
+        if (Array.isArray(eventTypes)) {
+          eventTypes.forEach(addListeners);
+        } else if (typeof eventTypes === "string") {
+          addListeners(logic);
+        }
+      }
+      function injectBehaviorCSSFixes(events) {
+        if (!IS_MOBILE_SAFARI) {
+          return;
+        }
+        const injectedSelectors = {};
+        let cssText = "";
+        for (const eventId in events) {
+          const {
+            eventTypeId,
+            target
+          } = events[eventId];
+          const selector = elementApi.getQuerySelector(target);
+          if (injectedSelectors[selector]) {
+            continue;
+          }
+          if (eventTypeId === _constants.EventTypeConsts.MOUSE_CLICK || eventTypeId === _constants.EventTypeConsts.MOUSE_SECOND_CLICK) {
+            injectedSelectors[selector] = true;
+            cssText += // $FlowFixMe
+            selector + "{cursor: pointer;touch-action: manipulation;}";
+          }
+        }
+        if (cssText) {
+          const style = document.createElement("style");
+          style.textContent = cssText;
+          document.body.appendChild(style);
+        }
+      }
+      function renderInitialGroup({
+        store,
+        actionListId,
+        eventId
+      }) {
+        const {
+          ixData,
+          ixSession
+        } = store.getState();
+        const {
+          actionLists,
+          events
+        } = ixData;
+        const event = events[eventId];
+        const actionList = actionLists[actionListId];
+        if (actionList && actionList.useFirstGroupAsInitialState) {
+          const initialStateItems = (0, _get.default)(actionList, "actionItemGroups[0].actionItems", []);
+          const mediaQueries = (0, _get.default)(event, "mediaQueries", ixData.mediaQueryKeys);
+          if (!shouldAllowMediaQuery(mediaQueries, ixSession.mediaQueryKey)) {
+            return;
+          }
+          initialStateItems.forEach((actionItem) => {
+            var _itemConfig$target;
+            const {
+              config: itemConfig,
+              actionTypeId
+            } = actionItem;
+            const config = (
+              // When useEventTarget is explicitly true, use event target/targets to query elements
+              (itemConfig === null || itemConfig === void 0 ? void 0 : (_itemConfig$target = itemConfig.target) === null || _itemConfig$target === void 0 ? void 0 : _itemConfig$target.useEventTarget) === true ? {
+                target: event.target,
+                targets: event.targets
+              } : itemConfig
+            );
+            const itemElements = getAffectedElements({
+              config,
+              event,
+              elementApi
+            });
+            const shouldUsePlugin = isPluginType(actionTypeId);
+            itemElements.forEach((element) => {
+              const pluginInstance = shouldUsePlugin ? (
+                // $FlowFixMe
+                createPluginInstance(actionTypeId)(element, actionItem)
+              ) : null;
+              createInstance({
+                destination: getDestinationValues(
+                  {
+                    element,
+                    actionItem,
+                    elementApi
+                  },
+                  // $FlowFixMe
+                  pluginInstance
+                ),
+                immediate: true,
+                store,
+                element,
+                eventId,
+                actionItem,
+                actionListId,
+                pluginInstance
+              });
+            });
+          });
+        }
+      }
+      function stopAllActionGroups({
+        store
+      }) {
+        const {
+          ixInstances
+        } = store.getState();
+        (0, _forEach.default)(ixInstances, (instance) => {
+          if (!instance.continuous) {
+            const {
+              actionListId,
+              verbose
+            } = instance;
+            removeInstance(instance, store);
+            if (verbose) {
+              store.dispatch((0, _IX2EngineActions.actionListPlaybackChanged)({
+                actionListId,
+                isPlaying: false
+              }));
+            }
+          }
+        });
+      }
+      function stopActionGroup({
+        store,
+        // $FlowFixMe
+        eventId,
+        // $FlowFixMe
+        eventTarget,
+        // $FlowFixMe
+        eventStateKey,
+        actionListId
+      }) {
+        const {
+          ixInstances,
+          ixSession
+        } = store.getState();
+        const eventElementRoot = ixSession.hasBoundaryNodes && eventTarget ? elementApi.getClosestElement(eventTarget, BOUNDARY_SELECTOR) : null;
+        (0, _forEach.default)(ixInstances, (instance) => {
+          const boundaryMode = (0, _get.default)(instance, "actionItem.config.target.boundaryMode");
+          const validEventKey = eventStateKey ? instance.eventStateKey === eventStateKey : true;
+          if (instance.actionListId === actionListId && instance.eventId === eventId && validEventKey) {
+            if (eventElementRoot && boundaryMode && !elementApi.elementContains(eventElementRoot, instance.element)) {
+              return;
+            }
+            removeInstance(instance, store);
+            if (instance.verbose) {
+              store.dispatch((0, _IX2EngineActions.actionListPlaybackChanged)({
+                actionListId,
+                isPlaying: false
+              }));
+            }
+          }
+        });
+      }
+      function startActionGroup({
+        store,
+        eventId,
+        // $FlowFixMe
+        eventTarget,
+        // $FlowFixMe
+        eventStateKey,
+        actionListId,
+        groupIndex = 0,
+        // $FlowFixMe
+        immediate,
+        // $FlowFixMe
+        verbose
+      }) {
+        var _event$action;
+        const {
+          ixData,
+          ixSession
+        } = store.getState();
+        const {
+          events
+        } = ixData;
+        const event = events[eventId] || {};
+        const {
+          mediaQueries = ixData.mediaQueryKeys
+        } = event;
+        const actionList = (0, _get.default)(ixData, `actionLists.${actionListId}`, {});
+        const {
+          actionItemGroups,
+          useFirstGroupAsInitialState
+        } = actionList;
+        if (!actionItemGroups || !actionItemGroups.length) {
+          return false;
+        }
+        if (groupIndex >= actionItemGroups.length && (0, _get.default)(event, "config.loop")) {
+          groupIndex = 0;
+        }
+        if (groupIndex === 0 && useFirstGroupAsInitialState) {
+          groupIndex++;
+        }
+        const isFirstGroup = groupIndex === 0 || groupIndex === 1 && useFirstGroupAsInitialState;
+        const instanceDelay = isFirstGroup && isQuickEffect((_event$action = event.action) === null || _event$action === void 0 ? void 0 : _event$action.actionTypeId) ? event.config.delay : void 0;
+        const actionItems = (0, _get.default)(actionItemGroups, [groupIndex, "actionItems"], []);
+        if (!actionItems.length) {
+          return false;
+        }
+        if (!shouldAllowMediaQuery(mediaQueries, ixSession.mediaQueryKey)) {
+          return false;
+        }
+        const eventElementRoot = ixSession.hasBoundaryNodes && eventTarget ? elementApi.getClosestElement(eventTarget, BOUNDARY_SELECTOR) : null;
+        const carrierIndex = getMaxDurationItemIndex(actionItems);
+        let groupStartResult = false;
+        actionItems.forEach((actionItem, actionIndex) => {
+          const {
+            config,
+            actionTypeId
+          } = actionItem;
+          const shouldUsePlugin = isPluginType(actionTypeId);
+          const {
+            target
+          } = config;
+          if (!target) {
+            return;
+          }
+          const elementRoot = target.boundaryMode ? eventElementRoot : null;
+          const elements = getAffectedElements({
+            config,
+            event,
+            eventTarget,
+            elementRoot,
+            elementApi
+          });
+          elements.forEach((element, elementIndex) => {
+            const pluginInstance = shouldUsePlugin ? (
+              // $FlowFixMe
+              createPluginInstance(actionTypeId)(element, actionItem)
+            ) : null;
+            const pluginDuration = shouldUsePlugin ? (
+              // $FlowFixMe
+              getPluginDuration(actionTypeId)(element, actionItem)
+            ) : null;
+            groupStartResult = true;
+            const isCarrier = carrierIndex === actionIndex && elementIndex === 0;
+            const computedStyle = getComputedStyle({
+              element,
+              actionItem
+            });
+            const destination = getDestinationValues(
+              {
+                element,
+                actionItem,
+                elementApi
+              },
+              // $FlowFixMe
+              pluginInstance
+            );
+            createInstance({
+              store,
+              element,
+              actionItem,
+              eventId,
+              eventTarget,
+              eventStateKey,
+              actionListId,
+              groupIndex,
+              isCarrier,
+              computedStyle,
+              destination,
+              immediate,
+              verbose,
+              pluginInstance,
+              pluginDuration,
+              instanceDelay
