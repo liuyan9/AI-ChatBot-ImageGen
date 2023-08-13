@@ -12003,3 +12003,419 @@
               pluginInstance,
               pluginDuration,
               instanceDelay
+            });
+          });
+        });
+        return groupStartResult;
+      }
+      function createInstance(options) {
+        var _ixData$events$eventI;
+        const {
+          store,
+          computedStyle
+        } = options, rest = (0, _objectWithoutPropertiesLoose2.default)(options, _excluded);
+        const {
+          element,
+          actionItem,
+          immediate,
+          pluginInstance,
+          continuous,
+          restingValue,
+          eventId
+        } = rest;
+        const autoStart = !continuous;
+        const instanceId = getInstanceId();
+        const {
+          ixElements,
+          ixSession,
+          ixData
+        } = store.getState();
+        const elementId = getElementId(ixElements, element);
+        const {
+          refState
+        } = ixElements[elementId] || {};
+        const refType = elementApi.getRefType(element);
+        const skipMotion = ixSession.reducedMotion && _constants.ReducedMotionTypes[actionItem.actionTypeId];
+        let skipToValue;
+        if (skipMotion && continuous) {
+          switch ((_ixData$events$eventI = ixData.events[eventId]) === null || _ixData$events$eventI === void 0 ? void 0 : _ixData$events$eventI.eventTypeId) {
+            case _constants.EventTypeConsts.MOUSE_MOVE:
+            case _constants.EventTypeConsts.MOUSE_MOVE_IN_VIEWPORT:
+              skipToValue = restingValue;
+              break;
+            default:
+              skipToValue = 0.5;
+              break;
+          }
+        }
+        const origin = getInstanceOrigin(
+          element,
+          refState,
+          computedStyle,
+          actionItem,
+          elementApi,
+          // $FlowFixMe
+          pluginInstance
+        );
+        store.dispatch((0, _IX2EngineActions.instanceAdded)((0, _extends2.default)({
+          instanceId,
+          elementId,
+          origin,
+          refType,
+          skipMotion,
+          skipToValue
+        }, rest)));
+        dispatchCustomEvent(document.body, "ix2-animation-started", instanceId);
+        if (immediate) {
+          renderImmediateInstance(store, instanceId);
+          return;
+        }
+        observeStore({
+          store,
+          select: ({
+            ixInstances
+          }) => ixInstances[instanceId],
+          onChange: handleInstanceChange
+        });
+        if (autoStart) {
+          store.dispatch((0, _IX2EngineActions.instanceStarted)(instanceId, ixSession.tick));
+        }
+      }
+      function removeInstance(instance, store) {
+        dispatchCustomEvent(document.body, "ix2-animation-stopping", {
+          instanceId: instance.id,
+          state: store.getState()
+        });
+        const {
+          elementId,
+          actionItem
+        } = instance;
+        const {
+          ixElements
+        } = store.getState();
+        const {
+          ref,
+          refType
+        } = ixElements[elementId] || {};
+        if (refType === HTML_ELEMENT) {
+          cleanupHTMLElement(ref, actionItem, elementApi);
+        }
+        store.dispatch((0, _IX2EngineActions.instanceRemoved)(instance.id));
+      }
+      function dispatchCustomEvent(element, eventName, detail) {
+        const event = document.createEvent("CustomEvent");
+        event.initCustomEvent(eventName, true, true, detail);
+        element.dispatchEvent(event);
+      }
+      function renderImmediateInstance(store, instanceId) {
+        const {
+          ixParameters
+        } = store.getState();
+        store.dispatch((0, _IX2EngineActions.instanceStarted)(instanceId, 0));
+        store.dispatch((0, _IX2EngineActions.animationFrameChanged)(performance.now(), ixParameters));
+        const {
+          ixInstances
+        } = store.getState();
+        handleInstanceChange(ixInstances[instanceId], store);
+      }
+      function handleInstanceChange(instance, store) {
+        const {
+          active,
+          continuous,
+          complete,
+          elementId,
+          actionItem,
+          actionTypeId,
+          renderType,
+          current,
+          groupIndex,
+          eventId,
+          eventTarget,
+          eventStateKey,
+          actionListId,
+          isCarrier,
+          styleProp,
+          verbose,
+          pluginInstance
+        } = instance;
+        const {
+          ixData,
+          ixSession
+        } = store.getState();
+        const {
+          events
+        } = ixData;
+        const event = events[eventId] || {};
+        const {
+          mediaQueries = ixData.mediaQueryKeys
+        } = event;
+        if (!shouldAllowMediaQuery(mediaQueries, ixSession.mediaQueryKey)) {
+          return;
+        }
+        if (continuous || active || complete) {
+          if (current || renderType === RENDER_GENERAL && complete) {
+            store.dispatch((0, _IX2EngineActions.elementStateChanged)(elementId, actionTypeId, current, actionItem));
+            const {
+              ixElements
+            } = store.getState();
+            const {
+              ref,
+              refType,
+              refState
+            } = ixElements[elementId] || {};
+            const actionState = refState && refState[actionTypeId];
+            switch (refType) {
+              case HTML_ELEMENT: {
+                renderHTMLElement(ref, refState, actionState, eventId, actionItem, styleProp, elementApi, renderType, pluginInstance);
+                break;
+              }
+            }
+          }
+          if (complete) {
+            if (isCarrier) {
+              const started = startActionGroup({
+                store,
+                eventId,
+                eventTarget,
+                eventStateKey,
+                actionListId,
+                groupIndex: groupIndex + 1,
+                verbose
+              });
+              if (verbose && !started) {
+                store.dispatch((0, _IX2EngineActions.actionListPlaybackChanged)({
+                  actionListId,
+                  isPlaying: false
+                }));
+              }
+            }
+            removeInstance(instance, store);
+          }
+        }
+      }
+    }
+  });
+
+  // packages/systems/ix2/engine/index.js
+  var require_engine = __commonJS({
+    "packages/systems/ix2/engine/index.js"(exports) {
+      "use strict";
+      var _interopRequireWildcard = require_interopRequireWildcard().default;
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.actions = void 0;
+      exports.destroy = destroy;
+      exports.init = init;
+      exports.setEnv = setEnv;
+      exports.store = void 0;
+      require_includes3();
+      var _redux = require_lib2();
+      var _IX2Reducer = _interopRequireDefault(require_IX2Reducer());
+      var _IX2VanillaEngine = require_IX2VanillaEngine();
+      var actions = _interopRequireWildcard(require_IX2EngineActions());
+      exports.actions = actions;
+      var store = (0, _redux.createStore)(_IX2Reducer.default);
+      exports.store = store;
+      function setEnv(env) {
+        if (env()) {
+          (0, _IX2VanillaEngine.observeRequests)(store);
+        }
+      }
+      function init(rawData) {
+        destroy();
+        (0, _IX2VanillaEngine.startEngine)({
+          store,
+          rawData,
+          allowEvents: true
+        });
+      }
+      function destroy() {
+        (0, _IX2VanillaEngine.stopEngine)(store);
+      }
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/webflow-ix2.js
+  var require_webflow_ix2 = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-ix2.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      var ix2 = require_engine();
+      ix2.setEnv(Webflow.env);
+      Webflow.define("ix2", module.exports = function() {
+        return ix2;
+      });
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/webflow-links.js
+  var require_webflow_links = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-links.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      Webflow.define("links", module.exports = function($2, _) {
+        var api = {};
+        var $win = $2(window);
+        var designer;
+        var inApp = Webflow.env();
+        var location = window.location;
+        var tempLink = document.createElement("a");
+        var linkCurrent = "w--current";
+        var indexPage = /index\.(html|php)$/;
+        var dirList = /\/$/;
+        var anchors;
+        var slug;
+        api.ready = api.design = api.preview = init;
+        function init() {
+          designer = inApp && Webflow.env("design");
+          slug = Webflow.env("slug") || location.pathname || "";
+          Webflow.scroll.off(scroll);
+          anchors = [];
+          var links = document.links;
+          for (var i = 0; i < links.length; ++i) {
+            select(links[i]);
+          }
+          if (anchors.length) {
+            Webflow.scroll.on(scroll);
+            scroll();
+          }
+        }
+        function select(link) {
+          var href = designer && link.getAttribute("href-disabled") || link.getAttribute("href");
+          tempLink.href = href;
+          if (href.indexOf(":") >= 0) {
+            return;
+          }
+          var $link = $2(link);
+          if (tempLink.hash.length > 1 && tempLink.host + tempLink.pathname === location.host + location.pathname) {
+            if (!/^#[a-zA-Z0-9\-\_]+$/.test(tempLink.hash)) {
+              return;
+            }
+            var $section = $2(tempLink.hash);
+            $section.length && anchors.push({
+              link: $link,
+              sec: $section,
+              active: false
+            });
+            return;
+          }
+          if (href === "#" || href === "") {
+            return;
+          }
+          var match = tempLink.href === location.href || href === slug || indexPage.test(href) && dirList.test(slug);
+          setClass($link, linkCurrent, match);
+        }
+        function scroll() {
+          var viewTop = $win.scrollTop();
+          var viewHeight = $win.height();
+          _.each(anchors, function(anchor) {
+            var $link = anchor.link;
+            var $section = anchor.sec;
+            var top = $section.offset().top;
+            var height = $section.outerHeight();
+            var offset = viewHeight * 0.5;
+            var active = $section.is(":visible") && top + height - offset >= viewTop && top + offset <= viewTop + viewHeight;
+            if (anchor.active === active) {
+              return;
+            }
+            anchor.active = active;
+            setClass($link, linkCurrent, active);
+          });
+        }
+        function setClass($elem, className, add) {
+          var exists = $elem.hasClass(className);
+          if (add && exists) {
+            return;
+          }
+          if (!add && !exists) {
+            return;
+          }
+          add ? $elem.addClass(className) : $elem.removeClass(className);
+        }
+        return api;
+      });
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/webflow-scroll.js
+  var require_webflow_scroll = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-scroll.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      Webflow.define("scroll", module.exports = function($2) {
+        var NS_EVENTS = {
+          WF_CLICK_EMPTY: "click.wf-empty-link",
+          WF_CLICK_SCROLL: "click.wf-scroll"
+        };
+        var loc = window.location;
+        var history = inIframe() ? null : window.history;
+        var $win = $2(window);
+        var $doc = $2(document);
+        var $body = $2(document.body);
+        var animate = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(fn) {
+          window.setTimeout(fn, 15);
+        };
+        var rootTag = Webflow.env("editor") ? ".w-editor-body" : "body";
+        var headerSelector = "header, " + rootTag + " > .header, " + rootTag + " > .w-nav:not([data-no-scroll])";
+        var emptyHrefSelector = 'a[href="#"]';
+        var localHrefSelector = 'a[href*="#"]:not(.w-tab-link):not(' + emptyHrefSelector + ")";
+        var scrollTargetOutlineCSS = '.wf-force-outline-none[tabindex="-1"]:focus{outline:none;}';
+        var focusStylesEl = document.createElement("style");
+        focusStylesEl.appendChild(document.createTextNode(scrollTargetOutlineCSS));
+        function inIframe() {
+          try {
+            return Boolean(window.frameElement);
+          } catch (e) {
+            return true;
+          }
+        }
+        var validHash = /^#[a-zA-Z0-9][\w:.-]*$/;
+        function linksToCurrentPage(link) {
+          return validHash.test(link.hash) && link.host + link.pathname === loc.host + loc.pathname;
+        }
+        const reducedMotionMediaQuery = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)");
+        function reducedMotionEnabled() {
+          return document.body.getAttribute("data-wf-scroll-motion") === "none" || reducedMotionMediaQuery.matches;
+        }
+        function setFocusable($el, action) {
+          var initialTabindex;
+          switch (action) {
+            case "add":
+              initialTabindex = $el.attr("tabindex");
+              if (initialTabindex) {
+                $el.attr("data-wf-tabindex-swap", initialTabindex);
+              } else {
+                $el.attr("tabindex", "-1");
+              }
+              break;
+            case "remove":
+              initialTabindex = $el.attr("data-wf-tabindex-swap");
+              if (initialTabindex) {
+                $el.attr("tabindex", initialTabindex);
+                $el.removeAttr("data-wf-tabindex-swap");
+              } else {
+                $el.removeAttr("tabindex");
+              }
+              break;
+          }
+          $el.toggleClass("wf-force-outline-none", action === "add");
+        }
+        function validateScroll(evt) {
+          var target = evt.currentTarget;
+          if (
+            // Bail if in Designer
+            Webflow.env("design") || // Ignore links being used by jQuery mobile
+            window.$.mobile && /(?:^|\s)ui-link(?:$|\s)/.test(target.className)
+          ) {
+            return;
+          }
+          var hash = linksToCurrentPage(target) ? target.hash : "";
+          if (hash === "")
+            return;
+          var $el = $2(hash);
+          if (!$el.length) {
+            return;
+          }
+          if (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
