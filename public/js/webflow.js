@@ -13334,3 +13334,448 @@
         Symbol: $Symbol
       });
       $forEach(objectKeys(WellKnownSymbolsStore), function(name) {
+        defineWellKnownSymbol(name);
+      });
+      $2({ target: SYMBOL, stat: true, forced: !NATIVE_SYMBOL }, {
+        // `Symbol.for` method
+        // https://tc39.es/ecma262/#sec-symbol.for
+        "for": function(key) {
+          var string = $toString(key);
+          if (hasOwn(StringToSymbolRegistry, string))
+            return StringToSymbolRegistry[string];
+          var symbol = $Symbol(string);
+          StringToSymbolRegistry[string] = symbol;
+          SymbolToStringRegistry[symbol] = string;
+          return symbol;
+        },
+        // `Symbol.keyFor` method
+        // https://tc39.es/ecma262/#sec-symbol.keyfor
+        keyFor: function keyFor(sym) {
+          if (!isSymbol(sym))
+            throw TypeError2(sym + " is not a symbol");
+          if (hasOwn(SymbolToStringRegistry, sym))
+            return SymbolToStringRegistry[sym];
+        },
+        useSetter: function() {
+          USE_SETTER = true;
+        },
+        useSimple: function() {
+          USE_SETTER = false;
+        }
+      });
+      $2({ target: "Object", stat: true, forced: !NATIVE_SYMBOL, sham: !DESCRIPTORS }, {
+        // `Object.create` method
+        // https://tc39.es/ecma262/#sec-object.create
+        create: $create,
+        // `Object.defineProperty` method
+        // https://tc39.es/ecma262/#sec-object.defineproperty
+        defineProperty: $defineProperty,
+        // `Object.defineProperties` method
+        // https://tc39.es/ecma262/#sec-object.defineproperties
+        defineProperties: $defineProperties,
+        // `Object.getOwnPropertyDescriptor` method
+        // https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
+        getOwnPropertyDescriptor: $getOwnPropertyDescriptor
+      });
+      $2({ target: "Object", stat: true, forced: !NATIVE_SYMBOL }, {
+        // `Object.getOwnPropertyNames` method
+        // https://tc39.es/ecma262/#sec-object.getownpropertynames
+        getOwnPropertyNames: $getOwnPropertyNames,
+        // `Object.getOwnPropertySymbols` method
+        // https://tc39.es/ecma262/#sec-object.getownpropertysymbols
+        getOwnPropertySymbols: $getOwnPropertySymbols
+      });
+      $2({ target: "Object", stat: true, forced: fails(function() {
+        getOwnPropertySymbolsModule.f(1);
+      }) }, {
+        getOwnPropertySymbols: function getOwnPropertySymbols(it) {
+          return getOwnPropertySymbolsModule.f(toObject(it));
+        }
+      });
+      if ($stringify) {
+        FORCED_JSON_STRINGIFY = !NATIVE_SYMBOL || fails(function() {
+          var symbol = $Symbol();
+          return $stringify([symbol]) != "[null]" || $stringify({ a: symbol }) != "{}" || $stringify(Object(symbol)) != "{}";
+        });
+        $2({ target: "JSON", stat: true, forced: FORCED_JSON_STRINGIFY }, {
+          // eslint-disable-next-line no-unused-vars -- required for `.length`
+          stringify: function stringify(it, replacer, space) {
+            var args = arraySlice(arguments);
+            var $replacer = replacer;
+            if (!isObject(replacer) && it === void 0 || isSymbol(it))
+              return;
+            if (!isArray(replacer))
+              replacer = function(key, value) {
+                if (isCallable($replacer))
+                  value = call($replacer, this, key, value);
+                if (!isSymbol(value))
+                  return value;
+              };
+            args[1] = replacer;
+            return apply($stringify, null, args);
+          }
+        });
+      }
+      var FORCED_JSON_STRINGIFY;
+      if (!SymbolPrototype[TO_PRIMITIVE]) {
+        valueOf = SymbolPrototype.valueOf;
+        redefine(SymbolPrototype, TO_PRIMITIVE, function(hint) {
+          return call(valueOf, this);
+        });
+      }
+      var valueOf;
+      setToStringTag($Symbol, SYMBOL);
+      hiddenKeys[HIDDEN] = true;
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.async-iterator.js
+  var require_es_symbol_async_iterator = __commonJS({
+    "node_modules/core-js/modules/es.symbol.async-iterator.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("asyncIterator");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.description.js
+  var require_es_symbol_description = __commonJS({
+    "node_modules/core-js/modules/es.symbol.description.js"() {
+      "use strict";
+      var $2 = require_export();
+      var DESCRIPTORS = require_descriptors();
+      var global2 = require_global();
+      var uncurryThis = require_function_uncurry_this();
+      var hasOwn = require_has_own_property();
+      var isCallable = require_is_callable();
+      var isPrototypeOf = require_object_is_prototype_of();
+      var toString = require_to_string();
+      var defineProperty = require_object_define_property().f;
+      var copyConstructorProperties = require_copy_constructor_properties();
+      var NativeSymbol = global2.Symbol;
+      var SymbolPrototype = NativeSymbol && NativeSymbol.prototype;
+      if (DESCRIPTORS && isCallable(NativeSymbol) && (!("description" in SymbolPrototype) || // Safari 12 bug
+      NativeSymbol().description !== void 0)) {
+        EmptyStringDescriptionStore = {};
+        SymbolWrapper = function Symbol2() {
+          var description = arguments.length < 1 || arguments[0] === void 0 ? void 0 : toString(arguments[0]);
+          var result = isPrototypeOf(SymbolPrototype, this) ? new NativeSymbol(description) : description === void 0 ? NativeSymbol() : NativeSymbol(description);
+          if (description === "")
+            EmptyStringDescriptionStore[result] = true;
+          return result;
+        };
+        copyConstructorProperties(SymbolWrapper, NativeSymbol);
+        SymbolWrapper.prototype = SymbolPrototype;
+        SymbolPrototype.constructor = SymbolWrapper;
+        NATIVE_SYMBOL = String(NativeSymbol("test")) == "Symbol(test)";
+        symbolToString = uncurryThis(SymbolPrototype.toString);
+        symbolValueOf = uncurryThis(SymbolPrototype.valueOf);
+        regexp = /^Symbol\((.*)\)[^)]+$/;
+        replace = uncurryThis("".replace);
+        stringSlice = uncurryThis("".slice);
+        defineProperty(SymbolPrototype, "description", {
+          configurable: true,
+          get: function description() {
+            var symbol = symbolValueOf(this);
+            var string = symbolToString(symbol);
+            if (hasOwn(EmptyStringDescriptionStore, symbol))
+              return "";
+            var desc = NATIVE_SYMBOL ? stringSlice(string, 7, -1) : replace(string, regexp, "$1");
+            return desc === "" ? void 0 : desc;
+          }
+        });
+        $2({ global: true, forced: true }, {
+          Symbol: SymbolWrapper
+        });
+      }
+      var EmptyStringDescriptionStore;
+      var SymbolWrapper;
+      var NATIVE_SYMBOL;
+      var symbolToString;
+      var symbolValueOf;
+      var regexp;
+      var replace;
+      var stringSlice;
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.has-instance.js
+  var require_es_symbol_has_instance = __commonJS({
+    "node_modules/core-js/modules/es.symbol.has-instance.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("hasInstance");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.is-concat-spreadable.js
+  var require_es_symbol_is_concat_spreadable = __commonJS({
+    "node_modules/core-js/modules/es.symbol.is-concat-spreadable.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("isConcatSpreadable");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.iterator.js
+  var require_es_symbol_iterator = __commonJS({
+    "node_modules/core-js/modules/es.symbol.iterator.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("iterator");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.match.js
+  var require_es_symbol_match = __commonJS({
+    "node_modules/core-js/modules/es.symbol.match.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("match");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.match-all.js
+  var require_es_symbol_match_all = __commonJS({
+    "node_modules/core-js/modules/es.symbol.match-all.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("matchAll");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.replace.js
+  var require_es_symbol_replace = __commonJS({
+    "node_modules/core-js/modules/es.symbol.replace.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("replace");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.search.js
+  var require_es_symbol_search = __commonJS({
+    "node_modules/core-js/modules/es.symbol.search.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("search");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.species.js
+  var require_es_symbol_species = __commonJS({
+    "node_modules/core-js/modules/es.symbol.species.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("species");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.split.js
+  var require_es_symbol_split = __commonJS({
+    "node_modules/core-js/modules/es.symbol.split.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("split");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.to-primitive.js
+  var require_es_symbol_to_primitive = __commonJS({
+    "node_modules/core-js/modules/es.symbol.to-primitive.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("toPrimitive");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.to-string-tag.js
+  var require_es_symbol_to_string_tag = __commonJS({
+    "node_modules/core-js/modules/es.symbol.to-string-tag.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("toStringTag");
+    }
+  });
+
+  // node_modules/core-js/modules/es.symbol.unscopables.js
+  var require_es_symbol_unscopables = __commonJS({
+    "node_modules/core-js/modules/es.symbol.unscopables.js"() {
+      var defineWellKnownSymbol = require_define_well_known_symbol();
+      defineWellKnownSymbol("unscopables");
+    }
+  });
+
+  // node_modules/core-js/modules/es.json.to-string-tag.js
+  var require_es_json_to_string_tag = __commonJS({
+    "node_modules/core-js/modules/es.json.to-string-tag.js"() {
+      var global2 = require_global();
+      var setToStringTag = require_set_to_string_tag();
+      setToStringTag(global2.JSON, "JSON", true);
+    }
+  });
+
+  // node_modules/core-js/modules/es.math.to-string-tag.js
+  var require_es_math_to_string_tag = __commonJS({
+    "node_modules/core-js/modules/es.math.to-string-tag.js"() {
+      var setToStringTag = require_set_to_string_tag();
+      setToStringTag(Math, "Math", true);
+    }
+  });
+
+  // node_modules/core-js/modules/es.reflect.to-string-tag.js
+  var require_es_reflect_to_string_tag = __commonJS({
+    "node_modules/core-js/modules/es.reflect.to-string-tag.js"() {
+      var $2 = require_export();
+      var global2 = require_global();
+      var setToStringTag = require_set_to_string_tag();
+      $2({ global: true }, { Reflect: {} });
+      setToStringTag(global2.Reflect, "Reflect", true);
+    }
+  });
+
+  // node_modules/core-js/es/symbol/index.js
+  var require_symbol = __commonJS({
+    "node_modules/core-js/es/symbol/index.js"(exports, module) {
+      require_es_array_concat();
+      require_es_object_to_string();
+      require_es_symbol();
+      require_es_symbol_async_iterator();
+      require_es_symbol_description();
+      require_es_symbol_has_instance();
+      require_es_symbol_is_concat_spreadable();
+      require_es_symbol_iterator();
+      require_es_symbol_match();
+      require_es_symbol_match_all();
+      require_es_symbol_replace();
+      require_es_symbol_search();
+      require_es_symbol_species();
+      require_es_symbol_split();
+      require_es_symbol_to_primitive();
+      require_es_symbol_to_string_tag();
+      require_es_symbol_unscopables();
+      require_es_json_to_string_tag();
+      require_es_math_to_string_tag();
+      require_es_reflect_to_string_tag();
+      var path = require_path();
+      module.exports = path.Symbol;
+    }
+  });
+
+  // node_modules/core-js/internals/dom-iterables.js
+  var require_dom_iterables = __commonJS({
+    "node_modules/core-js/internals/dom-iterables.js"(exports, module) {
+      module.exports = {
+        CSSRuleList: 0,
+        CSSStyleDeclaration: 0,
+        CSSValueList: 0,
+        ClientRectList: 0,
+        DOMRectList: 0,
+        DOMStringList: 0,
+        DOMTokenList: 1,
+        DataTransferItemList: 0,
+        FileList: 0,
+        HTMLAllCollection: 0,
+        HTMLCollection: 0,
+        HTMLFormElement: 0,
+        HTMLSelectElement: 0,
+        MediaList: 0,
+        MimeTypeArray: 0,
+        NamedNodeMap: 0,
+        NodeList: 1,
+        PaintRequestList: 0,
+        Plugin: 0,
+        PluginArray: 0,
+        SVGLengthList: 0,
+        SVGNumberList: 0,
+        SVGPathSegList: 0,
+        SVGPointList: 0,
+        SVGStringList: 0,
+        SVGTransformList: 0,
+        SourceBufferList: 0,
+        StyleSheetList: 0,
+        TextTrackCueList: 0,
+        TextTrackList: 0,
+        TouchList: 0
+      };
+    }
+  });
+
+  // node_modules/core-js/internals/dom-token-list-prototype.js
+  var require_dom_token_list_prototype = __commonJS({
+    "node_modules/core-js/internals/dom-token-list-prototype.js"(exports, module) {
+      var documentCreateElement = require_document_create_element();
+      var classList = documentCreateElement("span").classList;
+      var DOMTokenListPrototype = classList && classList.constructor && classList.constructor.prototype;
+      module.exports = DOMTokenListPrototype === Object.prototype ? void 0 : DOMTokenListPrototype;
+    }
+  });
+
+  // node_modules/core-js/internals/iterators.js
+  var require_iterators = __commonJS({
+    "node_modules/core-js/internals/iterators.js"(exports, module) {
+      module.exports = {};
+    }
+  });
+
+  // node_modules/core-js/internals/correct-prototype-getter.js
+  var require_correct_prototype_getter = __commonJS({
+    "node_modules/core-js/internals/correct-prototype-getter.js"(exports, module) {
+      var fails = require_fails();
+      module.exports = !fails(function() {
+        function F() {
+        }
+        F.prototype.constructor = null;
+        return Object.getPrototypeOf(new F()) !== F.prototype;
+      });
+    }
+  });
+
+  // node_modules/core-js/internals/object-get-prototype-of.js
+  var require_object_get_prototype_of = __commonJS({
+    "node_modules/core-js/internals/object-get-prototype-of.js"(exports, module) {
+      var global2 = require_global();
+      var hasOwn = require_has_own_property();
+      var isCallable = require_is_callable();
+      var toObject = require_to_object();
+      var sharedKey = require_shared_key();
+      var CORRECT_PROTOTYPE_GETTER = require_correct_prototype_getter();
+      var IE_PROTO = sharedKey("IE_PROTO");
+      var Object2 = global2.Object;
+      var ObjectPrototype = Object2.prototype;
+      module.exports = CORRECT_PROTOTYPE_GETTER ? Object2.getPrototypeOf : function(O) {
+        var object = toObject(O);
+        if (hasOwn(object, IE_PROTO))
+          return object[IE_PROTO];
+        var constructor = object.constructor;
+        if (isCallable(constructor) && object instanceof constructor) {
+          return constructor.prototype;
+        }
+        return object instanceof Object2 ? ObjectPrototype : null;
+      };
+    }
+  });
+
+  // node_modules/core-js/internals/iterators-core.js
+  var require_iterators_core = __commonJS({
+    "node_modules/core-js/internals/iterators-core.js"(exports, module) {
+      "use strict";
+      var fails = require_fails();
+      var isCallable = require_is_callable();
+      var create = require_object_create();
+      var getPrototypeOf = require_object_get_prototype_of();
+      var redefine = require_redefine();
+      var wellKnownSymbol = require_well_known_symbol();
+      var IS_PURE = require_is_pure();
+      var ITERATOR = wellKnownSymbol("iterator");
+      var BUGGY_SAFARI_ITERATORS = false;
+      var IteratorPrototype;
+      var PrototypeOfArrayIteratorPrototype;
+      var arrayIterator;
+      if ([].keys) {
+        arrayIterator = [].keys();
+        if (!("next" in arrayIterator))
+          BUGGY_SAFARI_ITERATORS = true;
+        else {
+          PrototypeOfArrayIteratorPrototype = getPrototypeOf(getPrototypeOf(arrayIterator));
+          if (PrototypeOfArrayIteratorPrototype !== Object.prototype)
+            IteratorPrototype = PrototypeOfArrayIteratorPrototype;
+        }
+      }
+      var NEW_ITERATOR_PROTOTYPE = IteratorPrototype == void 0 || fails(function() {
+        var test = {};
+        return IteratorPrototype[ITERATOR].call(test) !== test;
+      });
+      if (NEW_ITERATOR_PROTOTYPE)
+        IteratorPrototype = {};
+      else if (IS_PURE)
+        IteratorPrototype = create(IteratorPrototype);
+      if (!isCallable(IteratorPrototype[ITERATOR])) {
