@@ -15085,3 +15085,414 @@
           for (index = 0; index < 47; index++) {
             test.push({ k: chr + index, v: value });
           }
+        }
+        test.sort(function(a, b) {
+          return b.v - a.v;
+        });
+        for (index = 0; index < test.length; index++) {
+          chr = test[index].k.charAt(0);
+          if (result.charAt(result.length - 1) !== chr)
+            result += chr;
+        }
+        return result !== "DGBEFHACIJK";
+      });
+      var FORCED = FAILS_ON_UNDEFINED || !FAILS_ON_NULL || !STRICT_METHOD || !STABLE_SORT;
+      var getSortCompare = function(comparefn) {
+        return function(x, y) {
+          if (y === void 0)
+            return -1;
+          if (x === void 0)
+            return 1;
+          if (comparefn !== void 0)
+            return +comparefn(x, y) || 0;
+          return toString(x) > toString(y) ? 1 : -1;
+        };
+      };
+      $2({ target: "Array", proto: true, forced: FORCED }, {
+        sort: function sort(comparefn) {
+          if (comparefn !== void 0)
+            aCallable(comparefn);
+          var array = toObject(this);
+          if (STABLE_SORT)
+            return comparefn === void 0 ? un$Sort(array) : un$Sort(array, comparefn);
+          var items = [];
+          var arrayLength = lengthOfArrayLike(array);
+          var itemsLength, index;
+          for (index = 0; index < arrayLength; index++) {
+            if (index in array)
+              push(items, array[index]);
+          }
+          internalSort(items, getSortCompare(comparefn));
+          itemsLength = items.length;
+          index = 0;
+          while (index < itemsLength)
+            array[index] = items[index++];
+          while (index < arrayLength)
+            delete array[index++];
+          return array;
+        }
+      });
+    }
+  });
+
+  // node_modules/core-js/internals/set-species.js
+  var require_set_species = __commonJS({
+    "node_modules/core-js/internals/set-species.js"(exports, module) {
+      "use strict";
+      var getBuiltIn = require_get_built_in();
+      var definePropertyModule = require_object_define_property();
+      var wellKnownSymbol = require_well_known_symbol();
+      var DESCRIPTORS = require_descriptors();
+      var SPECIES = wellKnownSymbol("species");
+      module.exports = function(CONSTRUCTOR_NAME) {
+        var Constructor = getBuiltIn(CONSTRUCTOR_NAME);
+        var defineProperty = definePropertyModule.f;
+        if (DESCRIPTORS && Constructor && !Constructor[SPECIES]) {
+          defineProperty(Constructor, SPECIES, {
+            configurable: true,
+            get: function() {
+              return this;
+            }
+          });
+        }
+      };
+    }
+  });
+
+  // node_modules/core-js/modules/es.array.species.js
+  var require_es_array_species = __commonJS({
+    "node_modules/core-js/modules/es.array.species.js"() {
+      var setSpecies = require_set_species();
+      setSpecies("Array");
+    }
+  });
+
+  // node_modules/core-js/modules/es.array.splice.js
+  var require_es_array_splice = __commonJS({
+    "node_modules/core-js/modules/es.array.splice.js"() {
+      "use strict";
+      var $2 = require_export();
+      var global2 = require_global();
+      var toAbsoluteIndex = require_to_absolute_index();
+      var toIntegerOrInfinity = require_to_integer_or_infinity();
+      var lengthOfArrayLike = require_length_of_array_like();
+      var toObject = require_to_object();
+      var arraySpeciesCreate = require_array_species_create();
+      var createProperty = require_create_property();
+      var arrayMethodHasSpeciesSupport = require_array_method_has_species_support();
+      var HAS_SPECIES_SUPPORT = arrayMethodHasSpeciesSupport("splice");
+      var TypeError2 = global2.TypeError;
+      var max = Math.max;
+      var min = Math.min;
+      var MAX_SAFE_INTEGER = 9007199254740991;
+      var MAXIMUM_ALLOWED_LENGTH_EXCEEDED = "Maximum allowed length exceeded";
+      $2({ target: "Array", proto: true, forced: !HAS_SPECIES_SUPPORT }, {
+        splice: function splice(start, deleteCount) {
+          var O = toObject(this);
+          var len = lengthOfArrayLike(O);
+          var actualStart = toAbsoluteIndex(start, len);
+          var argumentsLength = arguments.length;
+          var insertCount, actualDeleteCount, A, k, from, to;
+          if (argumentsLength === 0) {
+            insertCount = actualDeleteCount = 0;
+          } else if (argumentsLength === 1) {
+            insertCount = 0;
+            actualDeleteCount = len - actualStart;
+          } else {
+            insertCount = argumentsLength - 2;
+            actualDeleteCount = min(max(toIntegerOrInfinity(deleteCount), 0), len - actualStart);
+          }
+          if (len + insertCount - actualDeleteCount > MAX_SAFE_INTEGER) {
+            throw TypeError2(MAXIMUM_ALLOWED_LENGTH_EXCEEDED);
+          }
+          A = arraySpeciesCreate(O, actualDeleteCount);
+          for (k = 0; k < actualDeleteCount; k++) {
+            from = actualStart + k;
+            if (from in O)
+              createProperty(A, k, O[from]);
+          }
+          A.length = actualDeleteCount;
+          if (insertCount < actualDeleteCount) {
+            for (k = actualStart; k < len - actualDeleteCount; k++) {
+              from = k + actualDeleteCount;
+              to = k + insertCount;
+              if (from in O)
+                O[to] = O[from];
+              else
+                delete O[to];
+            }
+            for (k = len; k > len - actualDeleteCount + insertCount; k--)
+              delete O[k - 1];
+          } else if (insertCount > actualDeleteCount) {
+            for (k = len - actualDeleteCount; k > actualStart; k--) {
+              from = k + actualDeleteCount - 1;
+              to = k + insertCount - 1;
+              if (from in O)
+                O[to] = O[from];
+              else
+                delete O[to];
+            }
+          }
+          for (k = 0; k < insertCount; k++) {
+            O[k + actualStart] = arguments[k + 2];
+          }
+          O.length = len - actualDeleteCount + insertCount;
+          return A;
+        }
+      });
+    }
+  });
+
+  // node_modules/core-js/modules/es.array.unscopables.flat.js
+  var require_es_array_unscopables_flat = __commonJS({
+    "node_modules/core-js/modules/es.array.unscopables.flat.js"() {
+      var addToUnscopables = require_add_to_unscopables();
+      addToUnscopables("flat");
+    }
+  });
+
+  // node_modules/core-js/modules/es.array.unscopables.flat-map.js
+  var require_es_array_unscopables_flat_map = __commonJS({
+    "node_modules/core-js/modules/es.array.unscopables.flat-map.js"() {
+      var addToUnscopables = require_add_to_unscopables();
+      addToUnscopables("flatMap");
+    }
+  });
+
+  // node_modules/core-js/internals/string-multibyte.js
+  var require_string_multibyte = __commonJS({
+    "node_modules/core-js/internals/string-multibyte.js"(exports, module) {
+      var uncurryThis = require_function_uncurry_this();
+      var toIntegerOrInfinity = require_to_integer_or_infinity();
+      var toString = require_to_string();
+      var requireObjectCoercible = require_require_object_coercible();
+      var charAt = uncurryThis("".charAt);
+      var charCodeAt = uncurryThis("".charCodeAt);
+      var stringSlice = uncurryThis("".slice);
+      var createMethod = function(CONVERT_TO_STRING) {
+        return function($this, pos) {
+          var S = toString(requireObjectCoercible($this));
+          var position = toIntegerOrInfinity(pos);
+          var size = S.length;
+          var first, second;
+          if (position < 0 || position >= size)
+            return CONVERT_TO_STRING ? "" : void 0;
+          first = charCodeAt(S, position);
+          return first < 55296 || first > 56319 || position + 1 === size || (second = charCodeAt(S, position + 1)) < 56320 || second > 57343 ? CONVERT_TO_STRING ? charAt(S, position) : first : CONVERT_TO_STRING ? stringSlice(S, position, position + 2) : (first - 55296 << 10) + (second - 56320) + 65536;
+        };
+      };
+      module.exports = {
+        // `String.prototype.codePointAt` method
+        // https://tc39.es/ecma262/#sec-string.prototype.codepointat
+        codeAt: createMethod(false),
+        // `String.prototype.at` method
+        // https://github.com/mathiasbynens/String.prototype.at
+        charAt: createMethod(true)
+      };
+    }
+  });
+
+  // node_modules/core-js/modules/es.string.iterator.js
+  var require_es_string_iterator = __commonJS({
+    "node_modules/core-js/modules/es.string.iterator.js"() {
+      "use strict";
+      var charAt = require_string_multibyte().charAt;
+      var toString = require_to_string();
+      var InternalStateModule = require_internal_state();
+      var defineIterator = require_define_iterator();
+      var STRING_ITERATOR = "String Iterator";
+      var setInternalState = InternalStateModule.set;
+      var getInternalState = InternalStateModule.getterFor(STRING_ITERATOR);
+      defineIterator(String, "String", function(iterated) {
+        setInternalState(this, {
+          type: STRING_ITERATOR,
+          string: toString(iterated),
+          index: 0
+        });
+      }, function next() {
+        var state = getInternalState(this);
+        var string = state.string;
+        var index = state.index;
+        var point;
+        if (index >= string.length)
+          return { value: void 0, done: true };
+        point = charAt(string, index);
+        state.index += point.length;
+        return { value: point, done: false };
+      });
+    }
+  });
+
+  // node_modules/core-js/es/array/index.js
+  var require_array = __commonJS({
+    "node_modules/core-js/es/array/index.js"(exports, module) {
+      require_es_array_from();
+      require_es_array_is_array();
+      require_es_array_of();
+      require_es_array_at();
+      require_es_array_concat();
+      require_es_array_copy_within();
+      require_es_array_every();
+      require_es_array_fill();
+      require_es_array_filter();
+      require_es_array_find();
+      require_es_array_find_index();
+      require_es_array_flat();
+      require_es_array_flat_map();
+      require_es_array_for_each();
+      require_es_array_includes();
+      require_es_array_index_of();
+      require_es_array_iterator();
+      require_es_array_join();
+      require_es_array_last_index_of();
+      require_es_array_map();
+      require_es_array_reduce();
+      require_es_array_reduce_right();
+      require_es_array_reverse();
+      require_es_array_slice();
+      require_es_array_some();
+      require_es_array_sort();
+      require_es_array_species();
+      require_es_array_splice();
+      require_es_array_unscopables_flat();
+      require_es_array_unscopables_flat_map();
+      require_es_object_to_string();
+      require_es_string_iterator();
+      var path = require_path();
+      module.exports = path.Array;
+    }
+  });
+
+  // node_modules/core-js/stable/array/index.js
+  var require_array2 = __commonJS({
+    "node_modules/core-js/stable/array/index.js"(exports, module) {
+      var parent = require_array();
+      module.exports = parent;
+    }
+  });
+
+  // node_modules/core-js/internals/freezing.js
+  var require_freezing = __commonJS({
+    "node_modules/core-js/internals/freezing.js"(exports, module) {
+      var fails = require_fails();
+      module.exports = !fails(function() {
+        return Object.isExtensible(Object.preventExtensions({}));
+      });
+    }
+  });
+
+  // node_modules/core-js/internals/internal-metadata.js
+  var require_internal_metadata = __commonJS({
+    "node_modules/core-js/internals/internal-metadata.js"(exports, module) {
+      var $2 = require_export();
+      var uncurryThis = require_function_uncurry_this();
+      var hiddenKeys = require_hidden_keys();
+      var isObject = require_is_object();
+      var hasOwn = require_has_own_property();
+      var defineProperty = require_object_define_property().f;
+      var getOwnPropertyNamesModule = require_object_get_own_property_names();
+      var getOwnPropertyNamesExternalModule = require_object_get_own_property_names_external();
+      var uid = require_uid();
+      var FREEZING = require_freezing();
+      var REQUIRED = false;
+      var METADATA = uid("meta");
+      var id = 0;
+      var isExtensible = Object.isExtensible || function() {
+        return true;
+      };
+      var setMetadata = function(it) {
+        defineProperty(it, METADATA, { value: {
+          objectID: "O" + id++,
+          // object ID
+          weakData: {}
+          // weak collections IDs
+        } });
+      };
+      var fastKey = function(it, create) {
+        if (!isObject(it))
+          return typeof it == "symbol" ? it : (typeof it == "string" ? "S" : "P") + it;
+        if (!hasOwn(it, METADATA)) {
+          if (!isExtensible(it))
+            return "F";
+          if (!create)
+            return "E";
+          setMetadata(it);
+        }
+        return it[METADATA].objectID;
+      };
+      var getWeakData = function(it, create) {
+        if (!hasOwn(it, METADATA)) {
+          if (!isExtensible(it))
+            return true;
+          if (!create)
+            return false;
+          setMetadata(it);
+        }
+        return it[METADATA].weakData;
+      };
+      var onFreeze = function(it) {
+        if (FREEZING && REQUIRED && isExtensible(it) && !hasOwn(it, METADATA))
+          setMetadata(it);
+        return it;
+      };
+      var enable = function() {
+        meta.enable = function() {
+        };
+        REQUIRED = true;
+        var getOwnPropertyNames = getOwnPropertyNamesModule.f;
+        var splice = uncurryThis([].splice);
+        var test = {};
+        test[METADATA] = 1;
+        if (getOwnPropertyNames(test).length) {
+          getOwnPropertyNamesModule.f = function(it) {
+            var result = getOwnPropertyNames(it);
+            for (var i = 0, length = result.length; i < length; i++) {
+              if (result[i] === METADATA) {
+                splice(result, i, 1);
+                break;
+              }
+            }
+            return result;
+          };
+          $2({ target: "Object", stat: true, forced: true }, {
+            getOwnPropertyNames: getOwnPropertyNamesExternalModule.f
+          });
+        }
+      };
+      var meta = module.exports = {
+        enable,
+        fastKey,
+        getWeakData,
+        onFreeze
+      };
+      hiddenKeys[METADATA] = true;
+    }
+  });
+
+  // node_modules/core-js/internals/iterate.js
+  var require_iterate = __commonJS({
+    "node_modules/core-js/internals/iterate.js"(exports, module) {
+      var global2 = require_global();
+      var bind2 = require_function_bind_context();
+      var call = require_function_call();
+      var anObject = require_an_object();
+      var tryToString = require_try_to_string();
+      var isArrayIteratorMethod = require_is_array_iterator_method();
+      var lengthOfArrayLike = require_length_of_array_like();
+      var isPrototypeOf = require_object_is_prototype_of();
+      var getIterator = require_get_iterator();
+      var getIteratorMethod = require_get_iterator_method();
+      var iteratorClose = require_iterator_close();
+      var TypeError2 = global2.TypeError;
+      var Result = function(stopped, result) {
+        this.stopped = stopped;
+        this.result = result;
+      };
+      var ResultPrototype = Result.prototype;
+      module.exports = function(iterable, unboundFunction, options) {
+        var that = options && options.that;
+        var AS_ENTRIES = !!(options && options.AS_ENTRIES);
+        var IS_ITERATOR = !!(options && options.IS_ITERATOR);
+        var INTERRUPTED = !!(options && options.INTERRUPTED);
+        var fn = bind2(unboundFunction, that);
+        var iterator, iterFn, index, length, result, next, step;
