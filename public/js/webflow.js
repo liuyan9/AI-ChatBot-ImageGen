@@ -18178,3 +18178,448 @@
         function isBooleanValue(value) {
           return value.kind === "BooleanValue";
         }
+        function isIntValue(value) {
+          return value.kind === "IntValue";
+        }
+        function isFloatValue(value) {
+          return value.kind === "FloatValue";
+        }
+        function isVariable(value) {
+          return value.kind === "Variable";
+        }
+        function isObjectValue(value) {
+          return value.kind === "ObjectValue";
+        }
+        function isListValue(value) {
+          return value.kind === "ListValue";
+        }
+        function isEnumValue(value) {
+          return value.kind === "EnumValue";
+        }
+        function isNullValue(value) {
+          return value.kind === "NullValue";
+        }
+        function valueToObjectRepresentation(argObj, name, value, variables) {
+          if (isIntValue(value) || isFloatValue(value)) {
+            argObj[name.value] = Number(value.value);
+          } else if (isBooleanValue(value) || isStringValue(value)) {
+            argObj[name.value] = value.value;
+          } else if (isObjectValue(value)) {
+            var nestedArgObj_1 = {};
+            value.fields.map(function(obj) {
+              return valueToObjectRepresentation(nestedArgObj_1, obj.name, obj.value, variables);
+            });
+            argObj[name.value] = nestedArgObj_1;
+          } else if (isVariable(value)) {
+            var variableValue = (variables || {})[value.name.value];
+            argObj[name.value] = variableValue;
+          } else if (isListValue(value)) {
+            argObj[name.value] = value.values.map(function(listValue) {
+              var nestedArgArrayObj = {};
+              valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
+              return nestedArgArrayObj[name.value];
+            });
+          } else if (isEnumValue(value)) {
+            argObj[name.value] = value.value;
+          } else if (isNullValue(value)) {
+            argObj[name.value] = null;
+          } else {
+            throw new Error('The inline argument "' + name.value + '" of kind "' + value.kind + '" is not supported.\n                    Use variables instead of inline arguments to overcome this limitation.');
+          }
+        }
+        function storeKeyNameFromField(field, variables) {
+          var directivesObj = null;
+          if (field.directives) {
+            directivesObj = {};
+            field.directives.forEach(function(directive) {
+              directivesObj[directive.name.value] = {};
+              if (directive.arguments) {
+                directive.arguments.forEach(function(_a) {
+                  var name = _a.name, value = _a.value;
+                  return valueToObjectRepresentation(directivesObj[directive.name.value], name, value, variables);
+                });
+              }
+            });
+          }
+          var argObj = null;
+          if (field.arguments && field.arguments.length) {
+            argObj = {};
+            field.arguments.forEach(function(_a) {
+              var name = _a.name, value = _a.value;
+              return valueToObjectRepresentation(argObj, name, value, variables);
+            });
+          }
+          return getStoreKeyName(field.name.value, argObj, directivesObj);
+        }
+        var KNOWN_DIRECTIVES = [
+          "connection",
+          "include",
+          "skip",
+          "client",
+          "rest",
+          "export"
+        ];
+        function getStoreKeyName(fieldName, args, directives) {
+          if (directives && directives["connection"] && directives["connection"]["key"]) {
+            if (directives["connection"]["filter"] && directives["connection"]["filter"].length > 0) {
+              var filterKeys = directives["connection"]["filter"] ? directives["connection"]["filter"] : [];
+              filterKeys.sort();
+              var queryArgs_1 = args;
+              var filteredArgs_1 = {};
+              filterKeys.forEach(function(key) {
+                filteredArgs_1[key] = queryArgs_1[key];
+              });
+              return directives["connection"]["key"] + "(" + JSON.stringify(filteredArgs_1) + ")";
+            } else {
+              return directives["connection"]["key"];
+            }
+          }
+          var completeFieldName = fieldName;
+          if (args) {
+            var stringifiedArgs = stringify(args);
+            completeFieldName += "(" + stringifiedArgs + ")";
+          }
+          if (directives) {
+            Object.keys(directives).forEach(function(key) {
+              if (KNOWN_DIRECTIVES.indexOf(key) !== -1)
+                return;
+              if (directives[key] && Object.keys(directives[key]).length) {
+                completeFieldName += "@" + key + "(" + JSON.stringify(directives[key]) + ")";
+              } else {
+                completeFieldName += "@" + key;
+              }
+            });
+          }
+          return completeFieldName;
+        }
+        function argumentsObjectFromField(field, variables) {
+          if (field.arguments && field.arguments.length) {
+            var argObj_1 = {};
+            field.arguments.forEach(function(_a) {
+              var name = _a.name, value = _a.value;
+              return valueToObjectRepresentation(argObj_1, name, value, variables);
+            });
+            return argObj_1;
+          }
+          return null;
+        }
+        function resultKeyNameFromField(field) {
+          return field.alias ? field.alias.value : field.name.value;
+        }
+        function isField(selection) {
+          return selection.kind === "Field";
+        }
+        function isInlineFragment(selection) {
+          return selection.kind === "InlineFragment";
+        }
+        function isIdValue(idObject) {
+          return idObject && idObject.type === "id";
+        }
+        function toIdValue(idConfig, generated) {
+          if (generated === void 0) {
+            generated = false;
+          }
+          return __assign({ type: "id", generated }, typeof idConfig === "string" ? { id: idConfig, typename: void 0 } : idConfig);
+        }
+        function isJsonValue(jsonObject) {
+          return jsonObject != null && typeof jsonObject === "object" && jsonObject.type === "json";
+        }
+        function defaultValueFromVariable(node) {
+          throw new Error("Variable nodes are not supported by valueFromNode");
+        }
+        function valueFromNode(node, onVariable) {
+          if (onVariable === void 0) {
+            onVariable = defaultValueFromVariable;
+          }
+          switch (node.kind) {
+            case "Variable":
+              return onVariable(node);
+            case "NullValue":
+              return null;
+            case "IntValue":
+              return parseInt(node.value, 10);
+            case "FloatValue":
+              return parseFloat(node.value);
+            case "ListValue":
+              return node.values.map(function(v) {
+                return valueFromNode(v, onVariable);
+              });
+            case "ObjectValue": {
+              var value = {};
+              for (var _i = 0, _a = node.fields; _i < _a.length; _i++) {
+                var field = _a[_i];
+                value[field.name.value] = valueFromNode(field.value, onVariable);
+              }
+              return value;
+            }
+            default:
+              return node.value;
+          }
+        }
+        function getDirectiveInfoFromField(field, variables) {
+          if (field.directives && field.directives.length) {
+            var directiveObj_1 = {};
+            field.directives.forEach(function(directive) {
+              directiveObj_1[directive.name.value] = argumentsObjectFromField(directive, variables);
+            });
+            return directiveObj_1;
+          }
+          return null;
+        }
+        function shouldInclude(selection, variables) {
+          if (variables === void 0) {
+            variables = {};
+          }
+          if (!selection.directives) {
+            return true;
+          }
+          var res = true;
+          selection.directives.forEach(function(directive) {
+            if (directive.name.value !== "skip" && directive.name.value !== "include") {
+              return;
+            }
+            var directiveArguments = directive.arguments || [];
+            var directiveName = directive.name.value;
+            if (directiveArguments.length !== 1) {
+              throw new Error("Incorrect number of arguments for the @" + directiveName + " directive.");
+            }
+            var ifArgument = directiveArguments[0];
+            if (!ifArgument.name || ifArgument.name.value !== "if") {
+              throw new Error("Invalid argument for the @" + directiveName + " directive.");
+            }
+            var ifValue = directiveArguments[0].value;
+            var evaledValue = false;
+            if (!ifValue || ifValue.kind !== "BooleanValue") {
+              if (ifValue.kind !== "Variable") {
+                throw new Error("Argument for the @" + directiveName + " directive must be a variable or a boolean value.");
+              } else {
+                evaledValue = variables[ifValue.name.value];
+                if (evaledValue === void 0) {
+                  throw new Error("Invalid variable referenced in @" + directiveName + " directive.");
+                }
+              }
+            } else {
+              evaledValue = ifValue.value;
+            }
+            if (directiveName === "skip") {
+              evaledValue = !evaledValue;
+            }
+            if (!evaledValue) {
+              res = false;
+            }
+          });
+          return res;
+        }
+        function flattenSelections(selection) {
+          if (!selection.selectionSet || !(selection.selectionSet.selections.length > 0))
+            return [selection];
+          return [selection].concat(selection.selectionSet.selections.map(function(selectionNode) {
+            return [selectionNode].concat(flattenSelections(selectionNode));
+          }).reduce(function(selections, selected) {
+            return selections.concat(selected);
+          }, []));
+        }
+        function getDirectiveNames(doc) {
+          var directiveNames = doc.definitions.filter(function(definition) {
+            return definition.selectionSet && definition.selectionSet.selections;
+          }).map(function(x) {
+            return flattenSelections(x);
+          }).reduce(function(selections, selected) {
+            return selections.concat(selected);
+          }, []).filter(function(selection) {
+            return selection.directives && selection.directives.length > 0;
+          }).map(function(selection) {
+            return selection.directives;
+          }).reduce(function(directives, directive) {
+            return directives.concat(directive);
+          }, []).map(function(directive) {
+            return directive.name.value;
+          });
+          return directiveNames;
+        }
+        function hasDirectives(names, doc) {
+          return getDirectiveNames(doc).some(function(name) {
+            return names.indexOf(name) > -1;
+          });
+        }
+        var __assign$1 = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        function getFragmentQueryDocument(document2, fragmentName) {
+          var actualFragmentName = fragmentName;
+          var fragments = [];
+          document2.definitions.forEach(function(definition) {
+            if (definition.kind === "OperationDefinition") {
+              throw new Error("Found a " + definition.operation + " operation" + (definition.name ? " named '" + definition.name.value + "'" : "") + ". No operations are allowed when using a fragment as a query. Only fragments are allowed.");
+            }
+            if (definition.kind === "FragmentDefinition") {
+              fragments.push(definition);
+            }
+          });
+          if (typeof actualFragmentName === "undefined") {
+            if (fragments.length !== 1) {
+              throw new Error("Found " + fragments.length + " fragments. `fragmentName` must be provided when there is not exactly 1 fragment.");
+            }
+            actualFragmentName = fragments[0].name.value;
+          }
+          var query = __assign$1({}, document2, { definitions: [
+            {
+              kind: "OperationDefinition",
+              operation: "query",
+              selectionSet: {
+                kind: "SelectionSet",
+                selections: [
+                  {
+                    kind: "FragmentSpread",
+                    name: {
+                      kind: "Name",
+                      value: actualFragmentName
+                    }
+                  }
+                ]
+              }
+            }
+          ].concat(document2.definitions) });
+          return query;
+        }
+        function assign(target) {
+          var sources = [];
+          for (var _i = 1; _i < arguments.length; _i++) {
+            sources[_i - 1] = arguments[_i];
+          }
+          sources.forEach(function(source) {
+            if (typeof source === "undefined" || source === null) {
+              return;
+            }
+            Object.keys(source).forEach(function(key) {
+              target[key] = source[key];
+            });
+          });
+          return target;
+        }
+        function getMutationDefinition(doc) {
+          checkDocument(doc);
+          var mutationDef = doc.definitions.filter(function(definition) {
+            return definition.kind === "OperationDefinition" && definition.operation === "mutation";
+          })[0];
+          if (!mutationDef) {
+            throw new Error("Must contain a mutation definition.");
+          }
+          return mutationDef;
+        }
+        function checkDocument(doc) {
+          if (doc.kind !== "Document") {
+            throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
+          }
+          var operations = doc.definitions.filter(function(d) {
+            return d.kind !== "FragmentDefinition";
+          }).map(function(definition) {
+            if (definition.kind !== "OperationDefinition") {
+              throw new Error('Schema type definitions not allowed in queries. Found: "' + definition.kind + '"');
+            }
+            return definition;
+          });
+          if (operations.length > 1) {
+            throw new Error("Ambiguous GraphQL document: contains " + operations.length + " operations");
+          }
+        }
+        function getOperationDefinition(doc) {
+          checkDocument(doc);
+          return doc.definitions.filter(function(definition) {
+            return definition.kind === "OperationDefinition";
+          })[0];
+        }
+        function getOperationDefinitionOrDie(document2) {
+          var def = getOperationDefinition(document2);
+          if (!def) {
+            throw new Error("GraphQL document is missing an operation");
+          }
+          return def;
+        }
+        function getOperationName(doc) {
+          return doc.definitions.filter(function(definition) {
+            return definition.kind === "OperationDefinition" && definition.name;
+          }).map(function(x) {
+            return x.name.value;
+          })[0] || null;
+        }
+        function getFragmentDefinitions(doc) {
+          return doc.definitions.filter(function(definition) {
+            return definition.kind === "FragmentDefinition";
+          });
+        }
+        function getQueryDefinition(doc) {
+          var queryDef = getOperationDefinition(doc);
+          if (!queryDef || queryDef.operation !== "query") {
+            throw new Error("Must contain a query definition.");
+          }
+          return queryDef;
+        }
+        function getFragmentDefinition(doc) {
+          if (doc.kind !== "Document") {
+            throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
+          }
+          if (doc.definitions.length > 1) {
+            throw new Error("Fragment must have exactly one definition.");
+          }
+          var fragmentDef = doc.definitions[0];
+          if (fragmentDef.kind !== "FragmentDefinition") {
+            throw new Error("Must be a fragment definition.");
+          }
+          return fragmentDef;
+        }
+        function getMainDefinition(queryDoc) {
+          checkDocument(queryDoc);
+          var fragmentDefinition;
+          for (var _i = 0, _a = queryDoc.definitions; _i < _a.length; _i++) {
+            var definition = _a[_i];
+            if (definition.kind === "OperationDefinition") {
+              var operation = definition.operation;
+              if (operation === "query" || operation === "mutation" || operation === "subscription") {
+                return definition;
+              }
+            }
+            if (definition.kind === "FragmentDefinition" && !fragmentDefinition) {
+              fragmentDefinition = definition;
+            }
+          }
+          if (fragmentDefinition) {
+            return fragmentDefinition;
+          }
+          throw new Error("Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.");
+        }
+        function createFragmentMap(fragments) {
+          if (fragments === void 0) {
+            fragments = [];
+          }
+          var symTable = {};
+          fragments.forEach(function(fragment) {
+            symTable[fragment.name.value] = fragment;
+          });
+          return symTable;
+        }
+        function getDefaultValues(definition) {
+          if (definition && definition.variableDefinitions && definition.variableDefinitions.length) {
+            var defaultValues = definition.variableDefinitions.filter(function(_a) {
+              var defaultValue = _a.defaultValue;
+              return defaultValue;
+            }).map(function(_a) {
+              var variable = _a.variable, defaultValue = _a.defaultValue;
+              var defaultValueObj = {};
+              valueToObjectRepresentation(defaultValueObj, variable.name, defaultValue);
+              return defaultValueObj;
+            });
+            return assign.apply(void 0, [{}].concat(defaultValues));
+          }
+          return {};
+        }
+        function variablesInOperation(operation) {
+          var names = /* @__PURE__ */ new Set();
+          if (operation.variableDefinitions) {
+            for (var _i = 0, _a = operation.variableDefinitions; _i < _a.length; _i++) {
