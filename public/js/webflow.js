@@ -19494,3 +19494,418 @@
                     if (observer.closed)
                       return;
                   }
+                  observer.complete();
+                });
+              });
+            }
+            throw new TypeError(x + " is not observable");
+          }
+        }, {
+          key: "of",
+          value: function of() {
+            for (var _len2 = arguments.length, items = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+              items[_key2] = arguments[_key2];
+            }
+            var C = typeof this === "function" ? this : Observable2;
+            return new C(function(observer) {
+              enqueue(function() {
+                if (observer.closed)
+                  return;
+                for (var i = 0; i < items.length; ++i) {
+                  observer.next(items[i]);
+                  if (observer.closed)
+                    return;
+                }
+                observer.complete();
+              });
+            });
+          }
+        }, {
+          key: getSymbol("species"),
+          get: function() {
+            return this;
+          }
+        }]);
+        return Observable2;
+      }();
+      if (hasSymbols()) {
+        Object.defineProperty(Observable, Symbol("extensions"), {
+          value: {
+            symbol: getSymbol("observable"),
+            hostReportError
+          },
+          configurabe: true
+        });
+      }
+    }
+  });
+
+  // node_modules/zen-observable/index.js
+  var require_zen_observable = __commonJS({
+    "node_modules/zen-observable/index.js"(exports, module) {
+      module.exports = require_Observable().Observable;
+    }
+  });
+
+  // node_modules/zen-observable-ts/lib/bundle.umd.js
+  var require_bundle_umd2 = __commonJS({
+    "node_modules/zen-observable-ts/lib/bundle.umd.js"(exports, module) {
+      (function(global2, factory) {
+        typeof exports === "object" && typeof module !== "undefined" ? factory(exports, require_zen_observable()) : typeof define === "function" && define.amd ? define(["exports", "zen-observable"], factory) : factory((global2.apolloLink = global2.apolloLink || {}, global2.apolloLink.zenObservable = {}), global2.Observable);
+      })(exports, function(exports2, zenObservable) {
+        "use strict";
+        zenObservable = zenObservable && zenObservable.hasOwnProperty("default") ? zenObservable["default"] : zenObservable;
+        var Observable = zenObservable;
+        exports2.default = Observable;
+        exports2.Observable = Observable;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/graphql/language/visitor.js
+  var require_visitor = __commonJS({
+    "node_modules/graphql/language/visitor.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.visit = visit;
+      exports.visitInParallel = visitInParallel;
+      exports.visitWithTypeInfo = visitWithTypeInfo;
+      exports.getVisitFn = getVisitFn;
+      var QueryDocumentKeys = exports.QueryDocumentKeys = {
+        Name: [],
+        Document: ["definitions"],
+        OperationDefinition: ["name", "variableDefinitions", "directives", "selectionSet"],
+        VariableDefinition: ["variable", "type", "defaultValue"],
+        Variable: ["name"],
+        SelectionSet: ["selections"],
+        Field: ["alias", "name", "arguments", "directives", "selectionSet"],
+        Argument: ["name", "value"],
+        FragmentSpread: ["name", "directives"],
+        InlineFragment: ["typeCondition", "directives", "selectionSet"],
+        FragmentDefinition: [
+          "name",
+          // Note: fragment variable definitions are experimental and may be changed
+          // or removed in the future.
+          "variableDefinitions",
+          "typeCondition",
+          "directives",
+          "selectionSet"
+        ],
+        IntValue: [],
+        FloatValue: [],
+        StringValue: [],
+        BooleanValue: [],
+        NullValue: [],
+        EnumValue: [],
+        ListValue: ["values"],
+        ObjectValue: ["fields"],
+        ObjectField: ["name", "value"],
+        Directive: ["name", "arguments"],
+        NamedType: ["name"],
+        ListType: ["type"],
+        NonNullType: ["type"],
+        SchemaDefinition: ["directives", "operationTypes"],
+        OperationTypeDefinition: ["type"],
+        ScalarTypeDefinition: ["description", "name", "directives"],
+        ObjectTypeDefinition: ["description", "name", "interfaces", "directives", "fields"],
+        FieldDefinition: ["description", "name", "arguments", "type", "directives"],
+        InputValueDefinition: ["description", "name", "type", "defaultValue", "directives"],
+        InterfaceTypeDefinition: ["description", "name", "directives", "fields"],
+        UnionTypeDefinition: ["description", "name", "directives", "types"],
+        EnumTypeDefinition: ["description", "name", "directives", "values"],
+        EnumValueDefinition: ["description", "name", "directives"],
+        InputObjectTypeDefinition: ["description", "name", "directives", "fields"],
+        ScalarTypeExtension: ["name", "directives"],
+        ObjectTypeExtension: ["name", "interfaces", "directives", "fields"],
+        InterfaceTypeExtension: ["name", "directives", "fields"],
+        UnionTypeExtension: ["name", "directives", "types"],
+        EnumTypeExtension: ["name", "directives", "values"],
+        InputObjectTypeExtension: ["name", "directives", "fields"],
+        DirectiveDefinition: ["description", "name", "arguments", "locations"]
+      };
+      var BREAK = exports.BREAK = {};
+      function visit(root, visitor) {
+        var visitorKeys = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : QueryDocumentKeys;
+        var stack = void 0;
+        var inArray = Array.isArray(root);
+        var keys = [root];
+        var index = -1;
+        var edits = [];
+        var node = void 0;
+        var key = void 0;
+        var parent = void 0;
+        var path = [];
+        var ancestors = [];
+        var newRoot = root;
+        do {
+          index++;
+          var isLeaving = index === keys.length;
+          var isEdited = isLeaving && edits.length !== 0;
+          if (isLeaving) {
+            key = ancestors.length === 0 ? void 0 : path[path.length - 1];
+            node = parent;
+            parent = ancestors.pop();
+            if (isEdited) {
+              if (inArray) {
+                node = node.slice();
+              } else {
+                var clone = {};
+                for (var k in node) {
+                  if (node.hasOwnProperty(k)) {
+                    clone[k] = node[k];
+                  }
+                }
+                node = clone;
+              }
+              var editOffset = 0;
+              for (var ii = 0; ii < edits.length; ii++) {
+                var editKey = edits[ii][0];
+                var editValue = edits[ii][1];
+                if (inArray) {
+                  editKey -= editOffset;
+                }
+                if (inArray && editValue === null) {
+                  node.splice(editKey, 1);
+                  editOffset++;
+                } else {
+                  node[editKey] = editValue;
+                }
+              }
+            }
+            index = stack.index;
+            keys = stack.keys;
+            edits = stack.edits;
+            inArray = stack.inArray;
+            stack = stack.prev;
+          } else {
+            key = parent ? inArray ? index : keys[index] : void 0;
+            node = parent ? parent[key] : newRoot;
+            if (node === null || node === void 0) {
+              continue;
+            }
+            if (parent) {
+              path.push(key);
+            }
+          }
+          var result = void 0;
+          if (!Array.isArray(node)) {
+            if (!isNode(node)) {
+              throw new Error("Invalid AST Node: " + JSON.stringify(node));
+            }
+            var visitFn = getVisitFn(visitor, node.kind, isLeaving);
+            if (visitFn) {
+              result = visitFn.call(visitor, node, key, parent, path, ancestors);
+              if (result === BREAK) {
+                break;
+              }
+              if (result === false) {
+                if (!isLeaving) {
+                  path.pop();
+                  continue;
+                }
+              } else if (result !== void 0) {
+                edits.push([key, result]);
+                if (!isLeaving) {
+                  if (isNode(result)) {
+                    node = result;
+                  } else {
+                    path.pop();
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+          if (result === void 0 && isEdited) {
+            edits.push([key, node]);
+          }
+          if (isLeaving) {
+            path.pop();
+          } else {
+            stack = { inArray, index, keys, edits, prev: stack };
+            inArray = Array.isArray(node);
+            keys = inArray ? node : visitorKeys[node.kind] || [];
+            index = -1;
+            edits = [];
+            if (parent) {
+              ancestors.push(parent);
+            }
+            parent = node;
+          }
+        } while (stack !== void 0);
+        if (edits.length !== 0) {
+          newRoot = edits[edits.length - 1][1];
+        }
+        return newRoot;
+      }
+      function isNode(maybeNode) {
+        return Boolean(maybeNode && typeof maybeNode.kind === "string");
+      }
+      function visitInParallel(visitors) {
+        var skipping = new Array(visitors.length);
+        return {
+          enter: function enter(node) {
+            for (var i = 0; i < visitors.length; i++) {
+              if (!skipping[i]) {
+                var fn = getVisitFn(
+                  visitors[i],
+                  node.kind,
+                  /* isLeaving */
+                  false
+                );
+                if (fn) {
+                  var result = fn.apply(visitors[i], arguments);
+                  if (result === false) {
+                    skipping[i] = node;
+                  } else if (result === BREAK) {
+                    skipping[i] = BREAK;
+                  } else if (result !== void 0) {
+                    return result;
+                  }
+                }
+              }
+            }
+          },
+          leave: function leave(node) {
+            for (var i = 0; i < visitors.length; i++) {
+              if (!skipping[i]) {
+                var fn = getVisitFn(
+                  visitors[i],
+                  node.kind,
+                  /* isLeaving */
+                  true
+                );
+                if (fn) {
+                  var result = fn.apply(visitors[i], arguments);
+                  if (result === BREAK) {
+                    skipping[i] = BREAK;
+                  } else if (result !== void 0 && result !== false) {
+                    return result;
+                  }
+                }
+              } else if (skipping[i] === node) {
+                skipping[i] = null;
+              }
+            }
+          }
+        };
+      }
+      function visitWithTypeInfo(typeInfo, visitor) {
+        return {
+          enter: function enter(node) {
+            typeInfo.enter(node);
+            var fn = getVisitFn(
+              visitor,
+              node.kind,
+              /* isLeaving */
+              false
+            );
+            if (fn) {
+              var result = fn.apply(visitor, arguments);
+              if (result !== void 0) {
+                typeInfo.leave(node);
+                if (isNode(result)) {
+                  typeInfo.enter(result);
+                }
+              }
+              return result;
+            }
+          },
+          leave: function leave(node) {
+            var fn = getVisitFn(
+              visitor,
+              node.kind,
+              /* isLeaving */
+              true
+            );
+            var result = void 0;
+            if (fn) {
+              result = fn.apply(visitor, arguments);
+            }
+            typeInfo.leave(node);
+            return result;
+          }
+        };
+      }
+      function getVisitFn(visitor, kind, isLeaving) {
+        var kindVisitor = visitor[kind];
+        if (kindVisitor) {
+          if (!isLeaving && typeof kindVisitor === "function") {
+            return kindVisitor;
+          }
+          var kindSpecificVisitor = isLeaving ? kindVisitor.leave : kindVisitor.enter;
+          if (typeof kindSpecificVisitor === "function") {
+            return kindSpecificVisitor;
+          }
+        } else {
+          var specificVisitor = isLeaving ? visitor.leave : visitor.enter;
+          if (specificVisitor) {
+            if (typeof specificVisitor === "function") {
+              return specificVisitor;
+            }
+            var specificKindVisitor = specificVisitor[kind];
+            if (typeof specificKindVisitor === "function") {
+              return specificKindVisitor;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // node_modules/graphql/language/printer.js
+  var require_printer = __commonJS({
+    "node_modules/graphql/language/printer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.print = print;
+      var _visitor = require_visitor();
+      function print(ast) {
+        return (0, _visitor.visit)(ast, { leave: printDocASTReducer });
+      }
+      var printDocASTReducer = {
+        Name: function Name(node) {
+          return node.value;
+        },
+        Variable: function Variable(node) {
+          return "$" + node.name;
+        },
+        // Document
+        Document: function Document(node) {
+          return join(node.definitions, "\n\n") + "\n";
+        },
+        OperationDefinition: function OperationDefinition(node) {
+          var op = node.operation;
+          var name = node.name;
+          var varDefs = wrap("(", join(node.variableDefinitions, ", "), ")");
+          var directives = join(node.directives, " ");
+          var selectionSet = node.selectionSet;
+          return !name && !directives && !varDefs && op === "query" ? selectionSet : join([op, join([name, varDefs]), directives, selectionSet], " ");
+        },
+        VariableDefinition: function VariableDefinition(_ref) {
+          var variable = _ref.variable, type = _ref.type, defaultValue = _ref.defaultValue;
+          return variable + ": " + type + wrap(" = ", defaultValue);
+        },
+        SelectionSet: function SelectionSet(_ref2) {
+          var selections = _ref2.selections;
+          return block(selections);
+        },
+        Field: function Field(_ref3) {
+          var alias = _ref3.alias, name = _ref3.name, args = _ref3.arguments, directives = _ref3.directives, selectionSet = _ref3.selectionSet;
+          return join([wrap("", alias, ": ") + name + wrap("(", join(args, ", "), ")"), join(directives, " "), selectionSet], " ");
+        },
+        Argument: function Argument(_ref4) {
+          var name = _ref4.name, value = _ref4.value;
+          return name + ": " + value;
+        },
+        // Fragments
+        FragmentSpread: function FragmentSpread(_ref5) {
+          var name = _ref5.name, directives = _ref5.directives;
+          return "..." + name + wrap(" ", join(directives, " "));
+        },
+        InlineFragment: function InlineFragment(_ref6) {
