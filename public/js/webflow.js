@@ -20347,3 +20347,455 @@
             }
             DedupLink2.prototype.request = function(operation, forward) {
               var _this = this;
+              if (operation.getContext().forceFetch) {
+                return forward(operation);
+              }
+              var key = operation.toKey();
+              var cleanup = function(key2) {
+                _this.inFlightRequestObservables.delete(key2);
+                var prev = _this.subscribers.get(key2);
+                return prev;
+              };
+              if (!this.inFlightRequestObservables.get(key)) {
+                var singleObserver_1 = forward(operation);
+                var subscription_1;
+                var sharedObserver = new apolloLink.Observable(function(observer) {
+                  var prev = _this.subscribers.get(key);
+                  if (!prev)
+                    prev = { next: [], error: [], complete: [] };
+                  _this.subscribers.set(key, {
+                    next: prev.next.concat([observer.next.bind(observer)]),
+                    error: prev.error.concat([observer.error.bind(observer)]),
+                    complete: prev.complete.concat([observer.complete.bind(observer)])
+                  });
+                  if (!subscription_1) {
+                    subscription_1 = singleObserver_1.subscribe({
+                      next: function(result) {
+                        var prev2 = cleanup(key);
+                        _this.subscribers.delete(key);
+                        if (prev2) {
+                          prev2.next.forEach(function(next) {
+                            return next(result);
+                          });
+                          prev2.complete.forEach(function(complete) {
+                            return complete();
+                          });
+                        }
+                      },
+                      error: function(error) {
+                        var prev2 = cleanup(key);
+                        _this.subscribers.delete(key);
+                        if (prev2)
+                          prev2.error.forEach(function(err) {
+                            return err(error);
+                          });
+                      }
+                    });
+                  }
+                  return function() {
+                    if (subscription_1)
+                      subscription_1.unsubscribe();
+                    _this.inFlightRequestObservables.delete(key);
+                  };
+                });
+                this.inFlightRequestObservables.set(key, sharedObserver);
+              }
+              return this.inFlightRequestObservables.get(key);
+            };
+            return DedupLink2;
+          }(apolloLink.ApolloLink)
+        );
+        exports2.DedupLink = DedupLink;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/apollo-client/bundle.umd.js
+  var require_bundle_umd5 = __commonJS({
+    "node_modules/apollo-client/bundle.umd.js"(exports, module) {
+      (function(global2, factory) {
+        typeof exports === "object" && typeof module !== "undefined" ? factory(exports, require_bundle_umd3(), require_lib(), require_bundle_umd(), require_printer(), require_bundle_umd4()) : typeof define === "function" && define.amd ? define(["exports", "apollo-link", "symbol-observable", "apollo-utilities", "graphql/language/printer", "apollo-link-dedup"], factory) : factory((global2.apollo = global2.apollo || {}, global2.apollo.core = {}), global2.apolloLink.core, null, global2.apollo.utilities, null, global2.apolloLink.dedup);
+      })(exports, function(exports2, apolloLink, $$observable, apolloUtilities, printer, apolloLinkDedup) {
+        "use strict";
+        $$observable = $$observable && $$observable.hasOwnProperty("default") ? $$observable["default"] : $$observable;
+        (function(NetworkStatus) {
+          NetworkStatus[NetworkStatus["loading"] = 1] = "loading";
+          NetworkStatus[NetworkStatus["setVariables"] = 2] = "setVariables";
+          NetworkStatus[NetworkStatus["fetchMore"] = 3] = "fetchMore";
+          NetworkStatus[NetworkStatus["refetch"] = 4] = "refetch";
+          NetworkStatus[NetworkStatus["poll"] = 6] = "poll";
+          NetworkStatus[NetworkStatus["ready"] = 7] = "ready";
+          NetworkStatus[NetworkStatus["error"] = 8] = "error";
+        })(exports2.NetworkStatus || (exports2.NetworkStatus = {}));
+        function isNetworkRequestInFlight(networkStatus) {
+          return networkStatus < 7;
+        }
+        var __extends = function() {
+          var extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d, b) {
+            d.__proto__ = b;
+          } || function(d, b) {
+            for (var p in b)
+              if (b.hasOwnProperty(p))
+                d[p] = b[p];
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        var Observable = (
+          /** @class */
+          function(_super) {
+            __extends(Observable2, _super);
+            function Observable2() {
+              return _super !== null && _super.apply(this, arguments) || this;
+            }
+            Observable2.prototype[$$observable] = function() {
+              return this;
+            };
+            Observable2.prototype["@@observable"] = function() {
+              return this;
+            };
+            return Observable2;
+          }(apolloLink.Observable)
+        );
+        var __extends$1 = function() {
+          var extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d, b) {
+            d.__proto__ = b;
+          } || function(d, b) {
+            for (var p in b)
+              if (b.hasOwnProperty(p))
+                d[p] = b[p];
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        function isApolloError(err) {
+          return err.hasOwnProperty("graphQLErrors");
+        }
+        var generateErrorMessage = function(err) {
+          var message = "";
+          if (Array.isArray(err.graphQLErrors) && err.graphQLErrors.length !== 0) {
+            err.graphQLErrors.forEach(function(graphQLError) {
+              var errorMessage = graphQLError ? graphQLError.message : "Error message not found.";
+              message += "GraphQL error: " + errorMessage + "\n";
+            });
+          }
+          if (err.networkError) {
+            message += "Network error: " + err.networkError.message + "\n";
+          }
+          message = message.replace(/\n$/, "");
+          return message;
+        };
+        var ApolloError = (
+          /** @class */
+          function(_super) {
+            __extends$1(ApolloError2, _super);
+            function ApolloError2(_a) {
+              var graphQLErrors = _a.graphQLErrors, networkError = _a.networkError, errorMessage = _a.errorMessage, extraInfo = _a.extraInfo;
+              var _this = _super.call(this, errorMessage) || this;
+              _this.graphQLErrors = graphQLErrors || [];
+              _this.networkError = networkError || null;
+              if (!errorMessage) {
+                _this.message = generateErrorMessage(_this);
+              } else {
+                _this.message = errorMessage;
+              }
+              _this.extraInfo = extraInfo;
+              _this.__proto__ = ApolloError2.prototype;
+              return _this;
+            }
+            return ApolloError2;
+          }(Error)
+        );
+        (function(FetchType) {
+          FetchType[FetchType["normal"] = 1] = "normal";
+          FetchType[FetchType["refetch"] = 2] = "refetch";
+          FetchType[FetchType["poll"] = 3] = "poll";
+        })(exports2.FetchType || (exports2.FetchType = {}));
+        var __extends$2 = function() {
+          var extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d, b) {
+            d.__proto__ = b;
+          } || function(d, b) {
+            for (var p in b)
+              if (b.hasOwnProperty(p))
+                d[p] = b[p];
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        var __assign = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        var hasError = function(storeValue, policy) {
+          if (policy === void 0) {
+            policy = "none";
+          }
+          return storeValue && (storeValue.graphQLErrors && storeValue.graphQLErrors.length > 0 && policy === "none" || storeValue.networkError);
+        };
+        var ObservableQuery = (
+          /** @class */
+          function(_super) {
+            __extends$2(ObservableQuery2, _super);
+            function ObservableQuery2(_a) {
+              var scheduler = _a.scheduler, options = _a.options, _b = _a.shouldSubscribe, shouldSubscribe = _b === void 0 ? true : _b;
+              var _this = _super.call(this, function(observer) {
+                return _this.onSubscribe(observer);
+              }) || this;
+              _this.isCurrentlyPolling = false;
+              _this.isTornDown = false;
+              _this.options = options;
+              _this.variables = options.variables || {};
+              _this.queryId = scheduler.queryManager.generateQueryId();
+              _this.shouldSubscribe = shouldSubscribe;
+              _this.scheduler = scheduler;
+              _this.queryManager = scheduler.queryManager;
+              _this.observers = [];
+              _this.subscriptionHandles = [];
+              return _this;
+            }
+            ObservableQuery2.prototype.result = function() {
+              var that = this;
+              return new Promise(function(resolve2, reject2) {
+                var subscription;
+                var observer = {
+                  next: function(result) {
+                    resolve2(result);
+                    if (!that.observers.some(function(obs) {
+                      return obs !== observer;
+                    })) {
+                      that.queryManager.removeQuery(that.queryId);
+                    }
+                    setTimeout(function() {
+                      subscription.unsubscribe();
+                    }, 0);
+                  },
+                  error: function(error) {
+                    reject2(error);
+                  }
+                };
+                subscription = that.subscribe(observer);
+              });
+            };
+            ObservableQuery2.prototype.currentResult = function() {
+              if (this.isTornDown) {
+                return {
+                  data: this.lastError ? {} : this.lastResult ? this.lastResult.data : {},
+                  error: this.lastError,
+                  loading: false,
+                  networkStatus: exports2.NetworkStatus.error
+                };
+              }
+              var queryStoreValue = this.queryManager.queryStore.get(this.queryId);
+              if (hasError(queryStoreValue, this.options.errorPolicy)) {
+                return {
+                  data: {},
+                  loading: false,
+                  networkStatus: queryStoreValue.networkStatus,
+                  error: new ApolloError({
+                    graphQLErrors: queryStoreValue.graphQLErrors,
+                    networkError: queryStoreValue.networkError
+                  })
+                };
+              }
+              var _a = this.queryManager.getCurrentQueryResult(this), data = _a.data, partial = _a.partial;
+              var queryLoading = !queryStoreValue || queryStoreValue.networkStatus === exports2.NetworkStatus.loading;
+              var loading = this.options.fetchPolicy === "network-only" && queryLoading || partial && this.options.fetchPolicy !== "cache-only";
+              var networkStatus;
+              if (queryStoreValue) {
+                networkStatus = queryStoreValue.networkStatus;
+              } else {
+                networkStatus = loading ? exports2.NetworkStatus.loading : exports2.NetworkStatus.ready;
+              }
+              var result = {
+                data,
+                loading: isNetworkRequestInFlight(networkStatus),
+                networkStatus
+              };
+              if (queryStoreValue && queryStoreValue.graphQLErrors && this.options.errorPolicy === "all") {
+                result.errors = queryStoreValue.graphQLErrors;
+              }
+              if (!partial) {
+                var stale = false;
+                this.lastResult = __assign({}, result, { stale });
+              }
+              return __assign({}, result, { partial });
+            };
+            ObservableQuery2.prototype.getLastResult = function() {
+              return this.lastResult;
+            };
+            ObservableQuery2.prototype.getLastError = function() {
+              return this.lastError;
+            };
+            ObservableQuery2.prototype.resetLastResults = function() {
+              delete this.lastResult;
+              delete this.lastError;
+              this.isTornDown = false;
+            };
+            ObservableQuery2.prototype.refetch = function(variables) {
+              var fetchPolicy = this.options.fetchPolicy;
+              if (fetchPolicy === "cache-only") {
+                return Promise.reject(new Error("cache-only fetchPolicy option should not be used together with query refetch."));
+              }
+              if (!apolloUtilities.isEqual(this.variables, variables)) {
+                this.variables = Object.assign({}, this.variables, variables);
+              }
+              if (!apolloUtilities.isEqual(this.options.variables, this.variables)) {
+                this.options.variables = Object.assign({}, this.options.variables, this.variables);
+              }
+              var isNetworkFetchPolicy = fetchPolicy === "network-only" || fetchPolicy === "no-cache";
+              var combinedOptions = __assign({}, this.options, { fetchPolicy: isNetworkFetchPolicy ? fetchPolicy : "network-only" });
+              return this.queryManager.fetchQuery(this.queryId, combinedOptions, exports2.FetchType.refetch).then(function(result) {
+                return apolloUtilities.maybeDeepFreeze(result);
+              });
+            };
+            ObservableQuery2.prototype.fetchMore = function(fetchMoreOptions) {
+              var _this = this;
+              if (!fetchMoreOptions.updateQuery) {
+                throw new Error("updateQuery option is required. This function defines how to update the query data with the new results.");
+              }
+              var combinedOptions;
+              return Promise.resolve().then(function() {
+                var qid = _this.queryManager.generateQueryId();
+                if (fetchMoreOptions.query) {
+                  combinedOptions = fetchMoreOptions;
+                } else {
+                  combinedOptions = __assign({}, _this.options, fetchMoreOptions, { variables: Object.assign({}, _this.variables, fetchMoreOptions.variables) });
+                }
+                combinedOptions.fetchPolicy = "network-only";
+                return _this.queryManager.fetchQuery(qid, combinedOptions, exports2.FetchType.normal, _this.queryId);
+              }).then(function(fetchMoreResult) {
+                _this.updateQuery(function(previousResult) {
+                  return fetchMoreOptions.updateQuery(previousResult, {
+                    fetchMoreResult: fetchMoreResult.data,
+                    variables: combinedOptions.variables
+                  });
+                });
+                return fetchMoreResult;
+              });
+            };
+            ObservableQuery2.prototype.subscribeToMore = function(options) {
+              var _this = this;
+              var subscription = this.queryManager.startGraphQLSubscription({
+                query: options.document,
+                variables: options.variables
+              }).subscribe({
+                next: function(data) {
+                  if (options.updateQuery) {
+                    _this.updateQuery(function(previous, _a) {
+                      var variables = _a.variables;
+                      return options.updateQuery(previous, {
+                        subscriptionData: data,
+                        variables
+                      });
+                    });
+                  }
+                },
+                error: function(err) {
+                  if (options.onError) {
+                    options.onError(err);
+                    return;
+                  }
+                  console.error("Unhandled GraphQL subscription error", err);
+                }
+              });
+              this.subscriptionHandles.push(subscription);
+              return function() {
+                var i = _this.subscriptionHandles.indexOf(subscription);
+                if (i >= 0) {
+                  _this.subscriptionHandles.splice(i, 1);
+                  subscription.unsubscribe();
+                }
+              };
+            };
+            ObservableQuery2.prototype.setOptions = function(opts) {
+              var oldOptions = this.options;
+              this.options = Object.assign({}, this.options, opts);
+              if (opts.pollInterval) {
+                this.startPolling(opts.pollInterval);
+              } else if (opts.pollInterval === 0) {
+                this.stopPolling();
+              }
+              var tryFetch = oldOptions.fetchPolicy !== "network-only" && opts.fetchPolicy === "network-only" || oldOptions.fetchPolicy === "cache-only" && opts.fetchPolicy !== "cache-only" || oldOptions.fetchPolicy === "standby" && opts.fetchPolicy !== "standby" || false;
+              return this.setVariables(this.options.variables, tryFetch, opts.fetchResults);
+            };
+            ObservableQuery2.prototype.setVariables = function(variables, tryFetch, fetchResults) {
+              if (tryFetch === void 0) {
+                tryFetch = false;
+              }
+              if (fetchResults === void 0) {
+                fetchResults = true;
+              }
+              this.isTornDown = false;
+              var newVariables = variables ? variables : this.variables;
+              if (apolloUtilities.isEqual(newVariables, this.variables) && !tryFetch) {
+                if (this.observers.length === 0 || !fetchResults) {
+                  return new Promise(function(resolve2) {
+                    return resolve2();
+                  });
+                }
+                return this.result();
+              } else {
+                this.variables = newVariables;
+                this.options.variables = newVariables;
+                if (this.observers.length === 0) {
+                  return new Promise(function(resolve2) {
+                    return resolve2();
+                  });
+                }
+                return this.queryManager.fetchQuery(this.queryId, __assign({}, this.options, { variables: this.variables })).then(function(result) {
+                  return apolloUtilities.maybeDeepFreeze(result);
+                });
+              }
+            };
+            ObservableQuery2.prototype.updateQuery = function(mapFn) {
+              var _a = this.queryManager.getQueryWithPreviousResult(this.queryId), previousResult = _a.previousResult, variables = _a.variables, document2 = _a.document;
+              var newResult = apolloUtilities.tryFunctionOrLogError(function() {
+                return mapFn(previousResult, { variables });
+              });
+              if (newResult) {
+                this.queryManager.dataStore.markUpdateQueryResult(document2, variables, newResult);
+                this.queryManager.broadcastQueries();
+              }
+            };
+            ObservableQuery2.prototype.stopPolling = function() {
+              if (this.isCurrentlyPolling) {
+                this.scheduler.stopPollingQuery(this.queryId);
+                this.options.pollInterval = void 0;
+                this.isCurrentlyPolling = false;
+              }
+            };
+            ObservableQuery2.prototype.startPolling = function(pollInterval) {
+              if (this.options.fetchPolicy === "cache-first" || this.options.fetchPolicy === "cache-only") {
+                throw new Error("Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.");
+              }
+              if (this.isCurrentlyPolling) {
+                this.scheduler.stopPollingQuery(this.queryId);
+                this.isCurrentlyPolling = false;
+              }
+              this.options.pollInterval = pollInterval;
+              this.isCurrentlyPolling = true;
+              this.scheduler.startPollingQuery(this.options, this.queryId);
+            };
+            ObservableQuery2.prototype.onSubscribe = function(observer) {
+              var _this = this;
