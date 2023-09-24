@@ -20799,3 +20799,436 @@
             };
             ObservableQuery2.prototype.onSubscribe = function(observer) {
               var _this = this;
+              if (observer._subscription && observer._subscription._observer && !observer._subscription._observer.error) {
+                observer._subscription._observer.error = function(error) {
+                  console.error("Unhandled error", error.message, error.stack);
+                };
+              }
+              this.observers.push(observer);
+              if (observer.next && this.lastResult)
+                observer.next(this.lastResult);
+              if (observer.error && this.lastError)
+                observer.error(this.lastError);
+              if (this.observers.length === 1)
+                this.setUpQuery();
+              return function() {
+                _this.observers = _this.observers.filter(function(obs) {
+                  return obs !== observer;
+                });
+                if (_this.observers.length === 0) {
+                  _this.tearDownQuery();
+                }
+              };
+            };
+            ObservableQuery2.prototype.setUpQuery = function() {
+              var _this = this;
+              if (this.shouldSubscribe) {
+                this.queryManager.addObservableQuery(this.queryId, this);
+              }
+              if (!!this.options.pollInterval) {
+                if (this.options.fetchPolicy === "cache-first" || this.options.fetchPolicy === "cache-only") {
+                  throw new Error("Queries that specify the cache-first and cache-only fetchPolicies cannot also be polling queries.");
+                }
+                this.isCurrentlyPolling = true;
+                this.scheduler.startPollingQuery(this.options, this.queryId);
+              }
+              var observer = {
+                next: function(result) {
+                  _this.lastResult = result;
+                  _this.observers.forEach(function(obs) {
+                    return obs.next && obs.next(result);
+                  });
+                },
+                error: function(error) {
+                  _this.lastError = error;
+                  _this.observers.forEach(function(obs) {
+                    return obs.error && obs.error(error);
+                  });
+                }
+              };
+              this.queryManager.startQuery(this.queryId, this.options, this.queryManager.queryListenerForObserver(this.queryId, this.options, observer));
+            };
+            ObservableQuery2.prototype.tearDownQuery = function() {
+              this.isTornDown = true;
+              if (this.isCurrentlyPolling) {
+                this.scheduler.stopPollingQuery(this.queryId);
+                this.isCurrentlyPolling = false;
+              }
+              this.subscriptionHandles.forEach(function(sub) {
+                return sub.unsubscribe();
+              });
+              this.subscriptionHandles = [];
+              this.queryManager.removeObservableQuery(this.queryId);
+              this.queryManager.stopQuery(this.queryId);
+              this.observers = [];
+            };
+            return ObservableQuery2;
+          }(Observable)
+        );
+        var __assign$1 = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        var QueryScheduler = (
+          /** @class */
+          function() {
+            function QueryScheduler2(_a) {
+              var queryManager = _a.queryManager, ssrMode = _a.ssrMode;
+              this.inFlightQueries = {};
+              this.registeredQueries = {};
+              this.intervalQueries = {};
+              this.pollingTimers = {};
+              this.ssrMode = false;
+              this.queryManager = queryManager;
+              this.ssrMode = ssrMode || false;
+            }
+            QueryScheduler2.prototype.checkInFlight = function(queryId) {
+              var query = this.queryManager.queryStore.get(queryId);
+              return query && query.networkStatus !== exports2.NetworkStatus.ready && query.networkStatus !== exports2.NetworkStatus.error;
+            };
+            QueryScheduler2.prototype.fetchQuery = function(queryId, options, fetchType) {
+              var _this = this;
+              return new Promise(function(resolve2, reject2) {
+                _this.queryManager.fetchQuery(queryId, options, fetchType).then(function(result) {
+                  resolve2(result);
+                }).catch(function(error) {
+                  reject2(error);
+                });
+              });
+            };
+            QueryScheduler2.prototype.startPollingQuery = function(options, queryId, listener) {
+              if (!options.pollInterval) {
+                throw new Error("Attempted to start a polling query without a polling interval.");
+              }
+              if (this.ssrMode)
+                return queryId;
+              this.registeredQueries[queryId] = options;
+              if (listener) {
+                this.queryManager.addQueryListener(queryId, listener);
+              }
+              this.addQueryOnInterval(queryId, options);
+              return queryId;
+            };
+            QueryScheduler2.prototype.stopPollingQuery = function(queryId) {
+              delete this.registeredQueries[queryId];
+            };
+            QueryScheduler2.prototype.fetchQueriesOnInterval = function(interval) {
+              var _this = this;
+              this.intervalQueries[interval] = this.intervalQueries[interval].filter(function(queryId) {
+                if (!(_this.registeredQueries.hasOwnProperty(queryId) && _this.registeredQueries[queryId].pollInterval === interval)) {
+                  return false;
+                }
+                if (_this.checkInFlight(queryId)) {
+                  return true;
+                }
+                var queryOptions = _this.registeredQueries[queryId];
+                var pollingOptions = __assign$1({}, queryOptions);
+                pollingOptions.fetchPolicy = "network-only";
+                _this.fetchQuery(queryId, pollingOptions, exports2.FetchType.poll).catch(function() {
+                });
+                return true;
+              });
+              if (this.intervalQueries[interval].length === 0) {
+                clearInterval(this.pollingTimers[interval]);
+                delete this.intervalQueries[interval];
+              }
+            };
+            QueryScheduler2.prototype.addQueryOnInterval = function(queryId, queryOptions) {
+              var _this = this;
+              var interval = queryOptions.pollInterval;
+              if (!interval) {
+                throw new Error("A poll interval is required to start polling query with id '" + queryId + "'.");
+              }
+              if (this.intervalQueries.hasOwnProperty(interval.toString()) && this.intervalQueries[interval].length > 0) {
+                this.intervalQueries[interval].push(queryId);
+              } else {
+                this.intervalQueries[interval] = [queryId];
+                this.pollingTimers[interval] = setInterval(function() {
+                  _this.fetchQueriesOnInterval(interval);
+                }, interval);
+              }
+            };
+            QueryScheduler2.prototype.registerPollingQuery = function(queryOptions) {
+              if (!queryOptions.pollInterval) {
+                throw new Error("Attempted to register a non-polling query with the scheduler.");
+              }
+              return new ObservableQuery({
+                scheduler: this,
+                options: queryOptions
+              });
+            };
+            return QueryScheduler2;
+          }()
+        );
+        var MutationStore = (
+          /** @class */
+          function() {
+            function MutationStore2() {
+              this.store = {};
+            }
+            MutationStore2.prototype.getStore = function() {
+              return this.store;
+            };
+            MutationStore2.prototype.get = function(mutationId) {
+              return this.store[mutationId];
+            };
+            MutationStore2.prototype.initMutation = function(mutationId, mutationString, variables) {
+              this.store[mutationId] = {
+                mutationString,
+                variables: variables || {},
+                loading: true,
+                error: null
+              };
+            };
+            MutationStore2.prototype.markMutationError = function(mutationId, error) {
+              var mutation = this.store[mutationId];
+              if (!mutation) {
+                return;
+              }
+              mutation.loading = false;
+              mutation.error = error;
+            };
+            MutationStore2.prototype.markMutationResult = function(mutationId) {
+              var mutation = this.store[mutationId];
+              if (!mutation) {
+                return;
+              }
+              mutation.loading = false;
+              mutation.error = null;
+            };
+            MutationStore2.prototype.reset = function() {
+              this.store = {};
+            };
+            return MutationStore2;
+          }()
+        );
+        var __assign$2 = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        var QueryStore = (
+          /** @class */
+          function() {
+            function QueryStore2() {
+              this.store = {};
+            }
+            QueryStore2.prototype.getStore = function() {
+              return this.store;
+            };
+            QueryStore2.prototype.get = function(queryId) {
+              return this.store[queryId];
+            };
+            QueryStore2.prototype.initQuery = function(query) {
+              var previousQuery = this.store[query.queryId];
+              if (previousQuery && previousQuery.document !== query.document && printer.print(previousQuery.document) !== printer.print(query.document)) {
+                throw new Error("Internal Error: may not update existing query string in store");
+              }
+              var isSetVariables = false;
+              var previousVariables = null;
+              if (query.storePreviousVariables && previousQuery && previousQuery.networkStatus !== exports2.NetworkStatus.loading) {
+                if (!apolloUtilities.isEqual(previousQuery.variables, query.variables)) {
+                  isSetVariables = true;
+                  previousVariables = previousQuery.variables;
+                }
+              }
+              var networkStatus;
+              if (isSetVariables) {
+                networkStatus = exports2.NetworkStatus.setVariables;
+              } else if (query.isPoll) {
+                networkStatus = exports2.NetworkStatus.poll;
+              } else if (query.isRefetch) {
+                networkStatus = exports2.NetworkStatus.refetch;
+              } else {
+                networkStatus = exports2.NetworkStatus.loading;
+              }
+              var graphQLErrors = [];
+              if (previousQuery && previousQuery.graphQLErrors) {
+                graphQLErrors = previousQuery.graphQLErrors;
+              }
+              this.store[query.queryId] = {
+                document: query.document,
+                variables: query.variables,
+                previousVariables,
+                networkError: null,
+                graphQLErrors,
+                networkStatus,
+                metadata: query.metadata
+              };
+              if (typeof query.fetchMoreForQueryId === "string" && this.store[query.fetchMoreForQueryId]) {
+                this.store[query.fetchMoreForQueryId].networkStatus = exports2.NetworkStatus.fetchMore;
+              }
+            };
+            QueryStore2.prototype.markQueryResult = function(queryId, result, fetchMoreForQueryId) {
+              if (!this.store[queryId])
+                return;
+              this.store[queryId].networkError = null;
+              this.store[queryId].graphQLErrors = result.errors && result.errors.length ? result.errors : [];
+              this.store[queryId].previousVariables = null;
+              this.store[queryId].networkStatus = exports2.NetworkStatus.ready;
+              if (typeof fetchMoreForQueryId === "string" && this.store[fetchMoreForQueryId]) {
+                this.store[fetchMoreForQueryId].networkStatus = exports2.NetworkStatus.ready;
+              }
+            };
+            QueryStore2.prototype.markQueryError = function(queryId, error, fetchMoreForQueryId) {
+              if (!this.store[queryId])
+                return;
+              this.store[queryId].networkError = error;
+              this.store[queryId].networkStatus = exports2.NetworkStatus.error;
+              if (typeof fetchMoreForQueryId === "string") {
+                this.markQueryResultClient(fetchMoreForQueryId, true);
+              }
+            };
+            QueryStore2.prototype.markQueryResultClient = function(queryId, complete) {
+              if (!this.store[queryId])
+                return;
+              this.store[queryId].networkError = null;
+              this.store[queryId].previousVariables = null;
+              this.store[queryId].networkStatus = complete ? exports2.NetworkStatus.ready : exports2.NetworkStatus.loading;
+            };
+            QueryStore2.prototype.stopQuery = function(queryId) {
+              delete this.store[queryId];
+            };
+            QueryStore2.prototype.reset = function(observableQueryIds) {
+              var _this = this;
+              this.store = Object.keys(this.store).filter(function(queryId) {
+                return observableQueryIds.indexOf(queryId) > -1;
+              }).reduce(function(res, key) {
+                res[key] = __assign$2({}, _this.store[key], { networkStatus: exports2.NetworkStatus.loading });
+                return res;
+              }, {});
+            };
+            return QueryStore2;
+          }()
+        );
+        var __assign$3 = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        var defaultQueryInfo = {
+          listeners: [],
+          invalidated: false,
+          document: null,
+          newData: null,
+          lastRequestId: null,
+          observableQuery: null,
+          subscriptions: []
+        };
+        var QueryManager = (
+          /** @class */
+          function() {
+            function QueryManager2(_a) {
+              var link = _a.link, _b = _a.queryDeduplication, queryDeduplication = _b === void 0 ? false : _b, store = _a.store, _c = _a.onBroadcast, onBroadcast = _c === void 0 ? function() {
+                return void 0;
+              } : _c, _d = _a.ssrMode, ssrMode = _d === void 0 ? false : _d;
+              this.mutationStore = new MutationStore();
+              this.queryStore = new QueryStore();
+              this.idCounter = 1;
+              this.queries = /* @__PURE__ */ new Map();
+              this.fetchQueryPromises = /* @__PURE__ */ new Map();
+              this.queryIdsByName = {};
+              this.link = link;
+              this.deduplicator = apolloLink.ApolloLink.from([new apolloLinkDedup.DedupLink(), link]);
+              this.queryDeduplication = queryDeduplication;
+              this.dataStore = store;
+              this.onBroadcast = onBroadcast;
+              this.scheduler = new QueryScheduler({ queryManager: this, ssrMode });
+            }
+            QueryManager2.prototype.mutate = function(_a) {
+              var _this = this;
+              var mutation = _a.mutation, variables = _a.variables, optimisticResponse = _a.optimisticResponse, updateQueriesByName = _a.updateQueries, _b = _a.refetchQueries, refetchQueries = _b === void 0 ? [] : _b, updateWithProxyFn = _a.update, _c = _a.errorPolicy, errorPolicy = _c === void 0 ? "none" : _c, fetchPolicy = _a.fetchPolicy, _d = _a.context, context = _d === void 0 ? {} : _d;
+              if (!mutation) {
+                throw new Error("mutation option is required. You must specify your GraphQL document in the mutation option.");
+              }
+              if (fetchPolicy && fetchPolicy !== "no-cache") {
+                throw new Error("fetchPolicy for mutations currently only supports the 'no-cache' policy");
+              }
+              var mutationId = this.generateQueryId();
+              var cache = this.dataStore.getCache();
+              mutation = cache.transformDocument(mutation), variables = apolloUtilities.assign({}, apolloUtilities.getDefaultValues(apolloUtilities.getMutationDefinition(mutation)), variables);
+              var mutationString = printer.print(mutation);
+              this.setQuery(mutationId, function() {
+                return { document: mutation };
+              });
+              var generateUpdateQueriesInfo = function() {
+                var ret = {};
+                if (updateQueriesByName) {
+                  Object.keys(updateQueriesByName).forEach(function(queryName) {
+                    return (_this.queryIdsByName[queryName] || []).forEach(function(queryId) {
+                      ret[queryId] = {
+                        updater: updateQueriesByName[queryName],
+                        query: _this.queryStore.get(queryId)
+                      };
+                    });
+                  });
+                }
+                return ret;
+              };
+              this.mutationStore.initMutation(mutationId, mutationString, variables);
+              this.dataStore.markMutationInit({
+                mutationId,
+                document: mutation,
+                variables: variables || {},
+                updateQueries: generateUpdateQueriesInfo(),
+                update: updateWithProxyFn,
+                optimisticResponse
+              });
+              this.broadcastQueries();
+              return new Promise(function(resolve2, reject2) {
+                var storeResult;
+                var error;
+                var operation = _this.buildOperationForLink(mutation, variables, __assign$3({}, context, { optimisticResponse }));
+                apolloLink.execute(_this.link, operation).subscribe({
+                  next: function(result) {
+                    if (apolloUtilities.graphQLResultHasError(result) && errorPolicy === "none") {
+                      error = new ApolloError({
+                        graphQLErrors: result.errors
+                      });
+                      return;
+                    }
+                    _this.mutationStore.markMutationResult(mutationId);
+                    if (fetchPolicy !== "no-cache") {
+                      _this.dataStore.markMutationResult({
+                        mutationId,
+                        result,
+                        document: mutation,
+                        variables: variables || {},
+                        updateQueries: generateUpdateQueriesInfo(),
+                        update: updateWithProxyFn
+                      });
+                    }
+                    storeResult = result;
+                  },
+                  error: function(err) {
+                    _this.mutationStore.markMutationError(mutationId, err);
+                    _this.dataStore.markMutationComplete({
+                      mutationId,
+                      optimisticResponse
+                    });
+                    _this.broadcastQueries();
+                    _this.setQuery(mutationId, function() {
+                      return { document: void 0 };
+                    });
+                    reject2(new ApolloError({
+                      networkError: err
+                    }));
+                  },
+                  complete: function() {
+                    if (error) {
+                      _this.mutationStore.markMutationError(mutationId, error);
+                    }
+                    _this.dataStore.markMutationComplete({
