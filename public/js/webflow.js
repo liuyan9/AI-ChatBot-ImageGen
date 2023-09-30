@@ -21232,3 +21232,445 @@
                       _this.mutationStore.markMutationError(mutationId, error);
                     }
                     _this.dataStore.markMutationComplete({
+                      mutationId,
+                      optimisticResponse
+                    });
+                    _this.broadcastQueries();
+                    if (error) {
+                      reject2(error);
+                      return;
+                    }
+                    if (typeof refetchQueries === "function") {
+                      refetchQueries = refetchQueries(storeResult);
+                    }
+                    if (refetchQueries) {
+                      refetchQueries.forEach(function(refetchQuery) {
+                        if (typeof refetchQuery === "string") {
+                          _this.refetchQueryByName(refetchQuery);
+                          return;
+                        }
+                        _this.query({
+                          query: refetchQuery.query,
+                          variables: refetchQuery.variables,
+                          fetchPolicy: "network-only"
+                        });
+                      });
+                    }
+                    _this.setQuery(mutationId, function() {
+                      return { document: void 0 };
+                    });
+                    if (errorPolicy === "ignore" && storeResult && apolloUtilities.graphQLResultHasError(storeResult)) {
+                      delete storeResult.errors;
+                    }
+                    resolve2(storeResult);
+                  }
+                });
+              });
+            };
+            QueryManager2.prototype.fetchQuery = function(queryId, options, fetchType, fetchMoreForQueryId) {
+              var _this = this;
+              var _a = options.variables, variables = _a === void 0 ? {} : _a, _b = options.metadata, metadata = _b === void 0 ? null : _b, _c = options.fetchPolicy, fetchPolicy = _c === void 0 ? "cache-first" : _c;
+              var cache = this.dataStore.getCache();
+              var query = cache.transformDocument(options.query);
+              var storeResult;
+              var needToFetch = fetchPolicy === "network-only" || fetchPolicy === "no-cache";
+              if (fetchType !== exports2.FetchType.refetch && fetchPolicy !== "network-only" && fetchPolicy !== "no-cache") {
+                var _d = this.dataStore.getCache().diff({
+                  query,
+                  variables,
+                  returnPartialData: true,
+                  optimistic: false
+                }), complete = _d.complete, result = _d.result;
+                needToFetch = !complete || fetchPolicy === "cache-and-network";
+                storeResult = result;
+              }
+              var shouldFetch = needToFetch && fetchPolicy !== "cache-only" && fetchPolicy !== "standby";
+              if (apolloUtilities.hasDirectives(["live"], query))
+                shouldFetch = true;
+              var requestId = this.generateRequestId();
+              var cancel = this.updateQueryWatch(queryId, query, options);
+              this.setQuery(queryId, function() {
+                return {
+                  document: query,
+                  lastRequestId: requestId,
+                  invalidated: true,
+                  cancel
+                };
+              });
+              this.invalidate(true, fetchMoreForQueryId);
+              this.queryStore.initQuery({
+                queryId,
+                document: query,
+                storePreviousVariables: shouldFetch,
+                variables,
+                isPoll: fetchType === exports2.FetchType.poll,
+                isRefetch: fetchType === exports2.FetchType.refetch,
+                metadata,
+                fetchMoreForQueryId
+              });
+              this.broadcastQueries();
+              var shouldDispatchClientResult = !shouldFetch || fetchPolicy === "cache-and-network";
+              if (shouldDispatchClientResult) {
+                this.queryStore.markQueryResultClient(queryId, !shouldFetch);
+                this.invalidate(true, queryId, fetchMoreForQueryId);
+                this.broadcastQueries();
+              }
+              if (shouldFetch) {
+                var networkResult = this.fetchRequest({
+                  requestId,
+                  queryId,
+                  document: query,
+                  options,
+                  fetchMoreForQueryId
+                }).catch(function(error) {
+                  if (isApolloError(error)) {
+                    throw error;
+                  } else {
+                    var lastRequestId = _this.getQuery(queryId).lastRequestId;
+                    if (requestId >= (lastRequestId || 1)) {
+                      _this.queryStore.markQueryError(queryId, error, fetchMoreForQueryId);
+                      _this.invalidate(true, queryId, fetchMoreForQueryId);
+                      _this.broadcastQueries();
+                    }
+                    _this.removeFetchQueryPromise(requestId);
+                    throw new ApolloError({ networkError: error });
+                  }
+                });
+                if (fetchPolicy !== "cache-and-network") {
+                  return networkResult;
+                } else {
+                  networkResult.catch(function() {
+                  });
+                }
+              }
+              return Promise.resolve({ data: storeResult });
+            };
+            QueryManager2.prototype.queryListenerForObserver = function(queryId, options, observer) {
+              var _this = this;
+              var previouslyHadError = false;
+              return function(queryStoreValue, newData) {
+                _this.invalidate(false, queryId);
+                if (!queryStoreValue)
+                  return;
+                var observableQuery = _this.getQuery(queryId).observableQuery;
+                var fetchPolicy = observableQuery ? observableQuery.options.fetchPolicy : options.fetchPolicy;
+                if (fetchPolicy === "standby")
+                  return;
+                var errorPolicy = observableQuery ? observableQuery.options.errorPolicy : options.errorPolicy;
+                var lastResult = observableQuery ? observableQuery.getLastResult() : null;
+                var lastError = observableQuery ? observableQuery.getLastError() : null;
+                var shouldNotifyIfLoading = !newData && queryStoreValue.previousVariables != null || fetchPolicy === "cache-only" || fetchPolicy === "cache-and-network";
+                var networkStatusChanged = Boolean(lastResult && queryStoreValue.networkStatus !== lastResult.networkStatus);
+                var errorStatusChanged = errorPolicy && (lastError && lastError.graphQLErrors) !== queryStoreValue.graphQLErrors && errorPolicy !== "none";
+                if (!isNetworkRequestInFlight(queryStoreValue.networkStatus) || networkStatusChanged && options.notifyOnNetworkStatusChange || shouldNotifyIfLoading) {
+                  if ((!errorPolicy || errorPolicy === "none") && queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0 || queryStoreValue.networkError) {
+                    var apolloError_1 = new ApolloError({
+                      graphQLErrors: queryStoreValue.graphQLErrors,
+                      networkError: queryStoreValue.networkError
+                    });
+                    previouslyHadError = true;
+                    if (observer.error) {
+                      try {
+                        observer.error(apolloError_1);
+                      } catch (e) {
+                        setTimeout(function() {
+                          throw e;
+                        }, 0);
+                      }
+                    } else {
+                      setTimeout(function() {
+                        throw apolloError_1;
+                      }, 0);
+                      if (!apolloUtilities.isProduction()) {
+                        console.info("An unhandled error was thrown because no error handler is registered for the query " + printer.print(queryStoreValue.document));
+                      }
+                    }
+                    return;
+                  }
+                  try {
+                    var data = void 0;
+                    var isMissing = void 0;
+                    if (newData) {
+                      _this.setQuery(queryId, function() {
+                        return { newData: null };
+                      });
+                      data = newData.result;
+                      isMissing = !newData.complete ? !newData.complete : false;
+                    } else {
+                      if (lastResult && lastResult.data && !errorStatusChanged) {
+                        data = lastResult.data;
+                        isMissing = false;
+                      } else {
+                        var document_1 = _this.getQuery(queryId).document;
+                        var readResult = _this.dataStore.getCache().diff({
+                          query: document_1,
+                          variables: queryStoreValue.previousVariables || queryStoreValue.variables,
+                          optimistic: true
+                        });
+                        data = readResult.result;
+                        isMissing = !readResult.complete;
+                      }
+                    }
+                    var resultFromStore = void 0;
+                    if (isMissing && fetchPolicy !== "cache-only") {
+                      resultFromStore = {
+                        data: lastResult && lastResult.data,
+                        loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
+                        networkStatus: queryStoreValue.networkStatus,
+                        stale: true
+                      };
+                    } else {
+                      resultFromStore = {
+                        data,
+                        loading: isNetworkRequestInFlight(queryStoreValue.networkStatus),
+                        networkStatus: queryStoreValue.networkStatus,
+                        stale: false
+                      };
+                    }
+                    if (errorPolicy === "all" && queryStoreValue.graphQLErrors && queryStoreValue.graphQLErrors.length > 0) {
+                      resultFromStore.errors = queryStoreValue.graphQLErrors;
+                    }
+                    if (observer.next) {
+                      var isDifferentResult = !(lastResult && resultFromStore && lastResult.networkStatus === resultFromStore.networkStatus && lastResult.stale === resultFromStore.stale && // We can do a strict equality check here because we include a `previousResult`
+                      // with `readQueryFromStore`. So if the results are the same they will be
+                      // referentially equal.
+                      lastResult.data === resultFromStore.data);
+                      if (isDifferentResult || previouslyHadError) {
+                        try {
+                          observer.next(apolloUtilities.maybeDeepFreeze(resultFromStore));
+                        } catch (e) {
+                          setTimeout(function() {
+                            throw e;
+                          }, 0);
+                        }
+                      }
+                    }
+                    previouslyHadError = false;
+                  } catch (error) {
+                    previouslyHadError = true;
+                    if (observer.error)
+                      observer.error(new ApolloError({ networkError: error }));
+                    return;
+                  }
+                }
+              };
+            };
+            QueryManager2.prototype.watchQuery = function(options, shouldSubscribe) {
+              if (shouldSubscribe === void 0) {
+                shouldSubscribe = true;
+              }
+              if (options.fetchPolicy === "standby") {
+                throw new Error('client.watchQuery cannot be called with fetchPolicy set to "standby"');
+              }
+              var queryDefinition = apolloUtilities.getQueryDefinition(options.query);
+              if (queryDefinition.variableDefinitions && queryDefinition.variableDefinitions.length) {
+                var defaultValues = apolloUtilities.getDefaultValues(queryDefinition);
+                options.variables = apolloUtilities.assign({}, defaultValues, options.variables);
+              }
+              if (typeof options.notifyOnNetworkStatusChange === "undefined") {
+                options.notifyOnNetworkStatusChange = false;
+              }
+              var transformedOptions = __assign$3({}, options);
+              return new ObservableQuery({
+                scheduler: this.scheduler,
+                options: transformedOptions,
+                shouldSubscribe
+              });
+            };
+            QueryManager2.prototype.query = function(options) {
+              var _this = this;
+              if (!options.query) {
+                throw new Error("query option is required. You must specify your GraphQL document in the query option.");
+              }
+              if (options.query.kind !== "Document") {
+                throw new Error('You must wrap the query string in a "gql" tag.');
+              }
+              if (options.returnPartialData) {
+                throw new Error("returnPartialData option only supported on watchQuery.");
+              }
+              if (options.pollInterval) {
+                throw new Error("pollInterval option only supported on watchQuery.");
+              }
+              var requestId = this.idCounter;
+              return new Promise(function(resolve2, reject2) {
+                _this.addFetchQueryPromise(requestId, resolve2, reject2);
+                return _this.watchQuery(options, false).result().then(function(result) {
+                  _this.removeFetchQueryPromise(requestId);
+                  resolve2(result);
+                }).catch(function(error) {
+                  _this.removeFetchQueryPromise(requestId);
+                  reject2(error);
+                });
+              });
+            };
+            QueryManager2.prototype.generateQueryId = function() {
+              var queryId = this.idCounter.toString();
+              this.idCounter++;
+              return queryId;
+            };
+            QueryManager2.prototype.stopQueryInStore = function(queryId) {
+              this.queryStore.stopQuery(queryId);
+              this.invalidate(true, queryId);
+              this.broadcastQueries();
+            };
+            QueryManager2.prototype.addQueryListener = function(queryId, listener) {
+              this.setQuery(queryId, function(_a) {
+                var _b = _a.listeners, listeners = _b === void 0 ? [] : _b;
+                return {
+                  listeners: listeners.concat([listener]),
+                  invalidate: false
+                };
+              });
+            };
+            QueryManager2.prototype.updateQueryWatch = function(queryId, document2, options) {
+              var _this = this;
+              var cancel = this.getQuery(queryId).cancel;
+              if (cancel)
+                cancel();
+              var previousResult = function() {
+                var previousResult2 = null;
+                var observableQuery = _this.getQuery(queryId).observableQuery;
+                if (observableQuery) {
+                  var lastResult = observableQuery.getLastResult();
+                  if (lastResult) {
+                    previousResult2 = lastResult.data;
+                  }
+                }
+                return previousResult2;
+              };
+              return this.dataStore.getCache().watch({
+                query: document2,
+                variables: options.variables,
+                optimistic: true,
+                previousResult,
+                callback: function(newData) {
+                  _this.setQuery(queryId, function() {
+                    return { invalidated: true, newData };
+                  });
+                }
+              });
+            };
+            QueryManager2.prototype.addFetchQueryPromise = function(requestId, resolve2, reject2) {
+              this.fetchQueryPromises.set(requestId.toString(), {
+                resolve: resolve2,
+                reject: reject2
+              });
+            };
+            QueryManager2.prototype.removeFetchQueryPromise = function(requestId) {
+              this.fetchQueryPromises.delete(requestId.toString());
+            };
+            QueryManager2.prototype.addObservableQuery = function(queryId, observableQuery) {
+              this.setQuery(queryId, function() {
+                return { observableQuery };
+              });
+              var queryDef = apolloUtilities.getQueryDefinition(observableQuery.options.query);
+              if (queryDef.name && queryDef.name.value) {
+                var queryName = queryDef.name.value;
+                this.queryIdsByName[queryName] = this.queryIdsByName[queryName] || [];
+                this.queryIdsByName[queryName].push(observableQuery.queryId);
+              }
+            };
+            QueryManager2.prototype.removeObservableQuery = function(queryId) {
+              var _a = this.getQuery(queryId), observableQuery = _a.observableQuery, cancel = _a.cancel;
+              if (cancel)
+                cancel();
+              if (!observableQuery)
+                return;
+              var definition = apolloUtilities.getQueryDefinition(observableQuery.options.query);
+              var queryName = definition.name ? definition.name.value : null;
+              this.setQuery(queryId, function() {
+                return { observableQuery: null };
+              });
+              if (queryName) {
+                this.queryIdsByName[queryName] = this.queryIdsByName[queryName].filter(function(val) {
+                  return !(observableQuery.queryId === val);
+                });
+              }
+            };
+            QueryManager2.prototype.clearStore = function() {
+              this.fetchQueryPromises.forEach(function(_a) {
+                var reject2 = _a.reject;
+                reject2(new Error("Store reset while query was in flight(not completed in link chain)"));
+              });
+              var resetIds = [];
+              this.queries.forEach(function(_a, queryId) {
+                var observableQuery = _a.observableQuery;
+                if (observableQuery)
+                  resetIds.push(queryId);
+              });
+              this.queryStore.reset(resetIds);
+              this.mutationStore.reset();
+              var reset = this.dataStore.reset();
+              return reset;
+            };
+            QueryManager2.prototype.resetStore = function() {
+              var _this = this;
+              return this.clearStore().then(function() {
+                return _this.reFetchObservableQueries();
+              });
+            };
+            QueryManager2.prototype.getObservableQueryPromises = function(includeStandby) {
+              var _this = this;
+              var observableQueryPromises = [];
+              this.queries.forEach(function(_a, queryId) {
+                var observableQuery = _a.observableQuery;
+                if (!observableQuery)
+                  return;
+                var fetchPolicy = observableQuery.options.fetchPolicy;
+                observableQuery.resetLastResults();
+                if (fetchPolicy !== "cache-only" && (includeStandby || fetchPolicy !== "standby")) {
+                  observableQueryPromises.push(observableQuery.refetch());
+                }
+                _this.setQuery(queryId, function() {
+                  return { newData: null };
+                });
+                _this.invalidate(true, queryId);
+              });
+              return observableQueryPromises;
+            };
+            QueryManager2.prototype.reFetchObservableQueries = function(includeStandby) {
+              var observableQueryPromises = this.getObservableQueryPromises(includeStandby);
+              this.broadcastQueries();
+              return Promise.all(observableQueryPromises);
+            };
+            QueryManager2.prototype.startQuery = function(queryId, options, listener) {
+              this.addQueryListener(queryId, listener);
+              this.fetchQuery(queryId, options).catch(function() {
+                return void 0;
+              });
+              return queryId;
+            };
+            QueryManager2.prototype.startGraphQLSubscription = function(options) {
+              var _this = this;
+              var query = options.query;
+              var cache = this.dataStore.getCache();
+              var transformedDoc = cache.transformDocument(query);
+              var variables = apolloUtilities.assign({}, apolloUtilities.getDefaultValues(apolloUtilities.getOperationDefinition(query)), options.variables);
+              var sub;
+              var observers = [];
+              return new Observable(function(observer) {
+                observers.push(observer);
+                if (observers.length === 1) {
+                  var handler = {
+                    next: function(result) {
+                      _this.dataStore.markSubscriptionResult(result, transformedDoc, variables);
+                      _this.broadcastQueries();
+                      observers.forEach(function(obs) {
+                        if (obs.next)
+                          obs.next(result);
+                      });
+                    },
+                    error: function(error) {
+                      observers.forEach(function(obs) {
+                        if (obs.error)
+                          obs.error(error);
+                      });
+                    }
+                  };
+                  var operation = _this.buildOperationForLink(transformedDoc, variables);
+                  sub = apolloLink.execute(_this.link, operation).subscribe(handler);
+                }
+                return function() {
+                  observers = observers.filter(function(obs) {
+                    return obs !== observer;
+                  });
