@@ -22121,3 +22121,449 @@
               }
               if (this.disableNetworkFetches && options.fetchPolicy === "network-only") {
                 options = __assign$4({}, options, { fetchPolicy: "cache-first" });
+              }
+              return this.queryManager.query(options);
+            };
+            ApolloClient2.prototype.mutate = function(options) {
+              this.initQueryManager();
+              if (this.defaultOptions.mutate) {
+                options = __assign$4({}, this.defaultOptions.mutate, options);
+              }
+              return this.queryManager.mutate(options);
+            };
+            ApolloClient2.prototype.subscribe = function(options) {
+              this.initQueryManager();
+              return this.queryManager.startGraphQLSubscription(options);
+            };
+            ApolloClient2.prototype.readQuery = function(options) {
+              return this.initProxy().readQuery(options);
+            };
+            ApolloClient2.prototype.readFragment = function(options) {
+              return this.initProxy().readFragment(options);
+            };
+            ApolloClient2.prototype.writeQuery = function(options) {
+              var result = this.initProxy().writeQuery(options);
+              this.queryManager.broadcastQueries();
+              return result;
+            };
+            ApolloClient2.prototype.writeFragment = function(options) {
+              var result = this.initProxy().writeFragment(options);
+              this.queryManager.broadcastQueries();
+              return result;
+            };
+            ApolloClient2.prototype.writeData = function(options) {
+              var result = this.initProxy().writeData(options);
+              this.queryManager.broadcastQueries();
+              return result;
+            };
+            ApolloClient2.prototype.__actionHookForDevTools = function(cb) {
+              this.devToolsHookCb = cb;
+            };
+            ApolloClient2.prototype.__requestRaw = function(payload) {
+              return apolloLink.execute(this.link, payload);
+            };
+            ApolloClient2.prototype.initQueryManager = function() {
+              var _this = this;
+              if (this.queryManager)
+                return;
+              this.queryManager = new QueryManager({
+                link: this.link,
+                store: this.store,
+                queryDeduplication: this.queryDeduplication,
+                ssrMode: this.ssrMode,
+                onBroadcast: function() {
+                  if (_this.devToolsHookCb) {
+                    _this.devToolsHookCb({
+                      action: {},
+                      state: {
+                        queries: _this.queryManager.queryStore.getStore(),
+                        mutations: _this.queryManager.mutationStore.getStore()
+                      },
+                      dataWithOptimisticResults: _this.cache.extract(true)
+                    });
+                  }
+                }
+              });
+            };
+            ApolloClient2.prototype.resetStore = function() {
+              var _this = this;
+              return Promise.resolve().then(function() {
+                return _this.queryManager ? _this.queryManager.clearStore() : Promise.resolve(null);
+              }).then(function() {
+                return Promise.all(_this.resetStoreCallbacks.map(function(fn) {
+                  return fn();
+                }));
+              }).then(function() {
+                return _this.queryManager && _this.queryManager.reFetchObservableQueries ? _this.queryManager.reFetchObservableQueries() : Promise.resolve(null);
+              });
+            };
+            ApolloClient2.prototype.onResetStore = function(cb) {
+              var _this = this;
+              this.resetStoreCallbacks.push(cb);
+              return function() {
+                _this.resetStoreCallbacks = _this.resetStoreCallbacks.filter(function(c) {
+                  return c !== cb;
+                });
+              };
+            };
+            ApolloClient2.prototype.reFetchObservableQueries = function(includeStandby) {
+              return this.queryManager ? this.queryManager.reFetchObservableQueries(includeStandby) : Promise.resolve(null);
+            };
+            ApolloClient2.prototype.extract = function(optimistic) {
+              return this.initProxy().extract(optimistic);
+            };
+            ApolloClient2.prototype.restore = function(serializedState) {
+              return this.initProxy().restore(serializedState);
+            };
+            ApolloClient2.prototype.initProxy = function() {
+              if (!this.proxy) {
+                this.initQueryManager();
+                this.proxy = this.cache;
+              }
+              return this.proxy;
+            };
+            return ApolloClient2;
+          }()
+        );
+        exports2.printAST = printer.print;
+        exports2.ApolloClient = ApolloClient;
+        exports2.default = ApolloClient;
+        exports2.ObservableQuery = ObservableQuery;
+        exports2.ApolloError = ApolloError;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/apollo-link-batch-http/node_modules/apollo-link-http-common/lib/bundle.umd.js
+  var require_bundle_umd6 = __commonJS({
+    "node_modules/apollo-link-batch-http/node_modules/apollo-link-http-common/lib/bundle.umd.js"(exports, module) {
+      (function(global2, factory) {
+        typeof exports === "object" && typeof module !== "undefined" ? factory(exports, require_printer()) : typeof define === "function" && define.amd ? define(["exports", "graphql/language/printer"], factory) : factory((global2.apolloLink = global2.apolloLink || {}, global2.apolloLink.httpCommon = {}), global2.printer);
+      })(exports, function(exports2, printer) {
+        "use strict";
+        var __assign = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        var defaultHttpOptions = {
+          includeQuery: true,
+          includeExtensions: false
+        };
+        var defaultHeaders = {
+          // headers are case insensitive (https://stackoverflow.com/a/5259004)
+          accept: "*/*",
+          "content-type": "application/json"
+        };
+        var defaultOptions = {
+          method: "POST"
+        };
+        var fallbackHttpConfig = {
+          http: defaultHttpOptions,
+          headers: defaultHeaders,
+          options: defaultOptions
+        };
+        var throwServerError = function(response, result, message) {
+          var error = new Error(message);
+          error.response = response;
+          error.statusCode = response.status;
+          error.result = result;
+          throw error;
+        };
+        var parseAndCheckHttpResponse = function(operations) {
+          return function(response) {
+            return response.text().then(function(bodyText) {
+              try {
+                return JSON.parse(bodyText);
+              } catch (err) {
+                var parseError = err;
+                parseError.response = response;
+                parseError.statusCode = response.status;
+                parseError.bodyText = bodyText;
+                return Promise.reject(parseError);
+              }
+            }).then(function(result) {
+              if (response.status >= 300) {
+                throwServerError(response, result, "Response not successful: Received status code " + response.status);
+              }
+              if (!Array.isArray(result) && !result.hasOwnProperty("data") && !result.hasOwnProperty("errors")) {
+                throwServerError(response, result, "Server response was missing for query '" + (Array.isArray(operations) ? operations.map(function(op) {
+                  return op.operationName;
+                }) : operations.operationName) + "'.");
+              }
+              return result;
+            });
+          };
+        };
+        var checkFetcher = function(fetcher) {
+          if (!fetcher && typeof fetch === "undefined") {
+            var library = "unfetch";
+            if (typeof window === "undefined")
+              library = "node-fetch";
+            throw new Error("\nfetch is not found globally and no fetcher passed, to fix pass a fetch for\nyour environment like https://www.npmjs.com/package/" + library + ".\n\nFor example:\nimport fetch from '" + library + "';\nimport { createHttpLink } from 'apollo-link-http';\n\nconst link = createHttpLink({ uri: '/graphql', fetch: fetch });");
+          }
+        };
+        var createSignalIfSupported = function() {
+          if (typeof AbortController === "undefined")
+            return { controller: false, signal: false };
+          var controller = new AbortController();
+          var signal = controller.signal;
+          return { controller, signal };
+        };
+        var selectHttpOptionsAndBody = function(operation, fallbackConfig) {
+          var configs = [];
+          for (var _i = 2; _i < arguments.length; _i++) {
+            configs[_i - 2] = arguments[_i];
+          }
+          var options = __assign({}, fallbackConfig.options, { headers: fallbackConfig.headers, credentials: fallbackConfig.credentials });
+          var http = fallbackConfig.http;
+          configs.forEach(function(config) {
+            options = __assign({}, options, config.options, { headers: __assign({}, options.headers, config.headers) });
+            if (config.credentials)
+              options.credentials = config.credentials;
+            http = __assign({}, http, config.http);
+          });
+          var operationName = operation.operationName, extensions = operation.extensions, variables = operation.variables, query = operation.query;
+          var body = { operationName, variables };
+          if (http.includeExtensions)
+            body.extensions = extensions;
+          if (http.includeQuery)
+            body.query = printer.print(query);
+          return {
+            options,
+            body
+          };
+        };
+        var serializeFetchParameter = function(p, label) {
+          var serialized;
+          try {
+            serialized = JSON.stringify(p);
+          } catch (e) {
+            var parseError = new Error("Network request failed. " + label + " is not serializable: " + e.message);
+            parseError.parseError = e;
+            throw parseError;
+          }
+          return serialized;
+        };
+        var selectURI = function(operation, fallbackURI) {
+          var context = operation.getContext();
+          var contextURI = context.uri;
+          if (contextURI) {
+            return contextURI;
+          } else if (typeof fallbackURI === "function") {
+            return fallbackURI(operation);
+          } else {
+            return fallbackURI || "/graphql";
+          }
+        };
+        exports2.fallbackHttpConfig = fallbackHttpConfig;
+        exports2.throwServerError = throwServerError;
+        exports2.parseAndCheckHttpResponse = parseAndCheckHttpResponse;
+        exports2.checkFetcher = checkFetcher;
+        exports2.createSignalIfSupported = createSignalIfSupported;
+        exports2.selectHttpOptionsAndBody = selectHttpOptionsAndBody;
+        exports2.serializeFetchParameter = serializeFetchParameter;
+        exports2.selectURI = selectURI;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/apollo-link-batch/lib/bundle.umd.js
+  var require_bundle_umd7 = __commonJS({
+    "node_modules/apollo-link-batch/lib/bundle.umd.js"(exports, module) {
+      (function(global2, factory) {
+        typeof exports === "object" && typeof module !== "undefined" ? factory(exports, require_bundle_umd3()) : typeof define === "function" && define.amd ? define(["exports", "apollo-link"], factory) : factory((global2.apolloLink = global2.apolloLink || {}, global2.apolloLink.batch = {}), global2.apolloLink.core);
+      })(exports, function(exports2, apolloLink) {
+        "use strict";
+        var __assign = Object.assign || function(t) {
+          for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s)
+              if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+          }
+          return t;
+        };
+        var OperationBatcher = (
+          /** @class */
+          function() {
+            function OperationBatcher2(_a) {
+              var batchInterval = _a.batchInterval, _b = _a.batchMax, batchMax = _b === void 0 ? 0 : _b, batchHandler = _a.batchHandler, _c = _a.batchKey, batchKey = _c === void 0 ? function() {
+                return "";
+              } : _c;
+              this.queuedRequests = /* @__PURE__ */ new Map();
+              this.batchInterval = batchInterval;
+              this.batchMax = batchMax;
+              this.batchHandler = batchHandler;
+              this.batchKey = batchKey;
+            }
+            OperationBatcher2.prototype.enqueueRequest = function(request) {
+              var _this = this;
+              var requestCopy = __assign({}, request);
+              var queued = false;
+              var key = this.batchKey(request.operation);
+              if (!requestCopy.observable) {
+                requestCopy.observable = new apolloLink.Observable(function(observer) {
+                  if (!_this.queuedRequests.has(key)) {
+                    _this.queuedRequests.set(key, []);
+                  }
+                  if (!queued) {
+                    _this.queuedRequests.get(key).push(requestCopy);
+                    queued = true;
+                  }
+                  requestCopy.next = requestCopy.next || [];
+                  if (observer.next)
+                    requestCopy.next.push(observer.next.bind(observer));
+                  requestCopy.error = requestCopy.error || [];
+                  if (observer.error)
+                    requestCopy.error.push(observer.error.bind(observer));
+                  requestCopy.complete = requestCopy.complete || [];
+                  if (observer.complete)
+                    requestCopy.complete.push(observer.complete.bind(observer));
+                  if (_this.queuedRequests.get(key).length === 1) {
+                    _this.scheduleQueueConsumption(key);
+                  }
+                  if (_this.queuedRequests.get(key).length === _this.batchMax) {
+                    _this.consumeQueue(key);
+                  }
+                });
+              }
+              return requestCopy.observable;
+            };
+            OperationBatcher2.prototype.consumeQueue = function(key) {
+              if (key === void 0) {
+                key = "";
+              }
+              var queuedRequests = this.queuedRequests.get(key);
+              if (!queuedRequests) {
+                return;
+              }
+              this.queuedRequests.delete(key);
+              var requests = queuedRequests.map(function(queuedRequest) {
+                return queuedRequest.operation;
+              });
+              var forwards = queuedRequests.map(function(queuedRequest) {
+                return queuedRequest.forward;
+              });
+              var observables = [];
+              var nexts = [];
+              var errors = [];
+              var completes = [];
+              queuedRequests.forEach(function(batchableRequest, index) {
+                observables.push(batchableRequest.observable);
+                nexts.push(batchableRequest.next);
+                errors.push(batchableRequest.error);
+                completes.push(batchableRequest.complete);
+              });
+              var batchedObservable = this.batchHandler(requests, forwards) || apolloLink.Observable.of();
+              var onError = function(error) {
+                errors.forEach(function(rejecters) {
+                  if (rejecters) {
+                    rejecters.forEach(function(e) {
+                      return e(error);
+                    });
+                  }
+                });
+              };
+              batchedObservable.subscribe({
+                next: function(results) {
+                  if (!Array.isArray(results)) {
+                    results = [results];
+                  }
+                  if (nexts.length !== results.length) {
+                    var error = new Error("server returned results with length " + results.length + ", expected length of " + nexts.length);
+                    error.result = results;
+                    return onError(error);
+                  }
+                  results.forEach(function(result, index) {
+                    requests[index].setContext({ response: result });
+                    if (nexts[index]) {
+                      nexts[index].forEach(function(next) {
+                        return next(result);
+                      });
+                    }
+                  });
+                },
+                error: onError,
+                complete: function() {
+                  completes.forEach(function(complete) {
+                    if (complete) {
+                      complete.forEach(function(c) {
+                        return c();
+                      });
+                    }
+                  });
+                }
+              });
+              return observables;
+            };
+            OperationBatcher2.prototype.scheduleQueueConsumption = function(key) {
+              var _this = this;
+              if (key === void 0) {
+                key = "";
+              }
+              setTimeout(function() {
+                if (_this.queuedRequests.get(key) && _this.queuedRequests.get(key).length) {
+                  _this.consumeQueue(key);
+                }
+              }, this.batchInterval);
+            };
+            return OperationBatcher2;
+          }()
+        );
+        var __extends = function() {
+          var extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d, b) {
+            d.__proto__ = b;
+          } || function(d, b) {
+            for (var p in b)
+              if (b.hasOwnProperty(p))
+                d[p] = b[p];
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        var BatchLink = (
+          /** @class */
+          function(_super) {
+            __extends(BatchLink2, _super);
+            function BatchLink2(fetchParams) {
+              if (fetchParams === void 0) {
+                fetchParams = {};
+              }
+              var _this = _super.call(this) || this;
+              var _a = fetchParams.batchInterval, batchInterval = _a === void 0 ? 10 : _a, _b = fetchParams.batchMax, batchMax = _b === void 0 ? 0 : _b, _c = fetchParams.batchHandler, batchHandler = _c === void 0 ? function() {
+                return null;
+              } : _c, _d = fetchParams.batchKey, batchKey = _d === void 0 ? function() {
+                return "";
+              } : _d;
+              _this.batcher = new OperationBatcher({
+                batchInterval,
+                batchMax,
+                batchHandler,
+                batchKey
+              });
+              if (fetchParams.batchHandler.length <= 1) {
+                _this.request = function(operation) {
+                  return _this.batcher.enqueueRequest({ operation });
+                };
+              }
+              return _this;
+            }
+            BatchLink2.prototype.request = function(operation, forward) {
+              return this.batcher.enqueueRequest({
+                operation,
+                forward
+              });
+            };
+            return BatchLink2;
