@@ -22567,3 +22567,424 @@
               });
             };
             return BatchLink2;
+          }(apolloLink.ApolloLink)
+        );
+        exports2.BatchLink = BatchLink;
+        exports2.OperationBatcher = OperationBatcher;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/apollo-link-batch-http/lib/bundle.umd.js
+  var require_bundle_umd8 = __commonJS({
+    "node_modules/apollo-link-batch-http/lib/bundle.umd.js"(exports, module) {
+      (function(global2, factory) {
+        typeof exports === "object" && typeof module !== "undefined" ? factory(exports, require_bundle_umd3(), require_bundle_umd6(), require_bundle_umd7()) : typeof define === "function" && define.amd ? define(["exports", "apollo-link", "apollo-link-http-common", "apollo-link-batch"], factory) : factory((global2.apolloLink = global2.apolloLink || {}, global2.apolloLink.batchHttp = {}), global2.apolloLink.core, global2.apolloLink.httpCommon, global2.apolloLink.batch);
+      })(exports, function(exports2, apolloLink, apolloLinkHttpCommon, apolloLinkBatch) {
+        "use strict";
+        var __extends = function() {
+          var extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d, b) {
+            d.__proto__ = b;
+          } || function(d, b) {
+            for (var p in b)
+              if (b.hasOwnProperty(p))
+                d[p] = b[p];
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        var __rest = function(s, e) {
+          var t = {};
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+              t[p] = s[p];
+          if (s != null && typeof Object.getOwnPropertySymbols === "function") {
+            for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++)
+              if (e.indexOf(p[i]) < 0)
+                t[p[i]] = s[p[i]];
+          }
+          return t;
+        };
+        var BatchHttpLink = (
+          /** @class */
+          function(_super) {
+            __extends(BatchHttpLink2, _super);
+            function BatchHttpLink2(fetchParams) {
+              if (fetchParams === void 0) {
+                fetchParams = {};
+              }
+              var _this = _super.call(this) || this;
+              var _a = fetchParams.uri, uri = _a === void 0 ? "/graphql" : _a, fetcher = fetchParams.fetch, includeExtensions = fetchParams.includeExtensions, batchInterval = fetchParams.batchInterval, batchMax = fetchParams.batchMax, batchKey = fetchParams.batchKey, requestOptions = __rest(fetchParams, ["uri", "fetch", "includeExtensions", "batchInterval", "batchMax", "batchKey"]);
+              apolloLinkHttpCommon.checkFetcher(fetcher);
+              if (!fetcher) {
+                fetcher = fetch;
+              }
+              var linkConfig = {
+                http: { includeExtensions },
+                options: requestOptions.fetchOptions,
+                credentials: requestOptions.credentials,
+                headers: requestOptions.headers
+              };
+              _this.batchInterval = batchInterval || 10;
+              _this.batchMax = batchMax || 10;
+              var batchHandler = function(operations) {
+                var chosenURI = apolloLinkHttpCommon.selectURI(operations[0], uri);
+                var context = operations[0].getContext();
+                var contextConfig = {
+                  http: context.http,
+                  options: context.fetchOptions,
+                  credentials: context.credentials,
+                  headers: context.headers
+                };
+                var optsAndBody = operations.map(function(operation) {
+                  return apolloLinkHttpCommon.selectHttpOptionsAndBody(operation, apolloLinkHttpCommon.fallbackHttpConfig, linkConfig, contextConfig);
+                });
+                var body = optsAndBody.map(function(_a3) {
+                  var body2 = _a3.body;
+                  return body2;
+                });
+                var options = optsAndBody[0].options;
+                if (options.method === "GET") {
+                  return apolloLink.fromError(new Error("apollo-link-batch-http does not support GET requests"));
+                }
+                try {
+                  options.body = apolloLinkHttpCommon.serializeFetchParameter(body, "Payload");
+                } catch (parseError) {
+                  return apolloLink.fromError(parseError);
+                }
+                var controller;
+                if (!options.signal) {
+                  var _a2 = apolloLinkHttpCommon.createSignalIfSupported(), _controller = _a2.controller, signal = _a2.signal;
+                  controller = _controller;
+                  if (controller)
+                    options.signal = signal;
+                }
+                return new apolloLink.Observable(function(observer) {
+                  fetcher(chosenURI, options).then(apolloLinkHttpCommon.parseAndCheckHttpResponse(operations)).then(function(result) {
+                    observer.next(result);
+                    observer.complete();
+                    return result;
+                  }).catch(function(err) {
+                    if (err.name === "AbortError")
+                      return;
+                    if (err.result && err.result.errors && err.result.data) {
+                      observer.next(err.result);
+                    }
+                    observer.error(err);
+                  });
+                  return function() {
+                    if (controller)
+                      controller.abort();
+                  };
+                });
+              };
+              batchKey = batchKey || function(operation) {
+                var context = operation.getContext();
+                var contextConfig = {
+                  http: context.http,
+                  options: context.fetchOptions,
+                  credentials: context.credentials,
+                  headers: context.headers
+                };
+                return apolloLinkHttpCommon.selectURI(operation, uri) + JSON.stringify(contextConfig);
+              };
+              _this.batcher = new apolloLinkBatch.BatchLink({
+                batchInterval: _this.batchInterval,
+                batchMax: _this.batchMax,
+                batchKey,
+                batchHandler
+              });
+              return _this;
+            }
+            BatchHttpLink2.prototype.request = function(operation) {
+              return this.batcher.request(operation);
+            };
+            return BatchHttpLink2;
+          }(apolloLink.ApolloLink)
+        );
+        exports2.BatchHttpLink = BatchHttpLink;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/apollo-cache-inmemory/node_modules/apollo-utilities/lib/bundle.umd.js
+  var require_bundle_umd9 = __commonJS({
+    "node_modules/apollo-cache-inmemory/node_modules/apollo-utilities/lib/bundle.umd.js"(exports, module) {
+      (function(global2, factory) {
+        typeof exports === "object" && typeof module !== "undefined" ? factory(exports, require_fast_json_stable_stringify()) : typeof define === "function" && define.amd ? define(["exports", "fast-json-stable-stringify"], factory) : factory((global2.apollo = global2.apollo || {}, global2.apollo.utilities = {}), global2.stringify);
+      })(exports, function(exports2, stringify) {
+        "use strict";
+        stringify = stringify && stringify.hasOwnProperty("default") ? stringify["default"] : stringify;
+        var __assign = function() {
+          __assign = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign.apply(this, arguments);
+        };
+        function isScalarValue(value) {
+          return ["StringValue", "BooleanValue", "EnumValue"].indexOf(value.kind) > -1;
+        }
+        function isNumberValue(value) {
+          return ["IntValue", "FloatValue"].indexOf(value.kind) > -1;
+        }
+        function isStringValue(value) {
+          return value.kind === "StringValue";
+        }
+        function isBooleanValue(value) {
+          return value.kind === "BooleanValue";
+        }
+        function isIntValue(value) {
+          return value.kind === "IntValue";
+        }
+        function isFloatValue(value) {
+          return value.kind === "FloatValue";
+        }
+        function isVariable(value) {
+          return value.kind === "Variable";
+        }
+        function isObjectValue(value) {
+          return value.kind === "ObjectValue";
+        }
+        function isListValue(value) {
+          return value.kind === "ListValue";
+        }
+        function isEnumValue(value) {
+          return value.kind === "EnumValue";
+        }
+        function isNullValue(value) {
+          return value.kind === "NullValue";
+        }
+        function valueToObjectRepresentation(argObj, name, value, variables) {
+          if (isIntValue(value) || isFloatValue(value)) {
+            argObj[name.value] = Number(value.value);
+          } else if (isBooleanValue(value) || isStringValue(value)) {
+            argObj[name.value] = value.value;
+          } else if (isObjectValue(value)) {
+            var nestedArgObj_1 = {};
+            value.fields.map(function(obj) {
+              return valueToObjectRepresentation(nestedArgObj_1, obj.name, obj.value, variables);
+            });
+            argObj[name.value] = nestedArgObj_1;
+          } else if (isVariable(value)) {
+            var variableValue = (variables || {})[value.name.value];
+            argObj[name.value] = variableValue;
+          } else if (isListValue(value)) {
+            argObj[name.value] = value.values.map(function(listValue) {
+              var nestedArgArrayObj = {};
+              valueToObjectRepresentation(nestedArgArrayObj, name, listValue, variables);
+              return nestedArgArrayObj[name.value];
+            });
+          } else if (isEnumValue(value)) {
+            argObj[name.value] = value.value;
+          } else if (isNullValue(value)) {
+            argObj[name.value] = null;
+          } else {
+            throw new Error('The inline argument "' + name.value + '" of kind "' + value.kind + '"is not supported. Use variables instead of inline arguments to overcome this limitation.');
+          }
+        }
+        function storeKeyNameFromField(field, variables) {
+          var directivesObj = null;
+          if (field.directives) {
+            directivesObj = {};
+            field.directives.forEach(function(directive) {
+              directivesObj[directive.name.value] = {};
+              if (directive.arguments) {
+                directive.arguments.forEach(function(_a) {
+                  var name = _a.name, value = _a.value;
+                  return valueToObjectRepresentation(directivesObj[directive.name.value], name, value, variables);
+                });
+              }
+            });
+          }
+          var argObj = null;
+          if (field.arguments && field.arguments.length) {
+            argObj = {};
+            field.arguments.forEach(function(_a) {
+              var name = _a.name, value = _a.value;
+              return valueToObjectRepresentation(argObj, name, value, variables);
+            });
+          }
+          return getStoreKeyName(field.name.value, argObj, directivesObj);
+        }
+        var KNOWN_DIRECTIVES = [
+          "connection",
+          "include",
+          "skip",
+          "client",
+          "rest",
+          "export"
+        ];
+        function getStoreKeyName(fieldName, args, directives) {
+          if (directives && directives["connection"] && directives["connection"]["key"]) {
+            if (directives["connection"]["filter"] && directives["connection"]["filter"].length > 0) {
+              var filterKeys = directives["connection"]["filter"] ? directives["connection"]["filter"] : [];
+              filterKeys.sort();
+              var queryArgs_1 = args;
+              var filteredArgs_1 = {};
+              filterKeys.forEach(function(key) {
+                filteredArgs_1[key] = queryArgs_1[key];
+              });
+              return directives["connection"]["key"] + "(" + JSON.stringify(filteredArgs_1) + ")";
+            } else {
+              return directives["connection"]["key"];
+            }
+          }
+          var completeFieldName = fieldName;
+          if (args) {
+            var stringifiedArgs = stringify(args);
+            completeFieldName += "(" + stringifiedArgs + ")";
+          }
+          if (directives) {
+            Object.keys(directives).forEach(function(key) {
+              if (KNOWN_DIRECTIVES.indexOf(key) !== -1)
+                return;
+              if (directives[key] && Object.keys(directives[key]).length) {
+                completeFieldName += "@" + key + "(" + JSON.stringify(directives[key]) + ")";
+              } else {
+                completeFieldName += "@" + key;
+              }
+            });
+          }
+          return completeFieldName;
+        }
+        function argumentsObjectFromField(field, variables) {
+          if (field.arguments && field.arguments.length) {
+            var argObj_1 = {};
+            field.arguments.forEach(function(_a) {
+              var name = _a.name, value = _a.value;
+              return valueToObjectRepresentation(argObj_1, name, value, variables);
+            });
+            return argObj_1;
+          }
+          return null;
+        }
+        function resultKeyNameFromField(field) {
+          return field.alias ? field.alias.value : field.name.value;
+        }
+        function isField(selection) {
+          return selection.kind === "Field";
+        }
+        function isInlineFragment(selection) {
+          return selection.kind === "InlineFragment";
+        }
+        function isIdValue(idObject) {
+          return idObject && idObject.type === "id" && typeof idObject.generated === "boolean";
+        }
+        function toIdValue(idConfig, generated) {
+          if (generated === void 0) {
+            generated = false;
+          }
+          return __assign({ type: "id", generated }, typeof idConfig === "string" ? { id: idConfig, typename: void 0 } : idConfig);
+        }
+        function isJsonValue(jsonObject) {
+          return jsonObject != null && typeof jsonObject === "object" && jsonObject.type === "json";
+        }
+        function defaultValueFromVariable(node) {
+          throw new Error("Variable nodes are not supported by valueFromNode");
+        }
+        function valueFromNode(node, onVariable) {
+          if (onVariable === void 0) {
+            onVariable = defaultValueFromVariable;
+          }
+          switch (node.kind) {
+            case "Variable":
+              return onVariable(node);
+            case "NullValue":
+              return null;
+            case "IntValue":
+              return parseInt(node.value, 10);
+            case "FloatValue":
+              return parseFloat(node.value);
+            case "ListValue":
+              return node.values.map(function(v) {
+                return valueFromNode(v, onVariable);
+              });
+            case "ObjectValue": {
+              var value = {};
+              for (var _i = 0, _a = node.fields; _i < _a.length; _i++) {
+                var field = _a[_i];
+                value[field.name.value] = valueFromNode(field.value, onVariable);
+              }
+              return value;
+            }
+            default:
+              return node.value;
+          }
+        }
+        function getDirectiveInfoFromField(field, variables) {
+          if (field.directives && field.directives.length) {
+            var directiveObj_1 = {};
+            field.directives.forEach(function(directive) {
+              directiveObj_1[directive.name.value] = argumentsObjectFromField(directive, variables);
+            });
+            return directiveObj_1;
+          }
+          return null;
+        }
+        function shouldInclude(selection, variables) {
+          if (variables === void 0) {
+            variables = {};
+          }
+          if (!selection.directives) {
+            return true;
+          }
+          var res = true;
+          selection.directives.forEach(function(directive) {
+            if (directive.name.value !== "skip" && directive.name.value !== "include") {
+              return;
+            }
+            var directiveArguments = directive.arguments || [];
+            var directiveName = directive.name.value;
+            if (directiveArguments.length !== 1) {
+              throw new Error("Incorrect number of arguments for the @" + directiveName + " directive.");
+            }
+            var ifArgument = directiveArguments[0];
+            if (!ifArgument.name || ifArgument.name.value !== "if") {
+              throw new Error("Invalid argument for the @" + directiveName + " directive.");
+            }
+            var ifValue = directiveArguments[0].value;
+            var evaledValue = false;
+            if (!ifValue || ifValue.kind !== "BooleanValue") {
+              if (ifValue.kind !== "Variable") {
+                throw new Error("Argument for the @" + directiveName + " directive must be a variable or a boolean value.");
+              } else {
+                evaledValue = variables[ifValue.name.value];
+                if (evaledValue === void 0) {
+                  throw new Error("Invalid variable referenced in @" + directiveName + " directive.");
+                }
+              }
+            } else {
+              evaledValue = ifValue.value;
+            }
+            if (directiveName === "skip") {
+              evaledValue = !evaledValue;
+            }
+            if (!evaledValue) {
+              res = false;
+            }
+          });
+          return res;
+        }
+        function flattenSelections(selection) {
+          if (!selection.selectionSet || !(selection.selectionSet.selections.length > 0))
+            return [selection];
+          return [selection].concat(selection.selectionSet.selections.map(function(selectionNode) {
+            return [selectionNode].concat(flattenSelections(selectionNode));
+          }).reduce(function(selections, selected) {
+            return selections.concat(selected);
+          }, []));
+        }
+        function getDirectiveNames(doc) {
