@@ -22988,3 +22988,480 @@
           }, []));
         }
         function getDirectiveNames(doc) {
+          var directiveNames = doc.definitions.filter(function(definition) {
+            return definition.selectionSet && definition.selectionSet.selections;
+          }).map(function(x) {
+            return flattenSelections(x);
+          }).reduce(function(selections, selected) {
+            return selections.concat(selected);
+          }, []).filter(function(selection) {
+            return selection.directives && selection.directives.length > 0;
+          }).map(function(selection) {
+            return selection.directives;
+          }).reduce(function(directives, directive) {
+            return directives.concat(directive);
+          }, []).map(function(directive) {
+            return directive.name.value;
+          });
+          return directiveNames;
+        }
+        function hasDirectives(names, doc) {
+          return getDirectiveNames(doc).some(function(name) {
+            return names.indexOf(name) > -1;
+          });
+        }
+        var __assign$1 = function() {
+          __assign$1 = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign$1.apply(this, arguments);
+        };
+        function getFragmentQueryDocument(document2, fragmentName) {
+          var actualFragmentName = fragmentName;
+          var fragments = [];
+          document2.definitions.forEach(function(definition) {
+            if (definition.kind === "OperationDefinition") {
+              throw new Error("Found a " + definition.operation + " operation" + (definition.name ? " named '" + definition.name.value + "'" : "") + ". No operations are allowed when using a fragment as a query. Only fragments are allowed.");
+            }
+            if (definition.kind === "FragmentDefinition") {
+              fragments.push(definition);
+            }
+          });
+          if (typeof actualFragmentName === "undefined") {
+            if (fragments.length !== 1) {
+              throw new Error("Found " + fragments.length + " fragments. `fragmentName` must be provided when there is not exactly 1 fragment.");
+            }
+            actualFragmentName = fragments[0].name.value;
+          }
+          var query = __assign$1({}, document2, { definitions: [
+            {
+              kind: "OperationDefinition",
+              operation: "query",
+              selectionSet: {
+                kind: "SelectionSet",
+                selections: [
+                  {
+                    kind: "FragmentSpread",
+                    name: {
+                      kind: "Name",
+                      value: actualFragmentName
+                    }
+                  }
+                ]
+              }
+            }
+          ].concat(document2.definitions) });
+          return query;
+        }
+        function assign(target) {
+          var sources = [];
+          for (var _i = 1; _i < arguments.length; _i++) {
+            sources[_i - 1] = arguments[_i];
+          }
+          sources.forEach(function(source) {
+            if (typeof source === "undefined" || source === null) {
+              return;
+            }
+            Object.keys(source).forEach(function(key) {
+              target[key] = source[key];
+            });
+          });
+          return target;
+        }
+        function getMutationDefinition(doc) {
+          checkDocument(doc);
+          var mutationDef = doc.definitions.filter(function(definition) {
+            return definition.kind === "OperationDefinition" && definition.operation === "mutation";
+          })[0];
+          if (!mutationDef) {
+            throw new Error("Must contain a mutation definition.");
+          }
+          return mutationDef;
+        }
+        function checkDocument(doc) {
+          if (doc.kind !== "Document") {
+            throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
+          }
+          var operations = doc.definitions.filter(function(d) {
+            return d.kind !== "FragmentDefinition";
+          }).map(function(definition) {
+            if (definition.kind !== "OperationDefinition") {
+              throw new Error('Schema type definitions not allowed in queries. Found: "' + definition.kind + '"');
+            }
+            return definition;
+          });
+          if (operations.length > 1) {
+            throw new Error("Ambiguous GraphQL document: contains " + operations.length + " operations");
+          }
+        }
+        function getOperationDefinition(doc) {
+          checkDocument(doc);
+          return doc.definitions.filter(function(definition) {
+            return definition.kind === "OperationDefinition";
+          })[0];
+        }
+        function getOperationDefinitionOrDie(document2) {
+          var def = getOperationDefinition(document2);
+          if (!def) {
+            throw new Error("GraphQL document is missing an operation");
+          }
+          return def;
+        }
+        function getOperationName(doc) {
+          return doc.definitions.filter(function(definition) {
+            return definition.kind === "OperationDefinition" && definition.name;
+          }).map(function(x) {
+            return x.name.value;
+          })[0] || null;
+        }
+        function getFragmentDefinitions(doc) {
+          return doc.definitions.filter(function(definition) {
+            return definition.kind === "FragmentDefinition";
+          });
+        }
+        function getQueryDefinition(doc) {
+          var queryDef = getOperationDefinition(doc);
+          if (!queryDef || queryDef.operation !== "query") {
+            throw new Error("Must contain a query definition.");
+          }
+          return queryDef;
+        }
+        function getFragmentDefinition(doc) {
+          if (doc.kind !== "Document") {
+            throw new Error('Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
+          }
+          if (doc.definitions.length > 1) {
+            throw new Error("Fragment must have exactly one definition.");
+          }
+          var fragmentDef = doc.definitions[0];
+          if (fragmentDef.kind !== "FragmentDefinition") {
+            throw new Error("Must be a fragment definition.");
+          }
+          return fragmentDef;
+        }
+        function getMainDefinition(queryDoc) {
+          checkDocument(queryDoc);
+          var fragmentDefinition;
+          for (var _i = 0, _a = queryDoc.definitions; _i < _a.length; _i++) {
+            var definition = _a[_i];
+            if (definition.kind === "OperationDefinition") {
+              var operation = definition.operation;
+              if (operation === "query" || operation === "mutation" || operation === "subscription") {
+                return definition;
+              }
+            }
+            if (definition.kind === "FragmentDefinition" && !fragmentDefinition) {
+              fragmentDefinition = definition;
+            }
+          }
+          if (fragmentDefinition) {
+            return fragmentDefinition;
+          }
+          throw new Error("Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.");
+        }
+        function createFragmentMap(fragments) {
+          if (fragments === void 0) {
+            fragments = [];
+          }
+          var symTable = {};
+          fragments.forEach(function(fragment) {
+            symTable[fragment.name.value] = fragment;
+          });
+          return symTable;
+        }
+        function getDefaultValues(definition) {
+          if (definition && definition.variableDefinitions && definition.variableDefinitions.length) {
+            var defaultValues = definition.variableDefinitions.filter(function(_a) {
+              var defaultValue = _a.defaultValue;
+              return defaultValue;
+            }).map(function(_a) {
+              var variable = _a.variable, defaultValue = _a.defaultValue;
+              var defaultValueObj = {};
+              valueToObjectRepresentation(defaultValueObj, variable.name, defaultValue);
+              return defaultValueObj;
+            });
+            return assign.apply(void 0, [{}].concat(defaultValues));
+          }
+          return {};
+        }
+        function variablesInOperation(operation) {
+          var names = /* @__PURE__ */ new Set();
+          if (operation.variableDefinitions) {
+            for (var _i = 0, _a = operation.variableDefinitions; _i < _a.length; _i++) {
+              var definition = _a[_i];
+              names.add(definition.variable.name.value);
+            }
+          }
+          return names;
+        }
+        var toString = Object.prototype.toString;
+        function cloneDeep(value) {
+          return cloneDeepHelper(value, /* @__PURE__ */ new Map());
+        }
+        function cloneDeepHelper(val, seen) {
+          switch (toString.call(val)) {
+            case "[object Array]": {
+              if (seen.has(val))
+                return seen.get(val);
+              var copy_1 = val.slice(0);
+              seen.set(val, copy_1);
+              copy_1.forEach(function(child, i) {
+                copy_1[i] = cloneDeepHelper(child, seen);
+              });
+              return copy_1;
+            }
+            case "[object Object]": {
+              if (seen.has(val))
+                return seen.get(val);
+              var copy_2 = Object.create(Object.getPrototypeOf(val));
+              seen.set(val, copy_2);
+              Object.keys(val).forEach(function(key) {
+                copy_2[key] = cloneDeepHelper(val[key], seen);
+              });
+              return copy_2;
+            }
+            default:
+              return val;
+          }
+        }
+        var TYPENAME_FIELD = {
+          kind: "Field",
+          name: {
+            kind: "Name",
+            value: "__typename"
+          }
+        };
+        function isNotEmpty(op, fragments) {
+          return op.selectionSet.selections.filter(function(selectionSet) {
+            return !(selectionSet && selectionSet.kind === "FragmentSpread" && !isNotEmpty(fragments[selectionSet.name.value], fragments));
+          }).length > 0;
+        }
+        function getDirectiveMatcher(directives) {
+          return function directiveMatcher(directive) {
+            return directives.some(function(dir) {
+              if (dir.name && dir.name === directive.name.value)
+                return true;
+              if (dir.test && dir.test(directive))
+                return true;
+              return false;
+            });
+          };
+        }
+        function addTypenameToSelectionSet(selectionSet, isRoot) {
+          if (isRoot === void 0) {
+            isRoot = false;
+          }
+          if (selectionSet.selections) {
+            if (!isRoot) {
+              var alreadyHasThisField = selectionSet.selections.some(function(selection) {
+                return selection.kind === "Field" && selection.name.value === "__typename";
+              });
+              if (!alreadyHasThisField) {
+                selectionSet.selections.push(TYPENAME_FIELD);
+              }
+            }
+            selectionSet.selections.forEach(function(selection) {
+              if (selection.kind === "Field") {
+                if (selection.name.value.lastIndexOf("__", 0) !== 0 && selection.selectionSet) {
+                  addTypenameToSelectionSet(selection.selectionSet);
+                }
+              } else if (selection.kind === "InlineFragment") {
+                if (selection.selectionSet) {
+                  addTypenameToSelectionSet(selection.selectionSet);
+                }
+              }
+            });
+          }
+        }
+        function removeDirectivesFromSelectionSet(directives, selectionSet) {
+          if (!selectionSet.selections)
+            return selectionSet;
+          var agressiveRemove = directives.some(function(dir) {
+            return dir.remove;
+          });
+          selectionSet.selections = selectionSet.selections.map(function(selection) {
+            if (selection.kind !== "Field" || !selection || !selection.directives)
+              return selection;
+            var directiveMatcher = getDirectiveMatcher(directives);
+            var remove;
+            selection.directives = selection.directives.filter(function(directive) {
+              var shouldKeep = !directiveMatcher(directive);
+              if (!remove && !shouldKeep && agressiveRemove)
+                remove = true;
+              return shouldKeep;
+            });
+            return remove ? null : selection;
+          }).filter(function(x) {
+            return !!x;
+          });
+          selectionSet.selections.forEach(function(selection) {
+            if ((selection.kind === "Field" || selection.kind === "InlineFragment") && selection.selectionSet) {
+              removeDirectivesFromSelectionSet(directives, selection.selectionSet);
+            }
+          });
+          return selectionSet;
+        }
+        function removeDirectivesFromDocument(directives, doc) {
+          var docClone = cloneDeep(doc);
+          docClone.definitions.forEach(function(definition) {
+            removeDirectivesFromSelectionSet(directives, definition.selectionSet);
+          });
+          var operation = getOperationDefinitionOrDie(docClone);
+          var fragments = createFragmentMap(getFragmentDefinitions(docClone));
+          return isNotEmpty(operation, fragments) ? docClone : null;
+        }
+        function addTypenameToDocument(doc) {
+          checkDocument(doc);
+          var docClone = cloneDeep(doc);
+          docClone.definitions.forEach(function(definition) {
+            var isRoot = definition.kind === "OperationDefinition";
+            addTypenameToSelectionSet(definition.selectionSet, isRoot);
+          });
+          return docClone;
+        }
+        var connectionRemoveConfig = {
+          test: function(directive) {
+            var willRemove = directive.name.value === "connection";
+            if (willRemove) {
+              if (!directive.arguments || !directive.arguments.some(function(arg) {
+                return arg.name.value === "key";
+              })) {
+                console.warn("Removing an @connection directive even though it does not have a key. You may want to use the key parameter to specify a store key.");
+              }
+            }
+            return willRemove;
+          }
+        };
+        function removeConnectionDirectiveFromDocument(doc) {
+          checkDocument(doc);
+          return removeDirectivesFromDocument([connectionRemoveConfig], doc);
+        }
+        function hasDirectivesInSelectionSet(directives, selectionSet, nestedCheck) {
+          if (nestedCheck === void 0) {
+            nestedCheck = true;
+          }
+          if (!(selectionSet && selectionSet.selections)) {
+            return false;
+          }
+          var matchedSelections = selectionSet.selections.filter(function(selection) {
+            return hasDirectivesInSelection(directives, selection, nestedCheck);
+          });
+          return matchedSelections.length > 0;
+        }
+        function hasDirectivesInSelection(directives, selection, nestedCheck) {
+          if (nestedCheck === void 0) {
+            nestedCheck = true;
+          }
+          if (selection.kind !== "Field" || !selection) {
+            return true;
+          }
+          if (!selection.directives) {
+            return false;
+          }
+          var directiveMatcher = getDirectiveMatcher(directives);
+          var matchedDirectives = selection.directives.filter(directiveMatcher);
+          return matchedDirectives.length > 0 || nestedCheck && hasDirectivesInSelectionSet(directives, selection.selectionSet, nestedCheck);
+        }
+        function getDirectivesFromSelectionSet(directives, selectionSet) {
+          selectionSet.selections = selectionSet.selections.filter(function(selection) {
+            return hasDirectivesInSelection(directives, selection, true);
+          }).map(function(selection) {
+            if (hasDirectivesInSelection(directives, selection, false)) {
+              return selection;
+            }
+            if ((selection.kind === "Field" || selection.kind === "InlineFragment") && selection.selectionSet) {
+              selection.selectionSet = getDirectivesFromSelectionSet(directives, selection.selectionSet);
+            }
+            return selection;
+          });
+          return selectionSet;
+        }
+        function getDirectivesFromDocument(directives, doc, includeAllFragments) {
+          if (includeAllFragments === void 0) {
+            includeAllFragments = false;
+          }
+          checkDocument(doc);
+          var docClone = cloneDeep(doc);
+          docClone.definitions = docClone.definitions.map(function(definition) {
+            if ((definition.kind === "OperationDefinition" || definition.kind === "FragmentDefinition" && !includeAllFragments) && definition.selectionSet) {
+              definition.selectionSet = getDirectivesFromSelectionSet(directives, definition.selectionSet);
+            }
+            return definition;
+          });
+          var operation = getOperationDefinitionOrDie(docClone);
+          var fragments = createFragmentMap(getFragmentDefinitions(docClone));
+          return isNotEmpty(operation, fragments) ? docClone : null;
+        }
+        function getEnv() {
+          if (typeof process !== "undefined" && "production") {
+            return "production";
+          }
+          return "development";
+        }
+        function isEnv(env) {
+          return getEnv() === env;
+        }
+        function isProduction() {
+          return isEnv("production") === true;
+        }
+        function isDevelopment() {
+          return isEnv("development") === true;
+        }
+        function isTest() {
+          return isEnv("test") === true;
+        }
+        function tryFunctionOrLogError(f) {
+          try {
+            return f();
+          } catch (e) {
+            if (console.error) {
+              console.error(e);
+            }
+          }
+        }
+        function graphQLResultHasError(result) {
+          return result.errors && result.errors.length;
+        }
+        function isEqual(a, b) {
+          if (a === b) {
+            return true;
+          }
+          if (a instanceof Date && b instanceof Date) {
+            return a.getTime() === b.getTime();
+          }
+          if (a != null && typeof a === "object" && b != null && typeof b === "object") {
+            for (var key in a) {
+              if (Object.prototype.hasOwnProperty.call(a, key)) {
+                if (!Object.prototype.hasOwnProperty.call(b, key)) {
+                  return false;
+                }
+                if (!isEqual(a[key], b[key])) {
+                  return false;
+                }
+              }
+            }
+            for (var key in b) {
+              if (Object.prototype.hasOwnProperty.call(b, key) && !Object.prototype.hasOwnProperty.call(a, key)) {
+                return false;
+              }
+            }
+            return true;
+          }
+          return false;
+        }
+        function deepFreeze(o) {
+          Object.freeze(o);
+          Object.getOwnPropertyNames(o).forEach(function(prop) {
+            if (o[prop] !== null && (typeof o[prop] === "object" || typeof o[prop] === "function") && !Object.isFrozen(o[prop])) {
+              deepFreeze(o[prop]);
+            }
+          });
+          return o;
+        }
+        function maybeDeepFreeze(obj) {
