@@ -24339,3 +24339,440 @@
         }
         var testSet = /* @__PURE__ */ new Set();
         if (testSet.add(3) !== testSet) {
+          var add_1 = testSet.add;
+          Set.prototype.add = function() {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+              args[_i] = arguments[_i];
+            }
+            add_1.apply(this, args);
+            return this;
+          };
+        }
+        var frozen = {};
+        if (typeof Object.freeze === "function") {
+          Object.freeze(frozen);
+        }
+        try {
+          testMap.set(frozen, frozen).delete(frozen);
+        } catch (_a) {
+          var wrap = function(method) {
+            return method && function(obj) {
+              try {
+                testMap.set(obj, obj).delete(obj);
+              } finally {
+                return method.call(Object, obj);
+              }
+            };
+          };
+          Object.freeze = wrap(Object.freeze);
+          Object.seal = wrap(Object.seal);
+          Object.preventExtensions = wrap(Object.preventExtensions);
+        }
+        var haveWarned = false;
+        var HeuristicFragmentMatcher = function() {
+          function HeuristicFragmentMatcher2() {
+          }
+          HeuristicFragmentMatcher2.prototype.ensureReady = function() {
+            return Promise.resolve();
+          };
+          HeuristicFragmentMatcher2.prototype.canBypassInit = function() {
+            return true;
+          };
+          HeuristicFragmentMatcher2.prototype.match = function(idValue, typeCondition, context) {
+            var obj = context.store.get(idValue.id);
+            if (!obj && idValue.id === "ROOT_QUERY") {
+              return true;
+            }
+            if (!obj) {
+              return false;
+            }
+            if (!obj.__typename) {
+              if (!haveWarned) {
+                console.warn("You're using fragments in your queries, but either don't have the addTypename:\n  true option set in Apollo Client, or you are trying to write a fragment to the store without the __typename.\n   Please turn on the addTypename option and include __typename when writing fragments so that Apollo Client\n   can accurately match fragments.");
+                console.warn("Could not find __typename on Fragment ", typeCondition, obj);
+                console.warn("DEPRECATION WARNING: using fragments without __typename is unsupported behavior and will be removed in future versions of Apollo client. You should fix this and set addTypename to true now.");
+                if (!apolloUtilities.isTest()) {
+                  haveWarned = true;
+                }
+              }
+              return "heuristic";
+            }
+            if (obj.__typename === typeCondition) {
+              return true;
+            }
+            apolloUtilities.warnOnceInDevelopment("You are using the simple (heuristic) fragment matcher, but your queries contain union or interface types. Apollo Client will not be able to accurately map fragments. To make this error go away, use the `IntrospectionFragmentMatcher` as described in the docs: https://www.apollographql.com/docs/react/recipes/fragment-matching.html", "error");
+            return "heuristic";
+          };
+          return HeuristicFragmentMatcher2;
+        }();
+        var IntrospectionFragmentMatcher = function() {
+          function IntrospectionFragmentMatcher2(options) {
+            if (options && options.introspectionQueryResultData) {
+              this.possibleTypesMap = this.parseIntrospectionResult(options.introspectionQueryResultData);
+              this.isReady = true;
+            } else {
+              this.isReady = false;
+            }
+            this.match = this.match.bind(this);
+          }
+          IntrospectionFragmentMatcher2.prototype.match = function(idValue, typeCondition, context) {
+            if (!this.isReady) {
+              throw new Error("FragmentMatcher.match() was called before FragmentMatcher.init()");
+            }
+            var obj = context.store.get(idValue.id);
+            if (!obj) {
+              return false;
+            }
+            if (!obj.__typename) {
+              throw new Error("Cannot match fragment because __typename property is missing: " + JSON.stringify(obj));
+            }
+            if (obj.__typename === typeCondition) {
+              return true;
+            }
+            var implementingTypes = this.possibleTypesMap[typeCondition];
+            if (implementingTypes && implementingTypes.indexOf(obj.__typename) > -1) {
+              return true;
+            }
+            return false;
+          };
+          IntrospectionFragmentMatcher2.prototype.parseIntrospectionResult = function(introspectionResultData) {
+            var typeMap = {};
+            introspectionResultData.__schema.types.forEach(function(type) {
+              if (type.kind === "UNION" || type.kind === "INTERFACE") {
+                typeMap[type.name] = type.possibleTypes.map(function(implementingType) {
+                  return implementingType.name;
+                });
+              }
+            });
+            return typeMap;
+          };
+          return IntrospectionFragmentMatcher2;
+        }();
+        var wrap$1 = require_lib3().wrap;
+        var CacheKeyNode = function() {
+          function CacheKeyNode2() {
+            this.children = null;
+            this.key = null;
+          }
+          CacheKeyNode2.prototype.lookup = function() {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+              args[_i] = arguments[_i];
+            }
+            return this.lookupArray(args);
+          };
+          CacheKeyNode2.prototype.lookupArray = function(array) {
+            var node = this;
+            array.forEach(function(value) {
+              node = node.getOrCreate(value);
+            });
+            return node.key || (node.key = /* @__PURE__ */ Object.create(null));
+          };
+          CacheKeyNode2.prototype.getOrCreate = function(value) {
+            var map = this.children || (this.children = /* @__PURE__ */ new Map());
+            var node = map.get(value);
+            if (!node) {
+              map.set(value, node = new CacheKeyNode2());
+            }
+            return node;
+          };
+          return CacheKeyNode2;
+        }();
+        var hasOwn = Object.prototype.hasOwnProperty;
+        var DepTrackingCache = function() {
+          function DepTrackingCache2(data) {
+            if (data === void 0) {
+              data = /* @__PURE__ */ Object.create(null);
+            }
+            var _this = this;
+            this.data = data;
+            this.depend = wrap$1(function(dataId) {
+              return _this.data[dataId];
+            }, {
+              disposable: true,
+              makeCacheKey: function(dataId) {
+                return dataId;
+              }
+            });
+          }
+          DepTrackingCache2.prototype.toObject = function() {
+            return this.data;
+          };
+          DepTrackingCache2.prototype.get = function(dataId) {
+            this.depend(dataId);
+            return this.data[dataId];
+          };
+          DepTrackingCache2.prototype.set = function(dataId, value) {
+            var oldValue = this.data[dataId];
+            if (value !== oldValue) {
+              this.data[dataId] = value;
+              this.depend.dirty(dataId);
+            }
+          };
+          DepTrackingCache2.prototype.delete = function(dataId) {
+            if (hasOwn.call(this.data, dataId)) {
+              delete this.data[dataId];
+              this.depend.dirty(dataId);
+            }
+          };
+          DepTrackingCache2.prototype.clear = function() {
+            this.replace(null);
+          };
+          DepTrackingCache2.prototype.replace = function(newData) {
+            var _this = this;
+            if (newData) {
+              Object.keys(newData).forEach(function(dataId) {
+                _this.set(dataId, newData[dataId]);
+              });
+              Object.keys(this.data).forEach(function(dataId) {
+                if (!hasOwn.call(newData, dataId)) {
+                  _this.delete(dataId);
+                }
+              });
+            } else {
+              Object.keys(this.data).forEach(function(dataId) {
+                _this.delete(dataId);
+              });
+            }
+          };
+          return DepTrackingCache2;
+        }();
+        function defaultNormalizedCacheFactory(seed) {
+          return new DepTrackingCache(seed);
+        }
+        var __assign = function() {
+          __assign = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign.apply(this, arguments);
+        };
+        var CIRCULAR = /* @__PURE__ */ Object.create(null);
+        var objToStr = Object.prototype.toString;
+        var QueryKeyMaker = function() {
+          function QueryKeyMaker2(cacheKeyRoot) {
+            this.cacheKeyRoot = cacheKeyRoot;
+            this.perQueryKeyMakers = /* @__PURE__ */ new Map();
+          }
+          QueryKeyMaker2.prototype.forQuery = function(document2) {
+            if (!this.perQueryKeyMakers.has(document2)) {
+              this.perQueryKeyMakers.set(document2, new PerQueryKeyMaker(this.cacheKeyRoot, document2));
+            }
+            return this.perQueryKeyMakers.get(document2);
+          };
+          return QueryKeyMaker2;
+        }();
+        var PerQueryKeyMaker = function() {
+          function PerQueryKeyMaker2(cacheKeyRoot, query) {
+            this.cacheKeyRoot = cacheKeyRoot;
+            this.query = query;
+            this.cache = /* @__PURE__ */ new Map();
+            this.lookupArray = this.cacheMethod(this.lookupArray);
+            this.lookupObject = this.cacheMethod(this.lookupObject);
+            this.lookupFragmentSpread = this.cacheMethod(this.lookupFragmentSpread);
+          }
+          PerQueryKeyMaker2.prototype.cacheMethod = function(method) {
+            var _this = this;
+            return function(value) {
+              if (_this.cache.has(value)) {
+                var cached = _this.cache.get(value);
+                if (cached === CIRCULAR) {
+                  throw new Error("QueryKeyMaker cannot handle circular query structures");
+                }
+                return cached;
+              }
+              _this.cache.set(value, CIRCULAR);
+              try {
+                var result = method.call(_this, value);
+                _this.cache.set(value, result);
+                return result;
+              } catch (e) {
+                _this.cache.delete(value);
+                throw e;
+              }
+            };
+          };
+          PerQueryKeyMaker2.prototype.lookupQuery = function(document2) {
+            return this.lookupObject(document2);
+          };
+          PerQueryKeyMaker2.prototype.lookupSelectionSet = function(selectionSet) {
+            return this.lookupObject(selectionSet);
+          };
+          PerQueryKeyMaker2.prototype.lookupFragmentSpread = function(fragmentSpread) {
+            var name = fragmentSpread.name.value;
+            var fragment = null;
+            this.query.definitions.some(function(definition) {
+              if (definition.kind === "FragmentDefinition" && definition.name.value === name) {
+                fragment = definition;
+                return true;
+              }
+              return false;
+            });
+            return this.lookupObject(__assign({}, fragmentSpread, { fragment }));
+          };
+          PerQueryKeyMaker2.prototype.lookupAny = function(value) {
+            if (Array.isArray(value)) {
+              return this.lookupArray(value);
+            }
+            if (typeof value === "object" && value !== null) {
+              if (value.kind === "FragmentSpread") {
+                return this.lookupFragmentSpread(value);
+              }
+              return this.lookupObject(value);
+            }
+            return value;
+          };
+          PerQueryKeyMaker2.prototype.lookupArray = function(array) {
+            var elements = array.map(this.lookupAny, this);
+            return this.cacheKeyRoot.lookup(objToStr.call(array), this.cacheKeyRoot.lookupArray(elements));
+          };
+          PerQueryKeyMaker2.prototype.lookupObject = function(object) {
+            var _this = this;
+            var keys = safeSortedKeys(object);
+            var values = keys.map(function(key) {
+              return _this.lookupAny(object[key]);
+            });
+            return this.cacheKeyRoot.lookup(objToStr.call(object), this.cacheKeyRoot.lookupArray(keys), this.cacheKeyRoot.lookupArray(values));
+          };
+          return PerQueryKeyMaker2;
+        }();
+        var queryKeyMap = /* @__PURE__ */ Object.create(null);
+        Object.keys(visitor.QueryDocumentKeys).forEach(function(parentKind) {
+          var childKeys = queryKeyMap[parentKind] = /* @__PURE__ */ Object.create(null);
+          visitor.QueryDocumentKeys[parentKind].forEach(function(childKey) {
+            childKeys[childKey] = true;
+          });
+          if (parentKind === "FragmentSpread") {
+            childKeys["fragment"] = true;
+          }
+        });
+        function safeSortedKeys(object) {
+          var keys = Object.keys(object);
+          var keyCount = keys.length;
+          var knownKeys = typeof object.kind === "string" && queryKeyMap[object.kind];
+          var target = 0;
+          for (var source = target; source < keyCount; ++source) {
+            var key = keys[source];
+            var value = object[key];
+            var isObjectOrArray = value !== null && typeof value === "object";
+            if (!isObjectOrArray || !knownKeys || knownKeys[key] === true) {
+              keys[target++] = key;
+            }
+          }
+          keys.length = target;
+          return keys.sort();
+        }
+        var __assign$1 = function() {
+          __assign$1 = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign$1.apply(this, arguments);
+        };
+        var StoreReader = function() {
+          function StoreReader2(cacheKeyRoot) {
+            if (cacheKeyRoot === void 0) {
+              cacheKeyRoot = new CacheKeyNode();
+            }
+            var _this = this;
+            this.cacheKeyRoot = cacheKeyRoot;
+            var reader = this;
+            var executeStoreQuery = reader.executeStoreQuery, executeSelectionSet = reader.executeSelectionSet;
+            reader.keyMaker = new QueryKeyMaker(cacheKeyRoot);
+            this.executeStoreQuery = wrap$1(function(options) {
+              return executeStoreQuery.call(_this, options);
+            }, {
+              makeCacheKey: function(_a) {
+                var query = _a.query, rootValue = _a.rootValue, contextValue = _a.contextValue, variableValues = _a.variableValues, fragmentMatcher = _a.fragmentMatcher;
+                if (contextValue.store instanceof DepTrackingCache) {
+                  return reader.cacheKeyRoot.lookup(reader.keyMaker.forQuery(query).lookupQuery(query), contextValue.store, fragmentMatcher, JSON.stringify(variableValues), rootValue.id);
+                }
+                return;
+              }
+            });
+            this.executeSelectionSet = wrap$1(function(options) {
+              return executeSelectionSet.call(_this, options);
+            }, {
+              makeCacheKey: function(_a) {
+                var selectionSet = _a.selectionSet, rootValue = _a.rootValue, execContext = _a.execContext;
+                if (execContext.contextValue.store instanceof DepTrackingCache) {
+                  return reader.cacheKeyRoot.lookup(reader.keyMaker.forQuery(execContext.query).lookupSelectionSet(selectionSet), execContext.contextValue.store, execContext.fragmentMatcher, JSON.stringify(execContext.variableValues), rootValue.id);
+                }
+                return;
+              }
+            });
+          }
+          StoreReader2.prototype.readQueryFromStore = function(options) {
+            var optsPatch = { returnPartialData: false };
+            return this.diffQueryAgainstStore(__assign$1({}, options, optsPatch)).result;
+          };
+          StoreReader2.prototype.diffQueryAgainstStore = function(_a) {
+            var store = _a.store, query = _a.query, variables = _a.variables, previousResult = _a.previousResult, _b = _a.returnPartialData, returnPartialData = _b === void 0 ? true : _b, _c = _a.rootId, rootId = _c === void 0 ? "ROOT_QUERY" : _c, fragmentMatcherFunction = _a.fragmentMatcherFunction, config = _a.config;
+            var queryDefinition = apolloUtilities.getQueryDefinition(query);
+            variables = apolloUtilities.assign({}, apolloUtilities.getDefaultValues(queryDefinition), variables);
+            var context = {
+              store,
+              dataIdFromObject: config && config.dataIdFromObject || null,
+              cacheRedirects: config && config.cacheRedirects || {}
+            };
+            var execResult = this.executeStoreQuery({
+              query,
+              rootValue: {
+                type: "id",
+                id: rootId,
+                generated: true,
+                typename: "Query"
+              },
+              contextValue: context,
+              variableValues: variables,
+              fragmentMatcher: fragmentMatcherFunction
+            });
+            var hasMissingFields = execResult.missing && execResult.missing.length > 0;
+            if (hasMissingFields && !returnPartialData) {
+              execResult.missing.forEach(function(info) {
+                if (info.tolerable)
+                  return;
+                throw new Error("Can't find field " + info.fieldName + " on object " + JSON.stringify(info.object, null, 2) + ".");
+              });
+            }
+            if (previousResult) {
+              if (apolloUtilities.isEqual(previousResult, execResult.result)) {
+                execResult.result = previousResult;
+              }
+            }
+            return {
+              result: execResult.result,
+              complete: !hasMissingFields
+            };
+          };
+          StoreReader2.prototype.executeStoreQuery = function(_a) {
+            var query = _a.query, rootValue = _a.rootValue, contextValue = _a.contextValue, variableValues = _a.variableValues, _b = _a.fragmentMatcher, fragmentMatcher = _b === void 0 ? defaultFragmentMatcher : _b;
+            var mainDefinition = apolloUtilities.getMainDefinition(query);
+            var fragments = apolloUtilities.getFragmentDefinitions(query);
+            var fragmentMap = apolloUtilities.createFragmentMap(fragments);
+            var execContext = {
+              query,
+              fragmentMap,
+              contextValue,
+              variableValues,
+              fragmentMatcher
+            };
+            return this.executeSelectionSet({
+              selectionSet: mainDefinition.selectionSet,
+              rootValue,
+              execContext
+            });
+          };
+          StoreReader2.prototype.executeSelectionSet = function(_a) {
+            var _this = this;
