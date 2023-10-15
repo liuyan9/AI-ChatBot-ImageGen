@@ -24776,3 +24776,481 @@
           };
           StoreReader2.prototype.executeSelectionSet = function(_a) {
             var _this = this;
+            var selectionSet = _a.selectionSet, rootValue = _a.rootValue, execContext = _a.execContext;
+            var fragmentMap = execContext.fragmentMap, contextValue = execContext.contextValue, variables = execContext.variableValues;
+            var finalResult = {
+              result: {}
+            };
+            var objectsToMerge = [];
+            var object = contextValue.store.get(rootValue.id);
+            var typename = object && object.__typename || rootValue.id === "ROOT_QUERY" && "Query" || void 0;
+            function handleMissing(result) {
+              var _a2;
+              if (result.missing) {
+                finalResult.missing = finalResult.missing || [];
+                (_a2 = finalResult.missing).push.apply(_a2, result.missing);
+              }
+              return result.result;
+            }
+            selectionSet.selections.forEach(function(selection) {
+              var _a2;
+              if (!apolloUtilities.shouldInclude(selection, variables)) {
+                return;
+              }
+              if (apolloUtilities.isField(selection)) {
+                var fieldResult = handleMissing(_this.executeField(object, typename, selection, execContext));
+                if (typeof fieldResult !== "undefined") {
+                  objectsToMerge.push((_a2 = {}, _a2[apolloUtilities.resultKeyNameFromField(selection)] = fieldResult, _a2));
+                }
+              } else {
+                var fragment = void 0;
+                if (apolloUtilities.isInlineFragment(selection)) {
+                  fragment = selection;
+                } else {
+                  fragment = fragmentMap[selection.name.value];
+                  if (!fragment) {
+                    throw new Error("No fragment named " + selection.name.value);
+                  }
+                }
+                var typeCondition = fragment.typeCondition.name.value;
+                var match = execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+                if (match) {
+                  var fragmentExecResult = _this.executeSelectionSet({
+                    selectionSet: fragment.selectionSet,
+                    rootValue,
+                    execContext
+                  });
+                  if (match === "heuristic" && fragmentExecResult.missing) {
+                    fragmentExecResult = __assign$1({}, fragmentExecResult, { missing: fragmentExecResult.missing.map(function(info) {
+                      return __assign$1({}, info, { tolerable: true });
+                    }) });
+                  }
+                  objectsToMerge.push(handleMissing(fragmentExecResult));
+                }
+              }
+            });
+            merge(finalResult.result, objectsToMerge);
+            return finalResult;
+          };
+          StoreReader2.prototype.executeField = function(object, typename, field, execContext) {
+            var variables = execContext.variableValues, contextValue = execContext.contextValue;
+            var fieldName = field.name.value;
+            var args = apolloUtilities.argumentsObjectFromField(field, variables);
+            var info = {
+              resultKey: apolloUtilities.resultKeyNameFromField(field),
+              directives: apolloUtilities.getDirectiveInfoFromField(field, variables)
+            };
+            var readStoreResult = readStoreResolver(object, typename, fieldName, args, contextValue, info);
+            if (Array.isArray(readStoreResult.result)) {
+              return this.combineExecResults(readStoreResult, this.executeSubSelectedArray(field, readStoreResult.result, execContext));
+            }
+            if (!field.selectionSet) {
+              assertSelectionSetForIdValue(field, readStoreResult.result);
+              return readStoreResult;
+            }
+            if (readStoreResult.result == null) {
+              return readStoreResult;
+            }
+            return this.combineExecResults(readStoreResult, this.executeSelectionSet({
+              selectionSet: field.selectionSet,
+              rootValue: readStoreResult.result,
+              execContext
+            }));
+          };
+          StoreReader2.prototype.combineExecResults = function() {
+            var execResults = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+              execResults[_i] = arguments[_i];
+            }
+            var missing = null;
+            execResults.forEach(function(execResult) {
+              if (execResult.missing) {
+                missing = missing || [];
+                missing.push.apply(missing, execResult.missing);
+              }
+            });
+            return {
+              result: execResults.pop().result,
+              missing
+            };
+          };
+          StoreReader2.prototype.executeSubSelectedArray = function(field, result, execContext) {
+            var _this = this;
+            var missing = null;
+            function handleMissing(childResult) {
+              if (childResult.missing) {
+                missing = missing || [];
+                missing.push.apply(missing, childResult.missing);
+              }
+              return childResult.result;
+            }
+            result = result.map(function(item) {
+              if (item === null) {
+                return null;
+              }
+              if (Array.isArray(item)) {
+                return handleMissing(_this.executeSubSelectedArray(field, item, execContext));
+              }
+              if (field.selectionSet) {
+                return handleMissing(_this.executeSelectionSet({
+                  selectionSet: field.selectionSet,
+                  rootValue: item,
+                  execContext
+                }));
+              }
+              assertSelectionSetForIdValue(field, item);
+              return item;
+            });
+            return { result, missing };
+          };
+          return StoreReader2;
+        }();
+        function assertSelectionSetForIdValue(field, value) {
+          if (!field.selectionSet && apolloUtilities.isIdValue(value)) {
+            throw new Error("Missing selection set for object of type " + value.typename + " returned for query field " + field.name.value);
+          }
+        }
+        function defaultFragmentMatcher() {
+          return true;
+        }
+        function assertIdValue(idValue) {
+          if (!apolloUtilities.isIdValue(idValue)) {
+            throw new Error("Encountered a sub-selection on the query, but the store doesn't have an object reference. This should never happen during normal use unless you have custom code that is directly manipulating the store; please file an issue.");
+          }
+        }
+        function readStoreResolver(object, typename, fieldName, args, context, _a) {
+          var resultKey = _a.resultKey, directives = _a.directives;
+          var storeKeyName = fieldName;
+          if (args || directives) {
+            storeKeyName = apolloUtilities.getStoreKeyName(storeKeyName, args, directives);
+          }
+          var fieldValue = void 0;
+          if (object) {
+            fieldValue = object[storeKeyName];
+            if (typeof fieldValue === "undefined" && context.cacheRedirects && typeof typename === "string") {
+              var type = context.cacheRedirects[typename];
+              if (type) {
+                var resolver = type[fieldName];
+                if (resolver) {
+                  fieldValue = resolver(object, args, {
+                    getCacheKey: function(storeObj) {
+                      return apolloUtilities.toIdValue({
+                        id: context.dataIdFromObject(storeObj),
+                        typename: storeObj.__typename
+                      });
+                    }
+                  });
+                }
+              }
+            }
+          }
+          if (typeof fieldValue === "undefined") {
+            return {
+              result: fieldValue,
+              missing: [{
+                object,
+                fieldName: storeKeyName,
+                tolerable: false
+              }]
+            };
+          }
+          if (apolloUtilities.isJsonValue(fieldValue)) {
+            fieldValue = fieldValue.json;
+          }
+          return {
+            result: fieldValue
+          };
+        }
+        var hasOwn$1 = Object.prototype.hasOwnProperty;
+        function merge(target, sources) {
+          var pastCopies = [];
+          sources.forEach(function(source) {
+            mergeHelper(target, source, pastCopies);
+          });
+          return target;
+        }
+        function mergeHelper(target, source, pastCopies) {
+          if (source !== null && typeof source === "object") {
+            if (Object.isExtensible && !Object.isExtensible(target)) {
+              target = shallowCopyForMerge(target, pastCopies);
+            }
+            Object.keys(source).forEach(function(sourceKey) {
+              var sourceValue = source[sourceKey];
+              if (hasOwn$1.call(target, sourceKey)) {
+                var targetValue = target[sourceKey];
+                if (sourceValue !== targetValue) {
+                  target[sourceKey] = mergeHelper(shallowCopyForMerge(targetValue, pastCopies), sourceValue, pastCopies);
+                }
+              } else {
+                target[sourceKey] = sourceValue;
+              }
+            });
+          }
+          return target;
+        }
+        function shallowCopyForMerge(value, pastCopies) {
+          if (value !== null && typeof value === "object" && pastCopies.indexOf(value) < 0) {
+            if (Array.isArray(value)) {
+              value = value.slice(0);
+            } else {
+              value = __assign$1({}, value);
+            }
+            pastCopies.push(value);
+          }
+          return value;
+        }
+        var ObjectCache = function() {
+          function ObjectCache2(data) {
+            if (data === void 0) {
+              data = /* @__PURE__ */ Object.create(null);
+            }
+            this.data = data;
+          }
+          ObjectCache2.prototype.toObject = function() {
+            return this.data;
+          };
+          ObjectCache2.prototype.get = function(dataId) {
+            return this.data[dataId];
+          };
+          ObjectCache2.prototype.set = function(dataId, value) {
+            this.data[dataId] = value;
+          };
+          ObjectCache2.prototype.delete = function(dataId) {
+            this.data[dataId] = void 0;
+          };
+          ObjectCache2.prototype.clear = function() {
+            this.data = /* @__PURE__ */ Object.create(null);
+          };
+          ObjectCache2.prototype.replace = function(newData) {
+            this.data = newData || /* @__PURE__ */ Object.create(null);
+          };
+          return ObjectCache2;
+        }();
+        function defaultNormalizedCacheFactory$1(seed) {
+          return new ObjectCache(seed);
+        }
+        var __extends = function() {
+          var extendStatics = function(d, b) {
+            extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+              d2.__proto__ = b2;
+            } || function(d2, b2) {
+              for (var p in b2)
+                if (b2.hasOwnProperty(p))
+                  d2[p] = b2[p];
+            };
+            return extendStatics(d, b);
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        var __assign$2 = function() {
+          __assign$2 = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign$2.apply(this, arguments);
+        };
+        var WriteError = function(_super) {
+          __extends(WriteError2, _super);
+          function WriteError2() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.type = "WriteError";
+            return _this;
+          }
+          return WriteError2;
+        }(Error);
+        function enhanceErrorWithDocument(error, document2) {
+          var enhancedError = new WriteError("Error writing result to store for query:\n " + printer.print(document2));
+          enhancedError.message += "\n" + error.message;
+          enhancedError.stack = error.stack;
+          return enhancedError;
+        }
+        var StoreWriter = function() {
+          function StoreWriter2() {
+          }
+          StoreWriter2.prototype.writeQueryToStore = function(_a) {
+            var query = _a.query, result = _a.result, _b = _a.store, store = _b === void 0 ? defaultNormalizedCacheFactory() : _b, variables = _a.variables, dataIdFromObject = _a.dataIdFromObject, fragmentMatcherFunction = _a.fragmentMatcherFunction;
+            return this.writeResultToStore({
+              dataId: "ROOT_QUERY",
+              result,
+              document: query,
+              store,
+              variables,
+              dataIdFromObject,
+              fragmentMatcherFunction
+            });
+          };
+          StoreWriter2.prototype.writeResultToStore = function(_a) {
+            var dataId = _a.dataId, result = _a.result, document2 = _a.document, _b = _a.store, store = _b === void 0 ? defaultNormalizedCacheFactory() : _b, variables = _a.variables, dataIdFromObject = _a.dataIdFromObject, fragmentMatcherFunction = _a.fragmentMatcherFunction;
+            var operationDefinition = apolloUtilities.getOperationDefinition(document2);
+            try {
+              return this.writeSelectionSetToStore({
+                result,
+                dataId,
+                selectionSet: operationDefinition.selectionSet,
+                context: {
+                  store,
+                  processedData: {},
+                  variables: apolloUtilities.assign({}, apolloUtilities.getDefaultValues(operationDefinition), variables),
+                  dataIdFromObject,
+                  fragmentMap: apolloUtilities.createFragmentMap(apolloUtilities.getFragmentDefinitions(document2)),
+                  fragmentMatcherFunction
+                }
+              });
+            } catch (e) {
+              throw enhanceErrorWithDocument(e, document2);
+            }
+          };
+          StoreWriter2.prototype.writeSelectionSetToStore = function(_a) {
+            var _this = this;
+            var result = _a.result, dataId = _a.dataId, selectionSet = _a.selectionSet, context = _a.context;
+            var variables = context.variables, store = context.store, fragmentMap = context.fragmentMap;
+            selectionSet.selections.forEach(function(selection) {
+              if (!apolloUtilities.shouldInclude(selection, variables)) {
+                return;
+              }
+              if (apolloUtilities.isField(selection)) {
+                var resultFieldKey = apolloUtilities.resultKeyNameFromField(selection);
+                var value = result[resultFieldKey];
+                if (typeof value !== "undefined") {
+                  _this.writeFieldToStore({
+                    dataId,
+                    value,
+                    field: selection,
+                    context
+                  });
+                } else {
+                  var isDefered = selection.directives && selection.directives.length && selection.directives.some(function(directive) {
+                    return directive.name && directive.name.value === "defer";
+                  });
+                  if (!isDefered && context.fragmentMatcherFunction) {
+                    if (!apolloUtilities.isProduction()) {
+                      console.warn("Missing field " + resultFieldKey + " in " + JSON.stringify(result, null, 2).substring(0, 100));
+                    }
+                  }
+                }
+              } else {
+                var fragment = void 0;
+                if (apolloUtilities.isInlineFragment(selection)) {
+                  fragment = selection;
+                } else {
+                  fragment = (fragmentMap || {})[selection.name.value];
+                  if (!fragment) {
+                    throw new Error("No fragment named " + selection.name.value + ".");
+                  }
+                }
+                var matches = true;
+                if (context.fragmentMatcherFunction && fragment.typeCondition) {
+                  var idValue = apolloUtilities.toIdValue({ id: "self", typename: void 0 });
+                  var fakeContext = {
+                    store: new ObjectCache({ self: result }),
+                    cacheRedirects: {}
+                  };
+                  var match = context.fragmentMatcherFunction(idValue, fragment.typeCondition.name.value, fakeContext);
+                  if (!apolloUtilities.isProduction() && match === "heuristic") {
+                    console.error("WARNING: heuristic fragment matching going on!");
+                  }
+                  matches = !!match;
+                }
+                if (matches) {
+                  _this.writeSelectionSetToStore({
+                    result,
+                    selectionSet: fragment.selectionSet,
+                    dataId,
+                    context
+                  });
+                }
+              }
+            });
+            return store;
+          };
+          StoreWriter2.prototype.writeFieldToStore = function(_a) {
+            var field = _a.field, value = _a.value, dataId = _a.dataId, context = _a.context;
+            var _b;
+            var variables = context.variables, dataIdFromObject = context.dataIdFromObject, store = context.store;
+            var storeValue;
+            var storeObject;
+            var storeFieldName = apolloUtilities.storeKeyNameFromField(field, variables);
+            if (!field.selectionSet || value === null) {
+              storeValue = value != null && typeof value === "object" ? { type: "json", json: value } : value;
+            } else if (Array.isArray(value)) {
+              var generatedId = dataId + "." + storeFieldName;
+              storeValue = this.processArrayValue(value, generatedId, field.selectionSet, context);
+            } else {
+              var valueDataId = dataId + "." + storeFieldName;
+              var generated = true;
+              if (!isGeneratedId(valueDataId)) {
+                valueDataId = "$" + valueDataId;
+              }
+              if (dataIdFromObject) {
+                var semanticId = dataIdFromObject(value);
+                if (semanticId && isGeneratedId(semanticId)) {
+                  throw new Error('IDs returned by dataIdFromObject cannot begin with the "$" character.');
+                }
+                if (semanticId || typeof semanticId === "number" && semanticId === 0) {
+                  valueDataId = semanticId;
+                  generated = false;
+                }
+              }
+              if (!isDataProcessed(valueDataId, field, context.processedData)) {
+                this.writeSelectionSetToStore({
+                  dataId: valueDataId,
+                  result: value,
+                  selectionSet: field.selectionSet,
+                  context
+                });
+              }
+              var typename = value.__typename;
+              storeValue = apolloUtilities.toIdValue({ id: valueDataId, typename }, generated);
+              storeObject = store.get(dataId);
+              var escapedId = storeObject && storeObject[storeFieldName];
+              if (escapedId !== storeValue && apolloUtilities.isIdValue(escapedId)) {
+                var hadTypename = escapedId.typename !== void 0;
+                var hasTypename = typename !== void 0;
+                var typenameChanged = hadTypename && hasTypename && escapedId.typename !== typename;
+                if (generated && !escapedId.generated && !typenameChanged) {
+                  throw new Error("Store error: the application attempted to write an object with no provided id" + (" but the store already contains an id of " + escapedId.id + " for this object. The selectionSet") + " that was trying to be written is:\n" + printer.print(field));
+                }
+                if (hadTypename && !hasTypename) {
+                  throw new Error("Store error: the application attempted to write an object with no provided typename" + (" but the store already contains an object with typename of " + escapedId.typename + " for the object of id " + escapedId.id + ". The selectionSet") + " that was trying to be written is:\n" + printer.print(field));
+                }
+                if (escapedId.generated) {
+                  if (typenameChanged) {
+                    if (!generated) {
+                      store.delete(escapedId.id);
+                    }
+                  } else {
+                    mergeWithGenerated(escapedId.id, storeValue.id, store);
+                  }
+                }
+              }
+            }
+            storeObject = store.get(dataId);
+            if (!storeObject || !apolloUtilities.isEqual(storeValue, storeObject[storeFieldName])) {
+              store.set(dataId, __assign$2({}, storeObject, (_b = {}, _b[storeFieldName] = storeValue, _b)));
+            }
+          };
+          StoreWriter2.prototype.processArrayValue = function(value, generatedId, selectionSet, context) {
+            var _this = this;
+            return value.map(function(item, index) {
+              if (item === null) {
+                return null;
+              }
+              var itemDataId = generatedId + "." + index;
+              if (Array.isArray(item)) {
+                return _this.processArrayValue(item, itemDataId, selectionSet, context);
+              }
+              var generated = true;
+              if (context.dataIdFromObject) {
+                var semanticId = context.dataIdFromObject(item);
+                if (semanticId) {
