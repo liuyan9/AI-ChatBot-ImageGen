@@ -25254,3 +25254,451 @@
               if (context.dataIdFromObject) {
                 var semanticId = context.dataIdFromObject(item);
                 if (semanticId) {
+                  itemDataId = semanticId;
+                  generated = false;
+                }
+              }
+              if (!isDataProcessed(itemDataId, selectionSet, context.processedData)) {
+                _this.writeSelectionSetToStore({
+                  dataId: itemDataId,
+                  result: item,
+                  selectionSet,
+                  context
+                });
+              }
+              return apolloUtilities.toIdValue({ id: itemDataId, typename: item.__typename }, generated);
+            });
+          };
+          return StoreWriter2;
+        }();
+        function isGeneratedId(id) {
+          return id[0] === "$";
+        }
+        function mergeWithGenerated(generatedKey, realKey, cache) {
+          if (generatedKey === realKey) {
+            return false;
+          }
+          var generated = cache.get(generatedKey);
+          var real = cache.get(realKey);
+          var madeChanges = false;
+          Object.keys(generated).forEach(function(key) {
+            var value = generated[key];
+            var realValue = real[key];
+            if (apolloUtilities.isIdValue(value) && isGeneratedId(value.id) && apolloUtilities.isIdValue(realValue) && !apolloUtilities.isEqual(value, realValue) && mergeWithGenerated(value.id, realValue.id, cache)) {
+              madeChanges = true;
+            }
+          });
+          cache.delete(generatedKey);
+          var newRealValue = __assign$2({}, generated, real);
+          if (apolloUtilities.isEqual(newRealValue, real)) {
+            return madeChanges;
+          }
+          cache.set(realKey, newRealValue);
+          return true;
+        }
+        function isDataProcessed(dataId, field, processedData) {
+          if (!processedData) {
+            return false;
+          }
+          if (processedData[dataId]) {
+            if (processedData[dataId].indexOf(field) >= 0) {
+              return true;
+            } else {
+              processedData[dataId].push(field);
+            }
+          } else {
+            processedData[dataId] = [field];
+          }
+          return false;
+        }
+        var __assign$3 = function() {
+          __assign$3 = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign$3.apply(this, arguments);
+        };
+        var RecordingCache = function() {
+          function RecordingCache2(data) {
+            if (data === void 0) {
+              data = {};
+            }
+            this.data = data;
+            this.recordedData = {};
+          }
+          RecordingCache2.prototype.record = function(transaction) {
+            transaction(this);
+            var recordedData = this.recordedData;
+            this.recordedData = {};
+            return recordedData;
+          };
+          RecordingCache2.prototype.toObject = function() {
+            return __assign$3({}, this.data, this.recordedData);
+          };
+          RecordingCache2.prototype.get = function(dataId) {
+            if (this.recordedData.hasOwnProperty(dataId)) {
+              return this.recordedData[dataId];
+            }
+            return this.data[dataId];
+          };
+          RecordingCache2.prototype.set = function(dataId, value) {
+            if (this.get(dataId) !== value) {
+              this.recordedData[dataId] = value;
+            }
+          };
+          RecordingCache2.prototype.delete = function(dataId) {
+            this.recordedData[dataId] = void 0;
+          };
+          RecordingCache2.prototype.clear = function() {
+            var _this = this;
+            Object.keys(this.data).forEach(function(dataId) {
+              return _this.delete(dataId);
+            });
+            this.recordedData = {};
+          };
+          RecordingCache2.prototype.replace = function(newData) {
+            this.clear();
+            this.recordedData = __assign$3({}, newData);
+          };
+          return RecordingCache2;
+        }();
+        function record(startingState, transaction) {
+          var recordingCache = new RecordingCache(startingState);
+          return recordingCache.record(transaction);
+        }
+        var __extends$1 = function() {
+          var extendStatics = function(d, b) {
+            extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
+              d2.__proto__ = b2;
+            } || function(d2, b2) {
+              for (var p in b2)
+                if (b2.hasOwnProperty(p))
+                  d2[p] = b2[p];
+            };
+            return extendStatics(d, b);
+          };
+          return function(d, b) {
+            extendStatics(d, b);
+            function __() {
+              this.constructor = d;
+            }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+          };
+        }();
+        var __assign$4 = function() {
+          __assign$4 = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+              s = arguments[i];
+              for (var p in s)
+                if (Object.prototype.hasOwnProperty.call(s, p))
+                  t[p] = s[p];
+            }
+            return t;
+          };
+          return __assign$4.apply(this, arguments);
+        };
+        var defaultConfig = {
+          fragmentMatcher: new HeuristicFragmentMatcher(),
+          dataIdFromObject: defaultDataIdFromObject,
+          addTypename: true
+        };
+        function defaultDataIdFromObject(result) {
+          if (result.__typename) {
+            if (result.id !== void 0) {
+              return result.__typename + ":" + result.id;
+            }
+            if (result._id !== void 0) {
+              return result.__typename + ":" + result._id;
+            }
+          }
+          return null;
+        }
+        var InMemoryCache = function(_super) {
+          __extends$1(InMemoryCache2, _super);
+          function InMemoryCache2(config) {
+            if (config === void 0) {
+              config = {};
+            }
+            var _this = _super.call(this) || this;
+            _this.optimistic = [];
+            _this.watches = /* @__PURE__ */ new Set();
+            _this.typenameDocumentCache = /* @__PURE__ */ new Map();
+            _this.cacheKeyRoot = new CacheKeyNode();
+            _this.silenceBroadcast = false;
+            _this.config = __assign$4({}, defaultConfig, config);
+            if (_this.config.customResolvers) {
+              console.warn("customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.");
+              _this.config.cacheRedirects = _this.config.customResolvers;
+            }
+            if (_this.config.cacheResolvers) {
+              console.warn("cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.");
+              _this.config.cacheRedirects = _this.config.cacheResolvers;
+            }
+            _this.addTypename = _this.config.addTypename;
+            _this.data = defaultNormalizedCacheFactory();
+            _this.storeReader = new StoreReader(_this.cacheKeyRoot);
+            _this.storeWriter = new StoreWriter();
+            var cache = _this;
+            var maybeBroadcastWatch = cache.maybeBroadcastWatch;
+            _this.maybeBroadcastWatch = wrap$1(function(c) {
+              return maybeBroadcastWatch.call(_this, c);
+            }, {
+              makeCacheKey: function(c) {
+                if (c.optimistic && cache.optimistic.length > 0) {
+                  return;
+                }
+                if (c.previousResult) {
+                  return;
+                }
+                if (cache.data instanceof DepTrackingCache) {
+                  return cache.cacheKeyRoot.lookup(c.query, JSON.stringify(c.variables));
+                }
+              }
+            });
+            return _this;
+          }
+          InMemoryCache2.prototype.restore = function(data) {
+            if (data)
+              this.data.replace(data);
+            return this;
+          };
+          InMemoryCache2.prototype.extract = function(optimistic) {
+            if (optimistic === void 0) {
+              optimistic = false;
+            }
+            if (optimistic && this.optimistic.length > 0) {
+              var patches = this.optimistic.map(function(opt) {
+                return opt.data;
+              });
+              return Object.assign.apply(Object, [{}, this.data.toObject()].concat(patches));
+            }
+            return this.data.toObject();
+          };
+          InMemoryCache2.prototype.read = function(query) {
+            if (query.rootId && this.data.get(query.rootId) === void 0) {
+              return null;
+            }
+            var store = query.optimistic && this.optimistic.length ? defaultNormalizedCacheFactory(this.extract(true)) : this.data;
+            return this.storeReader.readQueryFromStore({
+              store,
+              query: this.transformDocument(query.query),
+              variables: query.variables,
+              rootId: query.rootId,
+              fragmentMatcherFunction: this.config.fragmentMatcher.match,
+              previousResult: query.previousResult,
+              config: this.config
+            });
+          };
+          InMemoryCache2.prototype.write = function(write) {
+            this.storeWriter.writeResultToStore({
+              dataId: write.dataId,
+              result: write.result,
+              variables: write.variables,
+              document: this.transformDocument(write.query),
+              store: this.data,
+              dataIdFromObject: this.config.dataIdFromObject,
+              fragmentMatcherFunction: this.config.fragmentMatcher.match
+            });
+            this.broadcastWatches();
+          };
+          InMemoryCache2.prototype.diff = function(query) {
+            var store = query.optimistic && this.optimistic.length ? defaultNormalizedCacheFactory(this.extract(true)) : this.data;
+            return this.storeReader.diffQueryAgainstStore({
+              store,
+              query: this.transformDocument(query.query),
+              variables: query.variables,
+              returnPartialData: query.returnPartialData,
+              previousResult: query.previousResult,
+              fragmentMatcherFunction: this.config.fragmentMatcher.match,
+              config: this.config
+            });
+          };
+          InMemoryCache2.prototype.watch = function(watch) {
+            var _this = this;
+            this.watches.add(watch);
+            return function() {
+              _this.watches.delete(watch);
+            };
+          };
+          InMemoryCache2.prototype.evict = function(query) {
+            throw new Error("eviction is not implemented on InMemory Cache");
+          };
+          InMemoryCache2.prototype.reset = function() {
+            this.data.clear();
+            this.broadcastWatches();
+            return Promise.resolve();
+          };
+          InMemoryCache2.prototype.removeOptimistic = function(id) {
+            var _this = this;
+            var toPerform = this.optimistic.filter(function(item) {
+              return item.id !== id;
+            });
+            this.optimistic = [];
+            toPerform.forEach(function(change) {
+              _this.recordOptimisticTransaction(change.transaction, change.id);
+            });
+            this.broadcastWatches();
+          };
+          InMemoryCache2.prototype.performTransaction = function(transaction) {
+            var alreadySilenced = this.silenceBroadcast;
+            this.silenceBroadcast = true;
+            transaction(this);
+            if (!alreadySilenced) {
+              this.silenceBroadcast = false;
+            }
+            this.broadcastWatches();
+          };
+          InMemoryCache2.prototype.recordOptimisticTransaction = function(transaction, id) {
+            var _this = this;
+            this.silenceBroadcast = true;
+            var patch = record(this.extract(true), function(recordingCache) {
+              var dataCache = _this.data;
+              _this.data = recordingCache;
+              _this.performTransaction(transaction);
+              _this.data = dataCache;
+            });
+            this.optimistic.push({
+              id,
+              transaction,
+              data: patch
+            });
+            this.silenceBroadcast = false;
+            this.broadcastWatches();
+          };
+          InMemoryCache2.prototype.transformDocument = function(document2) {
+            if (this.addTypename) {
+              var result = this.typenameDocumentCache.get(document2);
+              if (!result) {
+                result = apolloUtilities.addTypenameToDocument(document2);
+                this.typenameDocumentCache.set(document2, result);
+                this.typenameDocumentCache.set(result, result);
+              }
+              return result;
+            }
+            return document2;
+          };
+          InMemoryCache2.prototype.readQuery = function(options, optimistic) {
+            if (optimistic === void 0) {
+              optimistic = false;
+            }
+            return this.read({
+              query: options.query,
+              variables: options.variables,
+              optimistic
+            });
+          };
+          InMemoryCache2.prototype.readFragment = function(options, optimistic) {
+            if (optimistic === void 0) {
+              optimistic = false;
+            }
+            return this.read({
+              query: this.transformDocument(apolloUtilities.getFragmentQueryDocument(options.fragment, options.fragmentName)),
+              variables: options.variables,
+              rootId: options.id,
+              optimistic
+            });
+          };
+          InMemoryCache2.prototype.writeQuery = function(options) {
+            this.write({
+              dataId: "ROOT_QUERY",
+              result: options.data,
+              query: this.transformDocument(options.query),
+              variables: options.variables
+            });
+          };
+          InMemoryCache2.prototype.writeFragment = function(options) {
+            this.write({
+              dataId: options.id,
+              result: options.data,
+              query: this.transformDocument(apolloUtilities.getFragmentQueryDocument(options.fragment, options.fragmentName)),
+              variables: options.variables
+            });
+          };
+          InMemoryCache2.prototype.broadcastWatches = function() {
+            var _this = this;
+            if (!this.silenceBroadcast) {
+              var optimistic_1 = this.optimistic.length > 0;
+              this.watches.forEach(function(c) {
+                _this.maybeBroadcastWatch(c);
+                if (optimistic_1) {
+                  _this.maybeBroadcastWatch.dirty(c);
+                }
+              });
+            }
+          };
+          InMemoryCache2.prototype.maybeBroadcastWatch = function(c) {
+            c.callback(this.diff({
+              query: c.query,
+              variables: c.variables,
+              previousResult: c.previousResult && c.previousResult(),
+              optimistic: c.optimistic
+            }));
+          };
+          return InMemoryCache2;
+        }(apolloCache.ApolloCache);
+        exports2.InMemoryCache = InMemoryCache;
+        exports2.defaultDataIdFromObject = defaultDataIdFromObject;
+        exports2.StoreReader = StoreReader;
+        exports2.assertIdValue = assertIdValue;
+        exports2.WriteError = WriteError;
+        exports2.enhanceErrorWithDocument = enhanceErrorWithDocument;
+        exports2.StoreWriter = StoreWriter;
+        exports2.HeuristicFragmentMatcher = HeuristicFragmentMatcher;
+        exports2.IntrospectionFragmentMatcher = IntrospectionFragmentMatcher;
+        exports2.ObjectCache = ObjectCache;
+        exports2.defaultNormalizedCacheFactory = defaultNormalizedCacheFactory$1;
+        exports2.RecordingCache = RecordingCache;
+        exports2.record = record;
+        Object.defineProperty(exports2, "__esModule", { value: true });
+      });
+    }
+  });
+
+  // node_modules/apollo-link-error/node_modules/tslib/tslib.js
+  var require_tslib = __commonJS({
+    "node_modules/apollo-link-error/node_modules/tslib/tslib.js"(exports, module) {
+      var __extends;
+      var __assign;
+      var __rest;
+      var __decorate;
+      var __param;
+      var __metadata;
+      var __awaiter;
+      var __generator;
+      var __exportStar;
+      var __values;
+      var __read;
+      var __spread;
+      var __await;
+      var __asyncGenerator;
+      var __asyncDelegator;
+      var __asyncValues;
+      var __makeTemplateObject;
+      var __importStar;
+      var __importDefault;
+      (function(factory) {
+        var root = typeof global === "object" ? global : typeof self === "object" ? self : typeof this === "object" ? this : {};
+        if (typeof define === "function" && define.amd) {
+          define("tslib", ["exports"], function(exports2) {
+            factory(createExporter(root, createExporter(exports2)));
+          });
+        } else if (typeof module === "object" && typeof module.exports === "object") {
+          factory(createExporter(root, createExporter(module.exports)));
+        } else {
+          factory(createExporter(root));
+        }
+        function createExporter(exports2, previous) {
+          if (exports2 !== root) {
+            if (typeof Object.create === "function") {
+              Object.defineProperty(exports2, "__esModule", { value: true });
+            } else {
+              exports2.__esModule = true;
+            }
+          }
+          return function(id, v) {
+            return exports2[id] = previous ? previous(id, v) : v;
