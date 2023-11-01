@@ -27106,3 +27106,454 @@
         }
         var completeFieldName = fieldName;
         if (args) {
+          var stringifiedArgs = (0, _fastJsonStableStringify.default)(args);
+          completeFieldName += "(" + stringifiedArgs + ")";
+        }
+        if (directives) {
+          Object.keys(directives).forEach(function(key) {
+            if (KNOWN_DIRECTIVES.indexOf(key) !== -1)
+              return;
+            if (directives[key] && Object.keys(directives[key]).length) {
+              completeFieldName += "@" + key + "(" + JSON.stringify(directives[key]) + ")";
+            } else {
+              completeFieldName += "@" + key;
+            }
+          });
+        }
+        return completeFieldName;
+      }
+      function argumentsObjectFromField(field, variables) {
+        if (field.arguments && field.arguments.length) {
+          var argObj_1 = {};
+          field.arguments.forEach(function(_a) {
+            var name = _a.name, value = _a.value;
+            return valueToObjectRepresentation(argObj_1, name, value, variables);
+          });
+          return argObj_1;
+        }
+        return null;
+      }
+      function resultKeyNameFromField(field) {
+        return field.alias ? field.alias.value : field.name.value;
+      }
+      function isField(selection) {
+        return selection.kind === "Field";
+      }
+      function isInlineFragment(selection) {
+        return selection.kind === "InlineFragment";
+      }
+      function isIdValue(idObject) {
+        return idObject && idObject.type === "id" && typeof idObject.generated === "boolean";
+      }
+      function toIdValue(idConfig, generated) {
+        if (generated === void 0) {
+          generated = false;
+        }
+        return (0, _tslib.__assign)({
+          type: "id",
+          generated
+        }, typeof idConfig === "string" ? {
+          id: idConfig,
+          typename: void 0
+        } : idConfig);
+      }
+      function isJsonValue(jsonObject) {
+        return jsonObject != null && typeof jsonObject === "object" && jsonObject.type === "json";
+      }
+      function defaultValueFromVariable(node) {
+        throw true ? new _tsInvariant.InvariantError(18) : new _tsInvariant.InvariantError("Variable nodes are not supported by valueFromNode");
+      }
+      function valueFromNode(node, onVariable) {
+        if (onVariable === void 0) {
+          onVariable = defaultValueFromVariable;
+        }
+        switch (node.kind) {
+          case "Variable":
+            return onVariable(node);
+          case "NullValue":
+            return null;
+          case "IntValue":
+            return parseInt(node.value, 10);
+          case "FloatValue":
+            return parseFloat(node.value);
+          case "ListValue":
+            return node.values.map(function(v) {
+              return valueFromNode(v, onVariable);
+            });
+          case "ObjectValue": {
+            var value = {};
+            for (var _i = 0, _a = node.fields; _i < _a.length; _i++) {
+              var field = _a[_i];
+              value[field.name.value] = valueFromNode(field.value, onVariable);
+            }
+            return value;
+          }
+          default:
+            return node.value;
+        }
+      }
+      function getDirectiveInfoFromField(field, variables) {
+        if (field.directives && field.directives.length) {
+          var directiveObj_1 = {};
+          field.directives.forEach(function(directive) {
+            directiveObj_1[directive.name.value] = argumentsObjectFromField(directive, variables);
+          });
+          return directiveObj_1;
+        }
+        return null;
+      }
+      function shouldInclude(selection, variables) {
+        if (variables === void 0) {
+          variables = {};
+        }
+        return getInclusionDirectives(selection.directives).every(function(_a) {
+          var directive = _a.directive, ifArgument = _a.ifArgument;
+          var evaledValue = false;
+          if (ifArgument.value.kind === "Variable") {
+            evaledValue = variables[ifArgument.value.name.value];
+            true ? (0, _tsInvariant.invariant)(evaledValue !== void 0, 1) : (0, _tsInvariant.invariant)(evaledValue !== void 0, "Invalid variable referenced in @" + directive.name.value + " directive.");
+          } else {
+            evaledValue = ifArgument.value.value;
+          }
+          return directive.name.value === "skip" ? !evaledValue : evaledValue;
+        });
+      }
+      function getDirectiveNames(doc) {
+        var names = [];
+        (0, _visitor.visit)(doc, {
+          Directive: function(node) {
+            names.push(node.name.value);
+          }
+        });
+        return names;
+      }
+      function hasDirectives(names, doc) {
+        return getDirectiveNames(doc).some(function(name) {
+          return names.indexOf(name) > -1;
+        });
+      }
+      function hasClientExports(document2) {
+        return document2 && hasDirectives(["client"], document2) && hasDirectives(["export"], document2);
+      }
+      function isInclusionDirective(_a) {
+        var value = _a.name.value;
+        return value === "skip" || value === "include";
+      }
+      function getInclusionDirectives(directives) {
+        return directives ? directives.filter(isInclusionDirective).map(function(directive) {
+          var directiveArguments = directive.arguments;
+          var directiveName = directive.name.value;
+          true ? (0, _tsInvariant.invariant)(directiveArguments && directiveArguments.length === 1, 2) : (0, _tsInvariant.invariant)(directiveArguments && directiveArguments.length === 1, "Incorrect number of arguments for the @" + directiveName + " directive.");
+          var ifArgument = directiveArguments[0];
+          true ? (0, _tsInvariant.invariant)(ifArgument.name && ifArgument.name.value === "if", 3) : (0, _tsInvariant.invariant)(ifArgument.name && ifArgument.name.value === "if", "Invalid argument for the @" + directiveName + " directive.");
+          var ifValue = ifArgument.value;
+          true ? (0, _tsInvariant.invariant)(ifValue && (ifValue.kind === "Variable" || ifValue.kind === "BooleanValue"), 4) : (0, _tsInvariant.invariant)(ifValue && (ifValue.kind === "Variable" || ifValue.kind === "BooleanValue"), "Argument for the @" + directiveName + " directive must be a variable or a boolean value.");
+          return {
+            directive,
+            ifArgument
+          };
+        }) : [];
+      }
+      function getFragmentQueryDocument(document2, fragmentName) {
+        var actualFragmentName = fragmentName;
+        var fragments = [];
+        document2.definitions.forEach(function(definition) {
+          if (definition.kind === "OperationDefinition") {
+            throw true ? new _tsInvariant.InvariantError(5) : new _tsInvariant.InvariantError("Found a " + definition.operation + " operation" + (definition.name ? " named '" + definition.name.value + "'" : "") + ". No operations are allowed when using a fragment as a query. Only fragments are allowed.");
+          }
+          if (definition.kind === "FragmentDefinition") {
+            fragments.push(definition);
+          }
+        });
+        if (typeof actualFragmentName === "undefined") {
+          true ? (0, _tsInvariant.invariant)(fragments.length === 1, 6) : (0, _tsInvariant.invariant)(fragments.length === 1, "Found " + fragments.length + " fragments. `fragmentName` must be provided when there is not exactly 1 fragment.");
+          actualFragmentName = fragments[0].name.value;
+        }
+        var query = (0, _tslib.__assign)((0, _tslib.__assign)({}, document2), {
+          definitions: (0, _tslib.__spreadArrays)([{
+            kind: "OperationDefinition",
+            operation: "query",
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [{
+                kind: "FragmentSpread",
+                name: {
+                  kind: "Name",
+                  value: actualFragmentName
+                }
+              }]
+            }
+          }], document2.definitions)
+        });
+        return query;
+      }
+      function assign(target) {
+        var sources = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+          sources[_i - 1] = arguments[_i];
+        }
+        sources.forEach(function(source) {
+          if (typeof source === "undefined" || source === null) {
+            return;
+          }
+          Object.keys(source).forEach(function(key) {
+            target[key] = source[key];
+          });
+        });
+        return target;
+      }
+      function getMutationDefinition(doc) {
+        checkDocument(doc);
+        var mutationDef = doc.definitions.filter(function(definition) {
+          return definition.kind === "OperationDefinition" && definition.operation === "mutation";
+        })[0];
+        true ? (0, _tsInvariant.invariant)(mutationDef, 7) : (0, _tsInvariant.invariant)(mutationDef, "Must contain a mutation definition.");
+        return mutationDef;
+      }
+      function checkDocument(doc) {
+        true ? (0, _tsInvariant.invariant)(doc && doc.kind === "Document", 8) : (0, _tsInvariant.invariant)(doc && doc.kind === "Document", 'Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
+        var operations = doc.definitions.filter(function(d) {
+          return d.kind !== "FragmentDefinition";
+        }).map(function(definition) {
+          if (definition.kind !== "OperationDefinition") {
+            throw true ? new _tsInvariant.InvariantError(9) : new _tsInvariant.InvariantError('Schema type definitions not allowed in queries. Found: "' + definition.kind + '"');
+          }
+          return definition;
+        });
+        true ? (0, _tsInvariant.invariant)(operations.length <= 1, 10) : (0, _tsInvariant.invariant)(operations.length <= 1, "Ambiguous GraphQL document: contains " + operations.length + " operations");
+        return doc;
+      }
+      function getOperationDefinition(doc) {
+        checkDocument(doc);
+        return doc.definitions.filter(function(definition) {
+          return definition.kind === "OperationDefinition";
+        })[0];
+      }
+      function getOperationDefinitionOrDie(document2) {
+        var def = getOperationDefinition(document2);
+        true ? (0, _tsInvariant.invariant)(def, 11) : (0, _tsInvariant.invariant)(def, "GraphQL document is missing an operation");
+        return def;
+      }
+      function getOperationName(doc) {
+        return doc.definitions.filter(function(definition) {
+          return definition.kind === "OperationDefinition" && definition.name;
+        }).map(function(x) {
+          return x.name.value;
+        })[0] || null;
+      }
+      function getFragmentDefinitions(doc) {
+        return doc.definitions.filter(function(definition) {
+          return definition.kind === "FragmentDefinition";
+        });
+      }
+      function getQueryDefinition(doc) {
+        var queryDef = getOperationDefinition(doc);
+        true ? (0, _tsInvariant.invariant)(queryDef && queryDef.operation === "query", 12) : (0, _tsInvariant.invariant)(queryDef && queryDef.operation === "query", "Must contain a query definition.");
+        return queryDef;
+      }
+      function getFragmentDefinition(doc) {
+        true ? (0, _tsInvariant.invariant)(doc.kind === "Document", 13) : (0, _tsInvariant.invariant)(doc.kind === "Document", 'Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql');
+        true ? (0, _tsInvariant.invariant)(doc.definitions.length <= 1, 14) : (0, _tsInvariant.invariant)(doc.definitions.length <= 1, "Fragment must have exactly one definition.");
+        var fragmentDef = doc.definitions[0];
+        true ? (0, _tsInvariant.invariant)(fragmentDef.kind === "FragmentDefinition", 15) : (0, _tsInvariant.invariant)(fragmentDef.kind === "FragmentDefinition", "Must be a fragment definition.");
+        return fragmentDef;
+      }
+      function getMainDefinition(queryDoc) {
+        checkDocument(queryDoc);
+        var fragmentDefinition;
+        for (var _i = 0, _a = queryDoc.definitions; _i < _a.length; _i++) {
+          var definition = _a[_i];
+          if (definition.kind === "OperationDefinition") {
+            var operation = definition.operation;
+            if (operation === "query" || operation === "mutation" || operation === "subscription") {
+              return definition;
+            }
+          }
+          if (definition.kind === "FragmentDefinition" && !fragmentDefinition) {
+            fragmentDefinition = definition;
+          }
+        }
+        if (fragmentDefinition) {
+          return fragmentDefinition;
+        }
+        throw true ? new _tsInvariant.InvariantError(16) : new _tsInvariant.InvariantError("Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment.");
+      }
+      function createFragmentMap(fragments) {
+        if (fragments === void 0) {
+          fragments = [];
+        }
+        var symTable = {};
+        fragments.forEach(function(fragment) {
+          symTable[fragment.name.value] = fragment;
+        });
+        return symTable;
+      }
+      function getDefaultValues(definition) {
+        if (definition && definition.variableDefinitions && definition.variableDefinitions.length) {
+          var defaultValues = definition.variableDefinitions.filter(function(_a) {
+            var defaultValue = _a.defaultValue;
+            return defaultValue;
+          }).map(function(_a) {
+            var variable = _a.variable, defaultValue = _a.defaultValue;
+            var defaultValueObj = {};
+            valueToObjectRepresentation(defaultValueObj, variable.name, defaultValue);
+            return defaultValueObj;
+          });
+          return assign.apply(void 0, (0, _tslib.__spreadArrays)([{}], defaultValues));
+        }
+        return {};
+      }
+      function variablesInOperation(operation) {
+        var names = /* @__PURE__ */ new Set();
+        if (operation.variableDefinitions) {
+          for (var _i = 0, _a = operation.variableDefinitions; _i < _a.length; _i++) {
+            var definition = _a[_i];
+            names.add(definition.variable.name.value);
+          }
+        }
+        return names;
+      }
+      function filterInPlace(array, test, context) {
+        var target = 0;
+        array.forEach(function(elem, i) {
+          if (test.call(this, elem, i, array)) {
+            array[target++] = elem;
+          }
+        }, context);
+        array.length = target;
+        return array;
+      }
+      var TYPENAME_FIELD = {
+        kind: "Field",
+        name: {
+          kind: "Name",
+          value: "__typename"
+        }
+      };
+      function isEmpty(op, fragments) {
+        return op.selectionSet.selections.every(function(selection) {
+          return selection.kind === "FragmentSpread" && isEmpty(fragments[selection.name.value], fragments);
+        });
+      }
+      function nullIfDocIsEmpty(doc) {
+        return isEmpty(getOperationDefinition(doc) || getFragmentDefinition(doc), createFragmentMap(getFragmentDefinitions(doc))) ? null : doc;
+      }
+      function getDirectiveMatcher(directives) {
+        return function directiveMatcher(directive) {
+          return directives.some(function(dir) {
+            return dir.name && dir.name === directive.name.value || dir.test && dir.test(directive);
+          });
+        };
+      }
+      function removeDirectivesFromDocument(directives, doc) {
+        var variablesInUse = /* @__PURE__ */ Object.create(null);
+        var variablesToRemove = [];
+        var fragmentSpreadsInUse = /* @__PURE__ */ Object.create(null);
+        var fragmentSpreadsToRemove = [];
+        var modifiedDoc = nullIfDocIsEmpty((0, _visitor.visit)(doc, {
+          Variable: {
+            enter: function(node, _key, parent) {
+              if (parent.kind !== "VariableDefinition") {
+                variablesInUse[node.name.value] = true;
+              }
+            }
+          },
+          Field: {
+            enter: function(node) {
+              if (directives && node.directives) {
+                var shouldRemoveField = directives.some(function(directive) {
+                  return directive.remove;
+                });
+                if (shouldRemoveField && node.directives && node.directives.some(getDirectiveMatcher(directives))) {
+                  if (node.arguments) {
+                    node.arguments.forEach(function(arg) {
+                      if (arg.value.kind === "Variable") {
+                        variablesToRemove.push({
+                          name: arg.value.name.value
+                        });
+                      }
+                    });
+                  }
+                  if (node.selectionSet) {
+                    getAllFragmentSpreadsFromSelectionSet(node.selectionSet).forEach(function(frag) {
+                      fragmentSpreadsToRemove.push({
+                        name: frag.name.value
+                      });
+                    });
+                  }
+                  return null;
+                }
+              }
+            }
+          },
+          FragmentSpread: {
+            enter: function(node) {
+              fragmentSpreadsInUse[node.name.value] = true;
+            }
+          },
+          Directive: {
+            enter: function(node) {
+              if (getDirectiveMatcher(directives)(node)) {
+                return null;
+              }
+            }
+          }
+        }));
+        if (modifiedDoc && filterInPlace(variablesToRemove, function(v) {
+          return !variablesInUse[v.name];
+        }).length) {
+          modifiedDoc = removeArgumentsFromDocument(variablesToRemove, modifiedDoc);
+        }
+        if (modifiedDoc && filterInPlace(fragmentSpreadsToRemove, function(fs) {
+          return !fragmentSpreadsInUse[fs.name];
+        }).length) {
+          modifiedDoc = removeFragmentSpreadFromDocument(fragmentSpreadsToRemove, modifiedDoc);
+        }
+        return modifiedDoc;
+      }
+      function addTypenameToDocument(doc) {
+        return (0, _visitor.visit)(checkDocument(doc), {
+          SelectionSet: {
+            enter: function(node, _key, parent) {
+              if (parent && parent.kind === "OperationDefinition") {
+                return;
+              }
+              var selections = node.selections;
+              if (!selections) {
+                return;
+              }
+              var skip = selections.some(function(selection) {
+                return isField(selection) && (selection.name.value === "__typename" || selection.name.value.lastIndexOf("__", 0) === 0);
+              });
+              if (skip) {
+                return;
+              }
+              var field = parent;
+              if (isField(field) && field.directives && field.directives.some(function(d) {
+                return d.name.value === "export";
+              })) {
+                return;
+              }
+              return (0, _tslib.__assign)((0, _tslib.__assign)({}, node), {
+                selections: (0, _tslib.__spreadArrays)(selections, [TYPENAME_FIELD])
+              });
+            }
+          }
+        });
+      }
+      var connectionRemoveConfig = {
+        test: function(directive) {
+          var willRemove = directive.name.value === "connection";
+          if (willRemove) {
+            if (!directive.arguments || !directive.arguments.some(function(arg) {
+              return arg.name.value === "key";
+            })) {
+            }
+          }
+          return willRemove;
+        }
+      };
+      function removeConnectionDirectiveFromDocument(doc) {
+        return removeDirectivesFromDocument([connectionRemoveConfig], checkDocument(doc));
+      }
+      function hasDirectivesInSelectionSet(directives, selectionSet, nestedCheck) {
