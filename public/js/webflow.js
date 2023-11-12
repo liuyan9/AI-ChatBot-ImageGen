@@ -31633,3 +31633,451 @@
           black: "000",
           blanchedalmond: "ffebcd",
           blue: "00f",
+          blueviolet: "8a2be2",
+          brown: "a52a2a",
+          burlywood: "deb887",
+          burntsienna: "ea7e5d",
+          cadetblue: "5f9ea0",
+          chartreuse: "7fff00",
+          chocolate: "d2691e",
+          coral: "ff7f50",
+          cornflowerblue: "6495ed",
+          cornsilk: "fff8dc",
+          crimson: "dc143c",
+          cyan: "0ff",
+          darkblue: "00008b",
+          darkcyan: "008b8b",
+          darkgoldenrod: "b8860b",
+          darkgray: "a9a9a9",
+          darkgreen: "006400",
+          darkgrey: "a9a9a9",
+          darkkhaki: "bdb76b",
+          darkmagenta: "8b008b",
+          darkolivegreen: "556b2f",
+          darkorange: "ff8c00",
+          darkorchid: "9932cc",
+          darkred: "8b0000",
+          darksalmon: "e9967a",
+          darkseagreen: "8fbc8f",
+          darkslateblue: "483d8b",
+          darkslategray: "2f4f4f",
+          darkslategrey: "2f4f4f",
+          darkturquoise: "00ced1",
+          darkviolet: "9400d3",
+          deeppink: "ff1493",
+          deepskyblue: "00bfff",
+          dimgray: "696969",
+          dimgrey: "696969",
+          dodgerblue: "1e90ff",
+          firebrick: "b22222",
+          floralwhite: "fffaf0",
+          forestgreen: "228b22",
+          fuchsia: "f0f",
+          gainsboro: "dcdcdc",
+          ghostwhite: "f8f8ff",
+          gold: "ffd700",
+          goldenrod: "daa520",
+          gray: "808080",
+          green: "008000",
+          greenyellow: "adff2f",
+          grey: "808080",
+          honeydew: "f0fff0",
+          hotpink: "ff69b4",
+          indianred: "cd5c5c",
+          indigo: "4b0082",
+          ivory: "fffff0",
+          khaki: "f0e68c",
+          lavender: "e6e6fa",
+          lavenderblush: "fff0f5",
+          lawngreen: "7cfc00",
+          lemonchiffon: "fffacd",
+          lightblue: "add8e6",
+          lightcoral: "f08080",
+          lightcyan: "e0ffff",
+          lightgoldenrodyellow: "fafad2",
+          lightgray: "d3d3d3",
+          lightgreen: "90ee90",
+          lightgrey: "d3d3d3",
+          lightpink: "ffb6c1",
+          lightsalmon: "ffa07a",
+          lightseagreen: "20b2aa",
+          lightskyblue: "87cefa",
+          lightslategray: "789",
+          lightslategrey: "789",
+          lightsteelblue: "b0c4de",
+          lightyellow: "ffffe0",
+          lime: "0f0",
+          limegreen: "32cd32",
+          linen: "faf0e6",
+          magenta: "f0f",
+          maroon: "800000",
+          mediumaquamarine: "66cdaa",
+          mediumblue: "0000cd",
+          mediumorchid: "ba55d3",
+          mediumpurple: "9370db",
+          mediumseagreen: "3cb371",
+          mediumslateblue: "7b68ee",
+          mediumspringgreen: "00fa9a",
+          mediumturquoise: "48d1cc",
+          mediumvioletred: "c71585",
+          midnightblue: "191970",
+          mintcream: "f5fffa",
+          mistyrose: "ffe4e1",
+          moccasin: "ffe4b5",
+          navajowhite: "ffdead",
+          navy: "000080",
+          oldlace: "fdf5e6",
+          olive: "808000",
+          olivedrab: "6b8e23",
+          orange: "ffa500",
+          orangered: "ff4500",
+          orchid: "da70d6",
+          palegoldenrod: "eee8aa",
+          palegreen: "98fb98",
+          paleturquoise: "afeeee",
+          palevioletred: "db7093",
+          papayawhip: "ffefd5",
+          peachpuff: "ffdab9",
+          peru: "cd853f",
+          pink: "ffc0cb",
+          plum: "dda0dd",
+          powderblue: "b0e0e6",
+          purple: "800080",
+          rebeccapurple: "663399",
+          red: "f00",
+          rosybrown: "bc8f8f",
+          royalblue: "4169e1",
+          saddlebrown: "8b4513",
+          salmon: "fa8072",
+          sandybrown: "f4a460",
+          seagreen: "2e8b57",
+          seashell: "fff5ee",
+          sienna: "a0522d",
+          silver: "c0c0c0",
+          skyblue: "87ceeb",
+          slateblue: "6a5acd",
+          slategray: "708090",
+          slategrey: "708090",
+          snow: "fffafa",
+          springgreen: "00ff7f",
+          steelblue: "4682b4",
+          tan: "d2b48c",
+          teal: "008080",
+          thistle: "d8bfd8",
+          tomato: "ff6347",
+          turquoise: "40e0d0",
+          violet: "ee82ee",
+          wheat: "f5deb3",
+          white: "fff",
+          whitesmoke: "f5f5f5",
+          yellow: "ff0",
+          yellowgreen: "9acd32"
+        };
+        var hexNames = tinycolor.hexNames = flip(names);
+        function flip(o) {
+          var flipped = {};
+          for (var i in o) {
+            if (o.hasOwnProperty(i)) {
+              flipped[o[i]] = i;
+            }
+          }
+          return flipped;
+        }
+        function boundAlpha(a) {
+          a = parseFloat(a);
+          if (isNaN(a) || a < 0 || a > 1) {
+            a = 1;
+          }
+          return a;
+        }
+        function bound01(n, max) {
+          if (isOnePointZero(n)) {
+            n = "100%";
+          }
+          var processPercent = isPercentage(n);
+          n = mathMin(max, mathMax(0, parseFloat(n)));
+          if (processPercent) {
+            n = parseInt(n * max, 10) / 100;
+          }
+          if (Math2.abs(n - max) < 1e-6) {
+            return 1;
+          }
+          return n % max / parseFloat(max);
+        }
+        function clamp01(val) {
+          return mathMin(1, mathMax(0, val));
+        }
+        function parseIntFromHex(val) {
+          return parseInt(val, 16);
+        }
+        function isOnePointZero(n) {
+          return typeof n == "string" && n.indexOf(".") != -1 && parseFloat(n) === 1;
+        }
+        function isPercentage(n) {
+          return typeof n === "string" && n.indexOf("%") != -1;
+        }
+        function pad2(c) {
+          return c.length == 1 ? "0" + c : "" + c;
+        }
+        function convertToPercentage(n) {
+          if (n <= 1) {
+            n = n * 100 + "%";
+          }
+          return n;
+        }
+        function convertDecimalToHex(d) {
+          return Math2.round(parseFloat(d) * 255).toString(16);
+        }
+        function convertHexToDecimal(h) {
+          return parseIntFromHex(h) / 255;
+        }
+        var matchers = function() {
+          var CSS_INTEGER = "[-\\+]?\\d+%?";
+          var CSS_NUMBER = "[-\\+]?\\d*\\.\\d+%?";
+          var CSS_UNIT = "(?:" + CSS_NUMBER + ")|(?:" + CSS_INTEGER + ")";
+          var PERMISSIVE_MATCH3 = "[\\s|\\(]+(" + CSS_UNIT + ")[,|\\s]+(" + CSS_UNIT + ")[,|\\s]+(" + CSS_UNIT + ")\\s*\\)?";
+          var PERMISSIVE_MATCH4 = "[\\s|\\(]+(" + CSS_UNIT + ")[,|\\s]+(" + CSS_UNIT + ")[,|\\s]+(" + CSS_UNIT + ")[,|\\s]+(" + CSS_UNIT + ")\\s*\\)?";
+          return {
+            CSS_UNIT: new RegExp(CSS_UNIT),
+            rgb: new RegExp("rgb" + PERMISSIVE_MATCH3),
+            rgba: new RegExp("rgba" + PERMISSIVE_MATCH4),
+            hsl: new RegExp("hsl" + PERMISSIVE_MATCH3),
+            hsla: new RegExp("hsla" + PERMISSIVE_MATCH4),
+            hsv: new RegExp("hsv" + PERMISSIVE_MATCH3),
+            hsva: new RegExp("hsva" + PERMISSIVE_MATCH4),
+            hex3: /^#?([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+            hex6: /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/,
+            hex4: /^#?([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
+            hex8: /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/
+          };
+        }();
+        function isValidCSSUnit(color) {
+          return !!matchers.CSS_UNIT.exec(color);
+        }
+        function stringInputToObject(color) {
+          color = color.replace(trimLeft, "").replace(trimRight, "").toLowerCase();
+          var named = false;
+          if (names[color]) {
+            color = names[color];
+            named = true;
+          } else if (color == "transparent") {
+            return { r: 0, g: 0, b: 0, a: 0, format: "name" };
+          }
+          var match;
+          if (match = matchers.rgb.exec(color)) {
+            return { r: match[1], g: match[2], b: match[3] };
+          }
+          if (match = matchers.rgba.exec(color)) {
+            return { r: match[1], g: match[2], b: match[3], a: match[4] };
+          }
+          if (match = matchers.hsl.exec(color)) {
+            return { h: match[1], s: match[2], l: match[3] };
+          }
+          if (match = matchers.hsla.exec(color)) {
+            return { h: match[1], s: match[2], l: match[3], a: match[4] };
+          }
+          if (match = matchers.hsv.exec(color)) {
+            return { h: match[1], s: match[2], v: match[3] };
+          }
+          if (match = matchers.hsva.exec(color)) {
+            return { h: match[1], s: match[2], v: match[3], a: match[4] };
+          }
+          if (match = matchers.hex8.exec(color)) {
+            return {
+              r: parseIntFromHex(match[1]),
+              g: parseIntFromHex(match[2]),
+              b: parseIntFromHex(match[3]),
+              a: convertHexToDecimal(match[4]),
+              format: named ? "name" : "hex8"
+            };
+          }
+          if (match = matchers.hex6.exec(color)) {
+            return {
+              r: parseIntFromHex(match[1]),
+              g: parseIntFromHex(match[2]),
+              b: parseIntFromHex(match[3]),
+              format: named ? "name" : "hex"
+            };
+          }
+          if (match = matchers.hex4.exec(color)) {
+            return {
+              r: parseIntFromHex(match[1] + "" + match[1]),
+              g: parseIntFromHex(match[2] + "" + match[2]),
+              b: parseIntFromHex(match[3] + "" + match[3]),
+              a: convertHexToDecimal(match[4] + "" + match[4]),
+              format: named ? "name" : "hex8"
+            };
+          }
+          if (match = matchers.hex3.exec(color)) {
+            return {
+              r: parseIntFromHex(match[1] + "" + match[1]),
+              g: parseIntFromHex(match[2] + "" + match[2]),
+              b: parseIntFromHex(match[3] + "" + match[3]),
+              format: named ? "name" : "hex"
+            };
+          }
+          return false;
+        }
+        function validateWCAG2Parms(parms) {
+          var level, size;
+          parms = parms || { "level": "AA", "size": "small" };
+          level = (parms.level || "AA").toUpperCase();
+          size = (parms.size || "small").toLowerCase();
+          if (level !== "AA" && level !== "AAA") {
+            level = "AA";
+          }
+          if (size !== "small" && size !== "large") {
+            size = "small";
+          }
+          return { "level": level, "size": size };
+        }
+        if (typeof module !== "undefined" && module.exports) {
+          module.exports = tinycolor;
+        } else if (typeof define === "function" && define.amd) {
+          define(function() {
+            return tinycolor;
+          });
+        } else {
+          window.tinycolor = tinycolor;
+        }
+      })(Math);
+    }
+  });
+
+  // packages/systems/style/breakpoint-ids/index.js
+  var require_breakpoint_ids = __commonJS({
+    "packages/systems/style/breakpoint-ids/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.DEFAULT_BREAKPOINT_IDS = exports.BREAKPOINT_ID_XXL = exports.BREAKPOINT_ID_XL = exports.BREAKPOINT_ID_TINY = exports.BREAKPOINT_ID_SMALL = exports.BREAKPOINT_ID_MEDIUM = exports.BREAKPOINT_ID_MAIN = exports.BREAKPOINT_ID_LARGE = void 0;
+      var BREAKPOINT_ID_XXL = "xxl";
+      exports.BREAKPOINT_ID_XXL = BREAKPOINT_ID_XXL;
+      var BREAKPOINT_ID_XL = "xl";
+      exports.BREAKPOINT_ID_XL = BREAKPOINT_ID_XL;
+      var BREAKPOINT_ID_LARGE = "large";
+      exports.BREAKPOINT_ID_LARGE = BREAKPOINT_ID_LARGE;
+      var BREAKPOINT_ID_MAIN = "main";
+      exports.BREAKPOINT_ID_MAIN = BREAKPOINT_ID_MAIN;
+      var BREAKPOINT_ID_MEDIUM = "medium";
+      exports.BREAKPOINT_ID_MEDIUM = BREAKPOINT_ID_MEDIUM;
+      var BREAKPOINT_ID_SMALL = "small";
+      exports.BREAKPOINT_ID_SMALL = BREAKPOINT_ID_SMALL;
+      var BREAKPOINT_ID_TINY = "tiny";
+      exports.BREAKPOINT_ID_TINY = BREAKPOINT_ID_TINY;
+      var DEFAULT_BREAKPOINT_IDS = [BREAKPOINT_ID_MAIN, BREAKPOINT_ID_MEDIUM, BREAKPOINT_ID_SMALL, BREAKPOINT_ID_TINY];
+      exports.DEFAULT_BREAKPOINT_IDS = DEFAULT_BREAKPOINT_IDS;
+    }
+  });
+
+  // packages/systems/style/breakpoints-config/index.js
+  var require_breakpoints_config = __commonJS({
+    "packages/systems/style/breakpoints-config/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.LARGER_BREAKPOINTS_WORDING = exports.LARGER_BREAKPOINTS_CONFIG = exports.DEFAULT_BREAKPOINTS_CONFIG = void 0;
+      var _breakpointIds = require_breakpoint_ids();
+      var DEFAULT_BREAKPOINTS_CONFIG = {
+        [_breakpointIds.BREAKPOINT_ID_MAIN]: {
+          maxWidth: 1e4
+        },
+        [_breakpointIds.BREAKPOINT_ID_MEDIUM]: {
+          maxWidth: 991
+        },
+        [_breakpointIds.BREAKPOINT_ID_SMALL]: {
+          maxWidth: 767
+        },
+        [_breakpointIds.BREAKPOINT_ID_TINY]: {
+          maxWidth: 479
+        }
+      };
+      exports.DEFAULT_BREAKPOINTS_CONFIG = DEFAULT_BREAKPOINTS_CONFIG;
+      var LARGER_BREAKPOINTS_CONFIG = {
+        [_breakpointIds.BREAKPOINT_ID_MAIN]: {
+          maxWidth: 1e4
+        },
+        [_breakpointIds.BREAKPOINT_ID_XXL]: {
+          minWidth: 1920
+        },
+        [_breakpointIds.BREAKPOINT_ID_XL]: {
+          minWidth: 1440
+        },
+        [_breakpointIds.BREAKPOINT_ID_LARGE]: {
+          minWidth: 1280
+        },
+        [_breakpointIds.BREAKPOINT_ID_MEDIUM]: {
+          maxWidth: 991
+        },
+        [_breakpointIds.BREAKPOINT_ID_SMALL]: {
+          maxWidth: 767
+        },
+        [_breakpointIds.BREAKPOINT_ID_TINY]: {
+          maxWidth: 479
+        }
+      };
+      exports.LARGER_BREAKPOINTS_CONFIG = LARGER_BREAKPOINTS_CONFIG;
+      var LARGER_BREAKPOINTS_WORDING = {
+        [_breakpointIds.BREAKPOINT_ID_XXL]: {
+          label: "1920px and up",
+          description: null,
+          copy: "Styles added here will apply at 1920px and up."
+        },
+        [_breakpointIds.BREAKPOINT_ID_XL]: {
+          label: "1440px and up",
+          description: null,
+          copy: "Styles added here will apply at 1440px and up, unless they\u2019re edited at a larger breakpoint."
+        },
+        [_breakpointIds.BREAKPOINT_ID_LARGE]: {
+          label: "1280px and up",
+          description: null,
+          copy: "Styles added here will apply at 1280px and up, unless they\u2019re edited at a larger breakpoint."
+        },
+        [_breakpointIds.BREAKPOINT_ID_MAIN]: {
+          label: "Desktop",
+          description: "Base breakpoint",
+          copy: "Desktop styles apply at all breakpoints, unless they\u2019re edited at a larger or smaller breakpoint. Start your styling here."
+        },
+        [_breakpointIds.BREAKPOINT_ID_MEDIUM]: {
+          label: "Tablet",
+          description: "991px and down",
+          copy: "Styles added here will apply at 991px and down, unless they\u2019re edited at a smaller breakpoint."
+        },
+        [_breakpointIds.BREAKPOINT_ID_SMALL]: {
+          label: "Mobile landscape",
+          description: "767px and down",
+          copy: "Styles added here will apply at 767px and down, unless they\u2019re edited at a smaller breakpoint."
+        },
+        [_breakpointIds.BREAKPOINT_ID_TINY]: {
+          label: "Mobile portrait",
+          description: "478px and down",
+          copy: "Styles added here will apply at 478px and down."
+        }
+      };
+      exports.LARGER_BREAKPOINTS_WORDING = LARGER_BREAKPOINTS_WORDING;
+    }
+  });
+
+  // shared/render/plugins/Commerce/StyleMapObserver.js
+  var require_StyleMapObserver = __commonJS({
+    "shared/render/plugins/Commerce/StyleMapObserver.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _defineProperty2 = _interopRequireDefault(require_defineProperty2());
+      var _merge = _interopRequireDefault(require_merge());
+      var _tinycolor = _interopRequireDefault(require_tinycolor());
+      var _breakpointsConfig = require_breakpoints_config();
+      var _breakpointIds = require_breakpoint_ids();
+      var STYLE_MAP_ATTR = "data-wf-style-map";
+      var orderedBreakpointIds = [_breakpointIds.BREAKPOINT_ID_MAIN, _breakpointIds.BREAKPOINT_ID_LARGE, _breakpointIds.BREAKPOINT_ID_XL, _breakpointIds.BREAKPOINT_ID_XXL, _breakpointIds.BREAKPOINT_ID_MEDIUM, _breakpointIds.BREAKPOINT_ID_SMALL, _breakpointIds.BREAKPOINT_ID_TINY];
+      var ORDERED_MEDIA_QUERIES = orderedBreakpointIds.map((breakpointId) => {
+        const config = _breakpointsConfig.LARGER_BREAKPOINTS_CONFIG[breakpointId];
+        let prop;
+        let value;
