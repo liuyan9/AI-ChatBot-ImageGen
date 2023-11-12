@@ -31178,3 +31178,458 @@
               }
               return this.toRgbString();
             }
+            if (format === "rgb") {
+              formattedString = this.toRgbString();
+            }
+            if (format === "prgb") {
+              formattedString = this.toPercentageRgbString();
+            }
+            if (format === "hex" || format === "hex6") {
+              formattedString = this.toHexString();
+            }
+            if (format === "hex3") {
+              formattedString = this.toHexString(true);
+            }
+            if (format === "hex4") {
+              formattedString = this.toHex8String(true);
+            }
+            if (format === "hex8") {
+              formattedString = this.toHex8String();
+            }
+            if (format === "name") {
+              formattedString = this.toName();
+            }
+            if (format === "hsl") {
+              formattedString = this.toHslString();
+            }
+            if (format === "hsv") {
+              formattedString = this.toHsvString();
+            }
+            return formattedString || this.toHexString();
+          },
+          clone: function() {
+            return tinycolor(this.toString());
+          },
+          _applyModification: function(fn, args) {
+            var color = fn.apply(null, [this].concat([].slice.call(args)));
+            this._r = color._r;
+            this._g = color._g;
+            this._b = color._b;
+            this.setAlpha(color._a);
+            return this;
+          },
+          lighten: function() {
+            return this._applyModification(lighten, arguments);
+          },
+          brighten: function() {
+            return this._applyModification(brighten, arguments);
+          },
+          darken: function() {
+            return this._applyModification(darken, arguments);
+          },
+          desaturate: function() {
+            return this._applyModification(desaturate, arguments);
+          },
+          saturate: function() {
+            return this._applyModification(saturate, arguments);
+          },
+          greyscale: function() {
+            return this._applyModification(greyscale, arguments);
+          },
+          spin: function() {
+            return this._applyModification(spin, arguments);
+          },
+          _applyCombination: function(fn, args) {
+            return fn.apply(null, [this].concat([].slice.call(args)));
+          },
+          analogous: function() {
+            return this._applyCombination(analogous, arguments);
+          },
+          complement: function() {
+            return this._applyCombination(complement, arguments);
+          },
+          monochromatic: function() {
+            return this._applyCombination(monochromatic, arguments);
+          },
+          splitcomplement: function() {
+            return this._applyCombination(splitcomplement, arguments);
+          },
+          triad: function() {
+            return this._applyCombination(triad, arguments);
+          },
+          tetrad: function() {
+            return this._applyCombination(tetrad, arguments);
+          }
+        };
+        tinycolor.fromRatio = function(color, opts) {
+          if (typeof color == "object") {
+            var newColor = {};
+            for (var i in color) {
+              if (color.hasOwnProperty(i)) {
+                if (i === "a") {
+                  newColor[i] = color[i];
+                } else {
+                  newColor[i] = convertToPercentage(color[i]);
+                }
+              }
+            }
+            color = newColor;
+          }
+          return tinycolor(color, opts);
+        };
+        function inputToRGB(color) {
+          var rgb = { r: 0, g: 0, b: 0 };
+          var a = 1;
+          var s = null;
+          var v = null;
+          var l = null;
+          var ok = false;
+          var format = false;
+          if (typeof color == "string") {
+            color = stringInputToObject(color);
+          }
+          if (typeof color == "object") {
+            if (isValidCSSUnit(color.r) && isValidCSSUnit(color.g) && isValidCSSUnit(color.b)) {
+              rgb = rgbToRgb(color.r, color.g, color.b);
+              ok = true;
+              format = String(color.r).substr(-1) === "%" ? "prgb" : "rgb";
+            } else if (isValidCSSUnit(color.h) && isValidCSSUnit(color.s) && isValidCSSUnit(color.v)) {
+              s = convertToPercentage(color.s);
+              v = convertToPercentage(color.v);
+              rgb = hsvToRgb(color.h, s, v);
+              ok = true;
+              format = "hsv";
+            } else if (isValidCSSUnit(color.h) && isValidCSSUnit(color.s) && isValidCSSUnit(color.l)) {
+              s = convertToPercentage(color.s);
+              l = convertToPercentage(color.l);
+              rgb = hslToRgb(color.h, s, l);
+              ok = true;
+              format = "hsl";
+            }
+            if (color.hasOwnProperty("a")) {
+              a = color.a;
+            }
+          }
+          a = boundAlpha(a);
+          return {
+            ok,
+            format: color.format || format,
+            r: mathMin(255, mathMax(rgb.r, 0)),
+            g: mathMin(255, mathMax(rgb.g, 0)),
+            b: mathMin(255, mathMax(rgb.b, 0)),
+            a
+          };
+        }
+        function rgbToRgb(r, g, b) {
+          return {
+            r: bound01(r, 255) * 255,
+            g: bound01(g, 255) * 255,
+            b: bound01(b, 255) * 255
+          };
+        }
+        function rgbToHsl(r, g, b) {
+          r = bound01(r, 255);
+          g = bound01(g, 255);
+          b = bound01(b, 255);
+          var max = mathMax(r, g, b), min = mathMin(r, g, b);
+          var h, s, l = (max + min) / 2;
+          if (max == min) {
+            h = s = 0;
+          } else {
+            var d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+              case r:
+                h = (g - b) / d + (g < b ? 6 : 0);
+                break;
+              case g:
+                h = (b - r) / d + 2;
+                break;
+              case b:
+                h = (r - g) / d + 4;
+                break;
+            }
+            h /= 6;
+          }
+          return { h, s, l };
+        }
+        function hslToRgb(h, s, l) {
+          var r, g, b;
+          h = bound01(h, 360);
+          s = bound01(s, 100);
+          l = bound01(l, 100);
+          function hue2rgb(p2, q2, t) {
+            if (t < 0)
+              t += 1;
+            if (t > 1)
+              t -= 1;
+            if (t < 1 / 6)
+              return p2 + (q2 - p2) * 6 * t;
+            if (t < 1 / 2)
+              return q2;
+            if (t < 2 / 3)
+              return p2 + (q2 - p2) * (2 / 3 - t) * 6;
+            return p2;
+          }
+          if (s === 0) {
+            r = g = b = l;
+          } else {
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+          }
+          return { r: r * 255, g: g * 255, b: b * 255 };
+        }
+        function rgbToHsv(r, g, b) {
+          r = bound01(r, 255);
+          g = bound01(g, 255);
+          b = bound01(b, 255);
+          var max = mathMax(r, g, b), min = mathMin(r, g, b);
+          var h, s, v = max;
+          var d = max - min;
+          s = max === 0 ? 0 : d / max;
+          if (max == min) {
+            h = 0;
+          } else {
+            switch (max) {
+              case r:
+                h = (g - b) / d + (g < b ? 6 : 0);
+                break;
+              case g:
+                h = (b - r) / d + 2;
+                break;
+              case b:
+                h = (r - g) / d + 4;
+                break;
+            }
+            h /= 6;
+          }
+          return { h, s, v };
+        }
+        function hsvToRgb(h, s, v) {
+          h = bound01(h, 360) * 6;
+          s = bound01(s, 100);
+          v = bound01(v, 100);
+          var i = Math2.floor(h), f = h - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s), mod = i % 6, r = [v, q, p, p, t, v][mod], g = [t, v, v, q, p, p][mod], b = [p, p, t, v, v, q][mod];
+          return { r: r * 255, g: g * 255, b: b * 255 };
+        }
+        function rgbToHex(r, g, b, allow3Char) {
+          var hex = [
+            pad2(mathRound(r).toString(16)),
+            pad2(mathRound(g).toString(16)),
+            pad2(mathRound(b).toString(16))
+          ];
+          if (allow3Char && hex[0].charAt(0) == hex[0].charAt(1) && hex[1].charAt(0) == hex[1].charAt(1) && hex[2].charAt(0) == hex[2].charAt(1)) {
+            return hex[0].charAt(0) + hex[1].charAt(0) + hex[2].charAt(0);
+          }
+          return hex.join("");
+        }
+        function rgbaToHex(r, g, b, a, allow4Char) {
+          var hex = [
+            pad2(mathRound(r).toString(16)),
+            pad2(mathRound(g).toString(16)),
+            pad2(mathRound(b).toString(16)),
+            pad2(convertDecimalToHex(a))
+          ];
+          if (allow4Char && hex[0].charAt(0) == hex[0].charAt(1) && hex[1].charAt(0) == hex[1].charAt(1) && hex[2].charAt(0) == hex[2].charAt(1) && hex[3].charAt(0) == hex[3].charAt(1)) {
+            return hex[0].charAt(0) + hex[1].charAt(0) + hex[2].charAt(0) + hex[3].charAt(0);
+          }
+          return hex.join("");
+        }
+        function rgbaToArgbHex(r, g, b, a) {
+          var hex = [
+            pad2(convertDecimalToHex(a)),
+            pad2(mathRound(r).toString(16)),
+            pad2(mathRound(g).toString(16)),
+            pad2(mathRound(b).toString(16))
+          ];
+          return hex.join("");
+        }
+        tinycolor.equals = function(color1, color2) {
+          if (!color1 || !color2) {
+            return false;
+          }
+          return tinycolor(color1).toRgbString() == tinycolor(color2).toRgbString();
+        };
+        tinycolor.random = function() {
+          return tinycolor.fromRatio({
+            r: mathRandom(),
+            g: mathRandom(),
+            b: mathRandom()
+          });
+        };
+        function desaturate(color, amount) {
+          amount = amount === 0 ? 0 : amount || 10;
+          var hsl = tinycolor(color).toHsl();
+          hsl.s -= amount / 100;
+          hsl.s = clamp01(hsl.s);
+          return tinycolor(hsl);
+        }
+        function saturate(color, amount) {
+          amount = amount === 0 ? 0 : amount || 10;
+          var hsl = tinycolor(color).toHsl();
+          hsl.s += amount / 100;
+          hsl.s = clamp01(hsl.s);
+          return tinycolor(hsl);
+        }
+        function greyscale(color) {
+          return tinycolor(color).desaturate(100);
+        }
+        function lighten(color, amount) {
+          amount = amount === 0 ? 0 : amount || 10;
+          var hsl = tinycolor(color).toHsl();
+          hsl.l += amount / 100;
+          hsl.l = clamp01(hsl.l);
+          return tinycolor(hsl);
+        }
+        function brighten(color, amount) {
+          amount = amount === 0 ? 0 : amount || 10;
+          var rgb = tinycolor(color).toRgb();
+          rgb.r = mathMax(0, mathMin(255, rgb.r - mathRound(255 * -(amount / 100))));
+          rgb.g = mathMax(0, mathMin(255, rgb.g - mathRound(255 * -(amount / 100))));
+          rgb.b = mathMax(0, mathMin(255, rgb.b - mathRound(255 * -(amount / 100))));
+          return tinycolor(rgb);
+        }
+        function darken(color, amount) {
+          amount = amount === 0 ? 0 : amount || 10;
+          var hsl = tinycolor(color).toHsl();
+          hsl.l -= amount / 100;
+          hsl.l = clamp01(hsl.l);
+          return tinycolor(hsl);
+        }
+        function spin(color, amount) {
+          var hsl = tinycolor(color).toHsl();
+          var hue = (hsl.h + amount) % 360;
+          hsl.h = hue < 0 ? 360 + hue : hue;
+          return tinycolor(hsl);
+        }
+        function complement(color) {
+          var hsl = tinycolor(color).toHsl();
+          hsl.h = (hsl.h + 180) % 360;
+          return tinycolor(hsl);
+        }
+        function triad(color) {
+          var hsl = tinycolor(color).toHsl();
+          var h = hsl.h;
+          return [
+            tinycolor(color),
+            tinycolor({ h: (h + 120) % 360, s: hsl.s, l: hsl.l }),
+            tinycolor({ h: (h + 240) % 360, s: hsl.s, l: hsl.l })
+          ];
+        }
+        function tetrad(color) {
+          var hsl = tinycolor(color).toHsl();
+          var h = hsl.h;
+          return [
+            tinycolor(color),
+            tinycolor({ h: (h + 90) % 360, s: hsl.s, l: hsl.l }),
+            tinycolor({ h: (h + 180) % 360, s: hsl.s, l: hsl.l }),
+            tinycolor({ h: (h + 270) % 360, s: hsl.s, l: hsl.l })
+          ];
+        }
+        function splitcomplement(color) {
+          var hsl = tinycolor(color).toHsl();
+          var h = hsl.h;
+          return [
+            tinycolor(color),
+            tinycolor({ h: (h + 72) % 360, s: hsl.s, l: hsl.l }),
+            tinycolor({ h: (h + 216) % 360, s: hsl.s, l: hsl.l })
+          ];
+        }
+        function analogous(color, results, slices) {
+          results = results || 6;
+          slices = slices || 30;
+          var hsl = tinycolor(color).toHsl();
+          var part = 360 / slices;
+          var ret = [tinycolor(color)];
+          for (hsl.h = (hsl.h - (part * results >> 1) + 720) % 360; --results; ) {
+            hsl.h = (hsl.h + part) % 360;
+            ret.push(tinycolor(hsl));
+          }
+          return ret;
+        }
+        function monochromatic(color, results) {
+          results = results || 6;
+          var hsv = tinycolor(color).toHsv();
+          var h = hsv.h, s = hsv.s, v = hsv.v;
+          var ret = [];
+          var modification = 1 / results;
+          while (results--) {
+            ret.push(tinycolor({ h, s, v }));
+            v = (v + modification) % 1;
+          }
+          return ret;
+        }
+        tinycolor.mix = function(color1, color2, amount) {
+          amount = amount === 0 ? 0 : amount || 50;
+          var rgb1 = tinycolor(color1).toRgb();
+          var rgb2 = tinycolor(color2).toRgb();
+          var p = amount / 100;
+          var rgba = {
+            r: (rgb2.r - rgb1.r) * p + rgb1.r,
+            g: (rgb2.g - rgb1.g) * p + rgb1.g,
+            b: (rgb2.b - rgb1.b) * p + rgb1.b,
+            a: (rgb2.a - rgb1.a) * p + rgb1.a
+          };
+          return tinycolor(rgba);
+        };
+        tinycolor.readability = function(color1, color2) {
+          var c1 = tinycolor(color1);
+          var c2 = tinycolor(color2);
+          return (Math2.max(c1.getLuminance(), c2.getLuminance()) + 0.05) / (Math2.min(c1.getLuminance(), c2.getLuminance()) + 0.05);
+        };
+        tinycolor.isReadable = function(color1, color2, wcag2) {
+          var readability = tinycolor.readability(color1, color2);
+          var wcag2Parms, out;
+          out = false;
+          wcag2Parms = validateWCAG2Parms(wcag2);
+          switch (wcag2Parms.level + wcag2Parms.size) {
+            case "AAsmall":
+            case "AAAlarge":
+              out = readability >= 4.5;
+              break;
+            case "AAlarge":
+              out = readability >= 3;
+              break;
+            case "AAAsmall":
+              out = readability >= 7;
+              break;
+          }
+          return out;
+        };
+        tinycolor.mostReadable = function(baseColor, colorList, args) {
+          var bestColor = null;
+          var bestScore = 0;
+          var readability;
+          var includeFallbackColors, level, size;
+          args = args || {};
+          includeFallbackColors = args.includeFallbackColors;
+          level = args.level;
+          size = args.size;
+          for (var i = 0; i < colorList.length; i++) {
+            readability = tinycolor.readability(baseColor, colorList[i]);
+            if (readability > bestScore) {
+              bestScore = readability;
+              bestColor = tinycolor(colorList[i]);
+            }
+          }
+          if (tinycolor.isReadable(baseColor, bestColor, { "level": level, "size": size }) || !includeFallbackColors) {
+            return bestColor;
+          } else {
+            args.includeFallbackColors = false;
+            return tinycolor.mostReadable(baseColor, ["#fff", "#000"], args);
+          }
+        };
+        var names = tinycolor.names = {
+          aliceblue: "f0f8ff",
+          antiquewhite: "faebd7",
+          aqua: "0ff",
+          aquamarine: "7fffd4",
+          azure: "f0ffff",
+          beige: "f5f5dc",
+          bisque: "ffe4c4",
+          black: "000",
+          blanchedalmond: "ffebcd",
+          blue: "00f",
