@@ -32555,3 +32555,462 @@
         "\u0175": "w",
         "\u0176": "Y",
         "\u0177": "y",
+        "\u0178": "Y",
+        "\u0179": "Z",
+        "\u017B": "Z",
+        "\u017D": "Z",
+        "\u017A": "z",
+        "\u017C": "z",
+        "\u017E": "z",
+        "\u0132": "IJ",
+        "\u0133": "ij",
+        "\u0152": "Oe",
+        "\u0153": "oe",
+        "\u0149": "'n",
+        "\u017F": "s"
+      };
+      var deburrLetter = basePropertyOf(deburredLetters);
+      module.exports = deburrLetter;
+    }
+  });
+
+  // node_modules/lodash/deburr.js
+  var require_deburr = __commonJS({
+    "node_modules/lodash/deburr.js"(exports, module) {
+      var deburrLetter = require_deburrLetter();
+      var toString = require_toString();
+      var reLatin = /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
+      var rsComboMarksRange = "\\u0300-\\u036f";
+      var reComboHalfMarksRange = "\\ufe20-\\ufe2f";
+      var rsComboSymbolsRange = "\\u20d0-\\u20ff";
+      var rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange;
+      var rsCombo = "[" + rsComboRange + "]";
+      var reComboMark = RegExp(rsCombo, "g");
+      function deburr(string) {
+        string = toString(string);
+        return string && string.replace(reLatin, deburrLetter).replace(reComboMark, "");
+      }
+      module.exports = deburr;
+    }
+  });
+
+  // node_modules/lodash/_asciiWords.js
+  var require_asciiWords = __commonJS({
+    "node_modules/lodash/_asciiWords.js"(exports, module) {
+      var reAsciiWord = /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
+      function asciiWords(string) {
+        return string.match(reAsciiWord) || [];
+      }
+      module.exports = asciiWords;
+    }
+  });
+
+  // node_modules/lodash/_hasUnicodeWord.js
+  var require_hasUnicodeWord = __commonJS({
+    "node_modules/lodash/_hasUnicodeWord.js"(exports, module) {
+      var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
+      function hasUnicodeWord(string) {
+        return reHasUnicodeWord.test(string);
+      }
+      module.exports = hasUnicodeWord;
+    }
+  });
+
+  // node_modules/lodash/_unicodeWords.js
+  var require_unicodeWords = __commonJS({
+    "node_modules/lodash/_unicodeWords.js"(exports, module) {
+      var rsAstralRange = "\\ud800-\\udfff";
+      var rsComboMarksRange = "\\u0300-\\u036f";
+      var reComboHalfMarksRange = "\\ufe20-\\ufe2f";
+      var rsComboSymbolsRange = "\\u20d0-\\u20ff";
+      var rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange;
+      var rsDingbatRange = "\\u2700-\\u27bf";
+      var rsLowerRange = "a-z\\xdf-\\xf6\\xf8-\\xff";
+      var rsMathOpRange = "\\xac\\xb1\\xd7\\xf7";
+      var rsNonCharRange = "\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf";
+      var rsPunctuationRange = "\\u2000-\\u206f";
+      var rsSpaceRange = " \\t\\x0b\\f\\xa0\\ufeff\\n\\r\\u2028\\u2029\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u202f\\u205f\\u3000";
+      var rsUpperRange = "A-Z\\xc0-\\xd6\\xd8-\\xde";
+      var rsVarRange = "\\ufe0e\\ufe0f";
+      var rsBreakRange = rsMathOpRange + rsNonCharRange + rsPunctuationRange + rsSpaceRange;
+      var rsApos = "['\u2019]";
+      var rsBreak = "[" + rsBreakRange + "]";
+      var rsCombo = "[" + rsComboRange + "]";
+      var rsDigits = "\\d+";
+      var rsDingbat = "[" + rsDingbatRange + "]";
+      var rsLower = "[" + rsLowerRange + "]";
+      var rsMisc = "[^" + rsAstralRange + rsBreakRange + rsDigits + rsDingbatRange + rsLowerRange + rsUpperRange + "]";
+      var rsFitz = "\\ud83c[\\udffb-\\udfff]";
+      var rsModifier = "(?:" + rsCombo + "|" + rsFitz + ")";
+      var rsNonAstral = "[^" + rsAstralRange + "]";
+      var rsRegional = "(?:\\ud83c[\\udde6-\\uddff]){2}";
+      var rsSurrPair = "[\\ud800-\\udbff][\\udc00-\\udfff]";
+      var rsUpper = "[" + rsUpperRange + "]";
+      var rsZWJ = "\\u200d";
+      var rsMiscLower = "(?:" + rsLower + "|" + rsMisc + ")";
+      var rsMiscUpper = "(?:" + rsUpper + "|" + rsMisc + ")";
+      var rsOptContrLower = "(?:" + rsApos + "(?:d|ll|m|re|s|t|ve))?";
+      var rsOptContrUpper = "(?:" + rsApos + "(?:D|LL|M|RE|S|T|VE))?";
+      var reOptMod = rsModifier + "?";
+      var rsOptVar = "[" + rsVarRange + "]?";
+      var rsOptJoin = "(?:" + rsZWJ + "(?:" + [rsNonAstral, rsRegional, rsSurrPair].join("|") + ")" + rsOptVar + reOptMod + ")*";
+      var rsOrdLower = "\\d*(?:1st|2nd|3rd|(?![123])\\dth)(?=\\b|[A-Z_])";
+      var rsOrdUpper = "\\d*(?:1ST|2ND|3RD|(?![123])\\dTH)(?=\\b|[a-z_])";
+      var rsSeq = rsOptVar + reOptMod + rsOptJoin;
+      var rsEmoji = "(?:" + [rsDingbat, rsRegional, rsSurrPair].join("|") + ")" + rsSeq;
+      var reUnicodeWord = RegExp([
+        rsUpper + "?" + rsLower + "+" + rsOptContrLower + "(?=" + [rsBreak, rsUpper, "$"].join("|") + ")",
+        rsMiscUpper + "+" + rsOptContrUpper + "(?=" + [rsBreak, rsUpper + rsMiscLower, "$"].join("|") + ")",
+        rsUpper + "?" + rsMiscLower + "+" + rsOptContrLower,
+        rsUpper + "+" + rsOptContrUpper,
+        rsOrdUpper,
+        rsOrdLower,
+        rsDigits,
+        rsEmoji
+      ].join("|"), "g");
+      function unicodeWords(string) {
+        return string.match(reUnicodeWord) || [];
+      }
+      module.exports = unicodeWords;
+    }
+  });
+
+  // node_modules/lodash/words.js
+  var require_words = __commonJS({
+    "node_modules/lodash/words.js"(exports, module) {
+      var asciiWords = require_asciiWords();
+      var hasUnicodeWord = require_hasUnicodeWord();
+      var toString = require_toString();
+      var unicodeWords = require_unicodeWords();
+      function words(string, pattern, guard) {
+        string = toString(string);
+        pattern = guard ? void 0 : pattern;
+        if (pattern === void 0) {
+          return hasUnicodeWord(string) ? unicodeWords(string) : asciiWords(string);
+        }
+        return string.match(pattern) || [];
+      }
+      module.exports = words;
+    }
+  });
+
+  // node_modules/lodash/_createCompounder.js
+  var require_createCompounder = __commonJS({
+    "node_modules/lodash/_createCompounder.js"(exports, module) {
+      var arrayReduce = require_arrayReduce();
+      var deburr = require_deburr();
+      var words = require_words();
+      var rsApos = "['\u2019]";
+      var reApos = RegExp(rsApos, "g");
+      function createCompounder(callback) {
+        return function(string) {
+          return arrayReduce(words(deburr(string).replace(reApos, "")), callback, "");
+        };
+      }
+      module.exports = createCompounder;
+    }
+  });
+
+  // node_modules/lodash/camelCase.js
+  var require_camelCase = __commonJS({
+    "node_modules/lodash/camelCase.js"(exports, module) {
+      var capitalize = require_capitalize();
+      var createCompounder = require_createCompounder();
+      var camelCase = createCompounder(function(result, word, index) {
+        word = word.toLowerCase();
+        return result + (index ? capitalize(word) : word);
+      });
+      module.exports = camelCase;
+    }
+  });
+
+  // packages/systems/commerce/constants/pluginConstants.js
+  var require_pluginConstants = __commonJS({
+    "packages/systems/commerce/constants/pluginConstants.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.NODE_TYPE_COMMERCE_CART_ERROR = exports.NODE_TYPE_COMMERCE_CART_CONTAINER_WRAPPER = exports.NODE_TYPE_COMMERCE_CART_CONTAINER = exports.NODE_TYPE_COMMERCE_CART_CLOSE_LINK = exports.NODE_TYPE_COMMERCE_CART_CHECKOUT_BUTTON = exports.NODE_TYPE_COMMERCE_CART_APPLE_PAY_BUTTON = exports.NODE_TYPE_COMMERCE_BUY_NOW_BUTTON = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR = exports.NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON = exports.NODE_TYPE_ADD_TO_CART_ERROR = exports.NODE_NAME_COMMERCE_ADD_TO_CART_QUANTITY_INPUT = exports.NEEDS_REFRESH = exports.LOADING_TEXT_DEFAULT = exports.LOADING_TEXT = exports.HIDE_CART_WHEN_EMPTY_KEYPATH = exports.HIDE_CART_WHEN_EMPTY_KEY = exports.HIDE_CART_WHEN_EMPTY_DEFAULT = exports.HIDE_CART_COUNT_KEY = exports.HIDE_CART_COUNT_DEFAULT = exports.EDITABLE_STYLE_NAMES = exports.EASINGS = exports.EASE_DEFAULT = exports.DEFAULT_SKU_SLUG = exports.DATA_ATTR_SUBSCRIPTION_TEXT = exports.DATA_ATTR_PUBLISHABLE_KEY = exports.DATA_ATTR_PRESELECT_DEFAULT_VARIANT = exports.DATA_ATTR_OPEN_PRODUCT = exports.DATA_ATTR_OPEN_ON_HOVER = exports.DATA_ATTR_NODE_TYPE = exports.DATA_ATTR_LOADING_TEXT = exports.DATA_ATTR_DEFAULT_TEXT = exports.DATA_ATTR_COUNT_HIDE_RULE = exports.DATA_ATTR_COMMERCE_SKU_ID = exports.DATA_ATTR_COMMERCE_PRODUCT_ID = exports.DATA_ATTR_COMMERCE_PRODUCT_CURRENT_SKU_VALUES = exports.DATA_ATTR_COMMERCE_OPTION_SET_ID = exports.DATA_ATTR_ANIMATION_EASING = exports.DATA_ATTR_ANIMATION_DURATION = exports.COMMERCE_SKU_FIELD_SLUG = exports.COMMERCE_SKU_COLLECTION_SLUG = exports.COMMERCE_PRODUCT_FIELD_SLUG = exports.COMMERCE_PRODUCT_COLLECTION_SLUG = exports.COMMERCE_PLUGIN_KEY = exports.COMMERCE_ERROR_CATEGORY = exports.COMMERCE_DEFAULT_COPY = exports.COMMERCE_CATEGORY_COLLECTION_SLUG = exports.COMMERCE_CART_PUBLISHED_SITE_ACTION_ATTR = exports.COMMERCE_CART_PUBLISHED_SITE_ACTIONS = exports.COMMERCE_CART_ITEM_ID_ATTR = exports.CHECKOUT_STATES = exports.CHECKOUT_STATE = exports.CHECKOUT_QUERY = exports.CHECKOUT_PLACE_ORDER_LOADING_TEXT_DEFAULT = exports.CHECKOUT_PLACE_ORDER_BUTTON_TEXT_DEFAULT = exports.CHECKOUT_ERRORS = exports.CHECKOUT_DISABLED_ERROR_MESSAGE = exports.CHECKOUT_BINDING_ROOT_QUERY_PATH = exports.CHANGE_CART_EVENT = exports.CART_TYPE_KEY = exports.CART_TYPE_DROPDOWN_ON_OPEN_KEY = exports.CART_TYPE_DROPDOWN_ON_OPEN = exports.CART_TYPES = exports.CART_TYPE = exports.CART_STATES_AUTOMATION = exports.CART_STATES = exports.CART_STATE = exports.CART_QUERY = exports.CART_PRODUCT_ADDED_KEYPATH = exports.CART_PRODUCT_ADDED_KEY = exports.CART_PRODUCT_ADDED_DEFAULT = exports.CART_OPEN = exports.CART_GENERAL_ERROR_MESSAGE = exports.CART_ERROR_MESSAGE_SELECTOR = exports.CART_ERROR_MESSAGE = exports.CART_ERRORS = exports.CART_COUNT_HIDE_RULES = exports.CART_CHECKOUT_LOADING_TEXT_DEFAULT = exports.CART_CHECKOUT_ERROR_MESSAGE_SELECTOR = exports.CART_CHECKOUT_ERROR_MESSAGE = exports.CART_CHECKOUT_BUTTON_TEXT_DEFAULT = exports.BILLING_ADDRESS_TOGGLE_KEYPATH = exports.BILLING_ADDRESS_TOGGLE_KEY = exports.BILLING_ADDRESS_TOGGLE_DEFAULT = exports.ANIMATION_EASING_KEYPATH = exports.ANIMATION_EASING_KEY = exports.ANIMATION_EASING_DEFAULT = exports.ANIMATION_DURATION_KEYPATH = exports.ANIMATION_DURATION_KEY = exports.ANIMATION_DURATION_DEFAULT = exports.ALIGN_KEY = exports.ALIGN_DEFAULT = exports.ADD_TO_CART_STATES = exports.ADD_TO_CART_LOADING = exports.ADD_TO_CART_ERROR_MESSAGE = exports.ADD_TO_CART_ERRORS = void 0;
+      exports.symbolMap = exports.getCheckoutErrorMessageForType = exports.getCartErrorMessageForType = exports.getATCErrorMessageForType = exports.WF_TEMPLATE_TYPE = exports.WF_TEMPLATE_ID_DATA_KEY = exports.WF_SKU_CONDITION_DATA_KEY = exports.WF_SKU_BINDING_DATA_KEY = exports.WF_CONDITION_DATA_KEY = exports.WF_COLLECTION_DATA_KEY = exports.WF_BINDING_DATA_KEY = exports.STRIPE_ELEMENT_TYPE = exports.STRIPE_ELEMENT_STYLE = exports.STRIPE_ELEMENT_INSTANCE = exports.STRIPE_ECOMMERCE_KEY = exports.STRIPE_ECOMMERCE_ACCOUNT_ID = exports.STATE = exports.SHIPPING_METHODS_STATES = exports.SHIPPING_METHODS_STATE = exports.SECTION_NAMES = exports.REQUIRES_SHIPPING = exports.REQUIRES_ACTION = exports.RENDER_TREE_EVENT = exports.QUICK_CHECKOUT_STATE_KEYPATH = exports.QUICK_CHECKOUT_STATES = exports.QUICK_CHECKOUT_STATE = exports.QUICK_CHECKOUT_AUTOMATION = exports.QUANTITY_ENABLED = exports.PREVIEW_ITEMS_KEYPATH = exports.PREVIEW_ITEMS_KEY = exports.PREVIEW_ITEMS_DEFAULT = exports.PAYPAL_ELEMENT_INSTANCE = exports.PAYPAL_BUTTON_ELEMENT_INSTANCE = exports.ORDER_TYPE = exports.ORDER_QUERY = exports.OPEN_STATE_KEYPATH = exports.OPEN_STATE_KEY = exports.OPEN_STATE_DEFAULT = exports.NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_FORM_CONTAINER = exports.NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_ERROR_STATE = exports.NODE_TYPE_COMMERCE_ORDER_CONFIRMATION_WRAPPER = exports.NODE_TYPE_COMMERCE_DOWNLOADS_BUTTON = exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER = exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_LIST = exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_EMPTY_STATE = exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_ZIP_FIELD = exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER = exports.NODE_TYPE_COMMERCE_CHECKOUT_PLACE_ORDER_BUTTON = exports.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER = exports.NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE = exports.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_INPUT = exports.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_FORM = exports.NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER = exports.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_ZIP_FIELD = exports.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER = exports.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX = exports.NODE_TYPE_COMMERCE_CHECKOUT_ADDITIONAL_INFO = exports.NODE_TYPE_COMMERCE_CART_WRAPPER = exports.NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_BUTTON = exports.NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_ACTIONS = exports.NODE_TYPE_COMMERCE_CART_OPEN_LINK = exports.NODE_TYPE_COMMERCE_CART_FORM = void 0;
+      var DATA_ATTR_COMMERCE_SKU_ID = "data-commerce-sku-id";
+      exports.DATA_ATTR_COMMERCE_SKU_ID = DATA_ATTR_COMMERCE_SKU_ID;
+      var DATA_ATTR_COMMERCE_PRODUCT_CURRENT_SKU_VALUES = "data-commerce-product-sku-values";
+      exports.DATA_ATTR_COMMERCE_PRODUCT_CURRENT_SKU_VALUES = DATA_ATTR_COMMERCE_PRODUCT_CURRENT_SKU_VALUES;
+      var DATA_ATTR_COMMERCE_OPTION_SET_ID = "data-commerce-option-set-id";
+      exports.DATA_ATTR_COMMERCE_OPTION_SET_ID = DATA_ATTR_COMMERCE_OPTION_SET_ID;
+      var DATA_ATTR_COMMERCE_PRODUCT_ID = "data-commerce-product-id";
+      exports.DATA_ATTR_COMMERCE_PRODUCT_ID = DATA_ATTR_COMMERCE_PRODUCT_ID;
+      var DATA_ATTR_NODE_TYPE = "data-node-type";
+      exports.DATA_ATTR_NODE_TYPE = DATA_ATTR_NODE_TYPE;
+      var DATA_ATTR_LOADING_TEXT = "data-loading-text";
+      exports.DATA_ATTR_LOADING_TEXT = DATA_ATTR_LOADING_TEXT;
+      var DATA_ATTR_OPEN_PRODUCT = "data-open-product";
+      exports.DATA_ATTR_OPEN_PRODUCT = DATA_ATTR_OPEN_PRODUCT;
+      var DATA_ATTR_OPEN_ON_HOVER = "data-open-on-hover";
+      exports.DATA_ATTR_OPEN_ON_HOVER = DATA_ATTR_OPEN_ON_HOVER;
+      var DATA_ATTR_COUNT_HIDE_RULE = "data-count-hide-rule";
+      exports.DATA_ATTR_COUNT_HIDE_RULE = DATA_ATTR_COUNT_HIDE_RULE;
+      var DATA_ATTR_PRESELECT_DEFAULT_VARIANT = "data-preselect-default-variant";
+      exports.DATA_ATTR_PRESELECT_DEFAULT_VARIANT = DATA_ATTR_PRESELECT_DEFAULT_VARIANT;
+      var DATA_ATTR_DEFAULT_TEXT = "data-default-text";
+      exports.DATA_ATTR_DEFAULT_TEXT = DATA_ATTR_DEFAULT_TEXT;
+      var DATA_ATTR_SUBSCRIPTION_TEXT = "data-subscription-text";
+      exports.DATA_ATTR_SUBSCRIPTION_TEXT = DATA_ATTR_SUBSCRIPTION_TEXT;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_FORM = "commerce-add-to-cart-form";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM = NODE_TYPE_COMMERCE_ADD_TO_CART_FORM;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR = "commerce-add-to-cart-error";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR = NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR;
+      var NODE_TYPE_COMMERCE_CART_ERROR = "commerce-cart-error";
+      exports.NODE_TYPE_COMMERCE_CART_ERROR = NODE_TYPE_COMMERCE_CART_ERROR;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT = "commerce-add-to-cart-option-select";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT = NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST = "commerce-add-to-cart-option-list";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST = NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP = "commerce-add-to-cart-pill-group";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP = NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_PILL = "commerce-add-to-cart-pill";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL = NODE_TYPE_COMMERCE_ADD_TO_CART_PILL;
+      var NODE_TYPE_COMMERCE_CART_WRAPPER = "commerce-cart-wrapper";
+      exports.NODE_TYPE_COMMERCE_CART_WRAPPER = NODE_TYPE_COMMERCE_CART_WRAPPER;
+      var NODE_TYPE_COMMERCE_CART_OPEN_LINK = "commerce-cart-open-link";
+      exports.NODE_TYPE_COMMERCE_CART_OPEN_LINK = NODE_TYPE_COMMERCE_CART_OPEN_LINK;
+      var NODE_TYPE_COMMERCE_CART_CLOSE_LINK = "commerce-cart-close-link";
+      exports.NODE_TYPE_COMMERCE_CART_CLOSE_LINK = NODE_TYPE_COMMERCE_CART_CLOSE_LINK;
+      var NODE_TYPE_COMMERCE_CART_CONTAINER_WRAPPER = "commerce-cart-container-wrapper";
+      exports.NODE_TYPE_COMMERCE_CART_CONTAINER_WRAPPER = NODE_TYPE_COMMERCE_CART_CONTAINER_WRAPPER;
+      var NODE_TYPE_COMMERCE_CART_CONTAINER = "commerce-cart-container";
+      exports.NODE_TYPE_COMMERCE_CART_CONTAINER = NODE_TYPE_COMMERCE_CART_CONTAINER;
+      var NODE_TYPE_COMMERCE_CART_CHECKOUT_BUTTON = "cart-checkout-button";
+      exports.NODE_TYPE_COMMERCE_CART_CHECKOUT_BUTTON = NODE_TYPE_COMMERCE_CART_CHECKOUT_BUTTON;
+      var NODE_TYPE_COMMERCE_CART_FORM = "commerce-cart-form";
+      exports.NODE_TYPE_COMMERCE_CART_FORM = NODE_TYPE_COMMERCE_CART_FORM;
+      var NODE_NAME_COMMERCE_ADD_TO_CART_QUANTITY_INPUT = "commerce-add-to-cart-quantity-input";
+      exports.NODE_NAME_COMMERCE_ADD_TO_CART_QUANTITY_INPUT = NODE_NAME_COMMERCE_ADD_TO_CART_QUANTITY_INPUT;
+      var NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER = "commerce-checkout-form-container";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER = NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER;
+      var NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER = "commerce-checkout-customer-info-wrapper";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER = NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER;
+      var NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER = "commerce-checkout-shipping-address-wrapper";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER = NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER;
+      var NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_ZIP_FIELD = "commerce-checkout-shipping-zip-field";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_ZIP_FIELD = NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_ZIP_FIELD;
+      var NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_ZIP_FIELD = "commerce-checkout-billing-zip-field";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_ZIP_FIELD = NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_ZIP_FIELD;
+      var NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER = "commerce-checkout-billing-address-wrapper";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER = NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER;
+      var NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER = "commerce-checkout-shipping-methods-wrapper";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER = NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER;
+      var NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_LIST = "commerce-checkout-shipping-methods-list";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_LIST = NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_LIST;
+      var NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_EMPTY_STATE = "commerce-checkout-shipping-methods-empty-state";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_EMPTY_STATE = NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_EMPTY_STATE;
+      var NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX = "commerce-checkout-billing-address-toggle-checkbox";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX = NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX;
+      var NODE_TYPE_COMMERCE_CHECKOUT_PLACE_ORDER_BUTTON = "commerce-checkout-place-order-button";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_PLACE_ORDER_BUTTON = NODE_TYPE_COMMERCE_CHECKOUT_PLACE_ORDER_BUTTON;
+      var NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE = "commerce-checkout-error-state";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE = NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE;
+      var NODE_TYPE_COMMERCE_ORDER_CONFIRMATION_WRAPPER = "commerce-order-confirmation-wrapper";
+      exports.NODE_TYPE_COMMERCE_ORDER_CONFIRMATION_WRAPPER = NODE_TYPE_COMMERCE_ORDER_CONFIRMATION_WRAPPER;
+      var NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_ACTIONS = "commerce-cart-quick-checkout-actions";
+      exports.NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_ACTIONS = NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_ACTIONS;
+      var NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_BUTTON = "commerce-cart-quick-checkout-button";
+      exports.NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_BUTTON = NODE_TYPE_COMMERCE_CART_QUICK_CHECKOUT_BUTTON;
+      var NODE_TYPE_COMMERCE_CART_APPLE_PAY_BUTTON = "commerce-cart-apple-pay-button";
+      exports.NODE_TYPE_COMMERCE_CART_APPLE_PAY_BUTTON = NODE_TYPE_COMMERCE_CART_APPLE_PAY_BUTTON;
+      var NODE_TYPE_COMMERCE_CHECKOUT_ADDITIONAL_INFO = "commerce-checkout-additional-info";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_ADDITIONAL_INFO = NODE_TYPE_COMMERCE_CHECKOUT_ADDITIONAL_INFO;
+      var NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_FORM_CONTAINER = "commerce-paypal-checkout-form-container";
+      exports.NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_FORM_CONTAINER = NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_FORM_CONTAINER;
+      var NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_ERROR_STATE = "commerce-checkout-error-state";
+      exports.NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_ERROR_STATE = NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_ERROR_STATE;
+      var NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_FORM = "commerce-checkout-discount-form";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_FORM = NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_FORM;
+      var NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_INPUT = "commerce-checkout-discount-input";
+      exports.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_INPUT = NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_INPUT;
+      var NODE_TYPE_COMMERCE_BUY_NOW_BUTTON = "commerce-buy-now-button";
+      exports.NODE_TYPE_COMMERCE_BUY_NOW_BUTTON = NODE_TYPE_COMMERCE_BUY_NOW_BUTTON;
+      var NODE_TYPE_COMMERCE_DOWNLOADS_BUTTON = "commerce-downloads-button";
+      exports.NODE_TYPE_COMMERCE_DOWNLOADS_BUTTON = NODE_TYPE_COMMERCE_DOWNLOADS_BUTTON;
+      var NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON = "commerce-add-to-cart-button";
+      exports.NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON = NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON;
+      var NODE_TYPE_ADD_TO_CART_ERROR = "commerce-add-to-cart-error";
+      exports.NODE_TYPE_ADD_TO_CART_ERROR = NODE_TYPE_ADD_TO_CART_ERROR;
+      var ADD_TO_CART_STATES = {
+        DEFAULT: "DEFAULT",
+        OUT_OF_STOCK: "OUT_OF_STOCK",
+        ERROR: "ERROR"
+      };
+      exports.ADD_TO_CART_STATES = ADD_TO_CART_STATES;
+      var CART_STATES = {
+        DEFAULT: "DEFAULT",
+        EMPTY: "EMPTY",
+        ERROR: "ERROR"
+      };
+      exports.CART_STATES = CART_STATES;
+      var CART_STATES_AUTOMATION = {
+        DEFAULT: "cart-default-button",
+        EMPTY: "cart-empty-button",
+        ERROR: "cart-error-button"
+      };
+      exports.CART_STATES_AUTOMATION = CART_STATES_AUTOMATION;
+      var CHECKOUT_STATES = {
+        DEFAULT: "DEFAULT",
+        ERROR: "ERROR"
+      };
+      exports.CHECKOUT_STATES = CHECKOUT_STATES;
+      var SHIPPING_METHODS_STATES = {
+        DEFAULT: "DEFAULT",
+        EMPTY: "EMPTY"
+      };
+      exports.SHIPPING_METHODS_STATES = SHIPPING_METHODS_STATES;
+      var CART_TYPE_DROPDOWN_ON_OPEN = {
+        CLICK: "CLICK",
+        HOVER: "HOVER"
+      };
+      exports.CART_TYPE_DROPDOWN_ON_OPEN = CART_TYPE_DROPDOWN_ON_OPEN;
+      var CART_TYPES = {
+        MODAL: "modal",
+        LEFT_SIDEBAR: "leftSidebar",
+        RIGHT_SIDEBAR: "rightSidebar",
+        LEFT_DROPDOWN: "leftDropdown",
+        RIGHT_DROPDOWN: "rightDropdown",
+        DROPDOWN: "dropdown"
+      };
+      exports.CART_TYPES = CART_TYPES;
+      var CART_COUNT_HIDE_RULES = {
+        ALWAYS: "always",
+        EMPTY: "empty"
+      };
+      exports.CART_COUNT_HIDE_RULES = CART_COUNT_HIDE_RULES;
+      var QUICK_CHECKOUT_STATES = {
+        NONE: "NONE",
+        PAY_NOW: "PAY_NOW",
+        APPLE_PAY: "APPLE_PAY"
+      };
+      exports.QUICK_CHECKOUT_STATES = QUICK_CHECKOUT_STATES;
+      var QUICK_CHECKOUT_AUTOMATION = {
+        PAY_NOW: "quick-checkout-default-button",
+        APPLE_PAY: "quick-checkout-apple-pay-button"
+      };
+      exports.QUICK_CHECKOUT_AUTOMATION = QUICK_CHECKOUT_AUTOMATION;
+      var PREVIEW_ITEMS_DEFAULT = 3;
+      exports.PREVIEW_ITEMS_DEFAULT = PREVIEW_ITEMS_DEFAULT;
+      var PREVIEW_ITEMS_KEY = "previewItems";
+      exports.PREVIEW_ITEMS_KEY = PREVIEW_ITEMS_KEY;
+      var PREVIEW_ITEMS_KEYPATH = ["data", "temp", PREVIEW_ITEMS_KEY];
+      exports.PREVIEW_ITEMS_KEYPATH = PREVIEW_ITEMS_KEYPATH;
+      var QUANTITY_ENABLED = "quantityEnabled";
+      exports.QUANTITY_ENABLED = QUANTITY_ENABLED;
+      var STATE = "state";
+      exports.STATE = STATE;
+      var CART_STATE = "state";
+      exports.CART_STATE = CART_STATE;
+      var QUICK_CHECKOUT_STATE = "state";
+      exports.QUICK_CHECKOUT_STATE = QUICK_CHECKOUT_STATE;
+      var QUICK_CHECKOUT_STATE_KEYPATH = ["data", "temp", QUICK_CHECKOUT_STATE];
+      exports.QUICK_CHECKOUT_STATE_KEYPATH = QUICK_CHECKOUT_STATE_KEYPATH;
+      var CHECKOUT_STATE = "state";
+      exports.CHECKOUT_STATE = CHECKOUT_STATE;
+      var SHIPPING_METHODS_STATE = "shippingMethodsState";
+      exports.SHIPPING_METHODS_STATE = SHIPPING_METHODS_STATE;
+      var OPEN_STATE_KEY = "isOpen";
+      exports.OPEN_STATE_KEY = OPEN_STATE_KEY;
+      var OPEN_STATE_KEYPATH = ["data", "temp", OPEN_STATE_KEY];
+      exports.OPEN_STATE_KEYPATH = OPEN_STATE_KEYPATH;
+      var OPEN_STATE_DEFAULT = false;
+      exports.OPEN_STATE_DEFAULT = OPEN_STATE_DEFAULT;
+      var BILLING_ADDRESS_TOGGLE_KEY = "isBillingAddressOpen";
+      exports.BILLING_ADDRESS_TOGGLE_KEY = BILLING_ADDRESS_TOGGLE_KEY;
+      var BILLING_ADDRESS_TOGGLE_KEYPATH = ["data", "temp", BILLING_ADDRESS_TOGGLE_KEY];
+      exports.BILLING_ADDRESS_TOGGLE_KEYPATH = BILLING_ADDRESS_TOGGLE_KEYPATH;
+      var BILLING_ADDRESS_TOGGLE_DEFAULT = true;
+      exports.BILLING_ADDRESS_TOGGLE_DEFAULT = BILLING_ADDRESS_TOGGLE_DEFAULT;
+      var HIDE_CART_WHEN_EMPTY_KEY = "hideCartWhenEmpty";
+      exports.HIDE_CART_WHEN_EMPTY_KEY = HIDE_CART_WHEN_EMPTY_KEY;
+      var HIDE_CART_WHEN_EMPTY_KEYPATH = ["data", "commerce", HIDE_CART_WHEN_EMPTY_KEY];
+      exports.HIDE_CART_WHEN_EMPTY_KEYPATH = HIDE_CART_WHEN_EMPTY_KEYPATH;
+      var HIDE_CART_WHEN_EMPTY_DEFAULT = false;
+      exports.HIDE_CART_WHEN_EMPTY_DEFAULT = HIDE_CART_WHEN_EMPTY_DEFAULT;
+      var HIDE_CART_COUNT_KEY = "hideCartCount";
+      exports.HIDE_CART_COUNT_KEY = HIDE_CART_COUNT_KEY;
+      var HIDE_CART_COUNT_DEFAULT = false;
+      exports.HIDE_CART_COUNT_DEFAULT = HIDE_CART_COUNT_DEFAULT;
+      var LOADING_TEXT = "loadingText";
+      exports.LOADING_TEXT = LOADING_TEXT;
+      var LOADING_TEXT_DEFAULT = "Adding to cart...";
+      exports.LOADING_TEXT_DEFAULT = LOADING_TEXT_DEFAULT;
+      var CART_CHECKOUT_BUTTON_TEXT_DEFAULT = "Continue to Checkout";
+      exports.CART_CHECKOUT_BUTTON_TEXT_DEFAULT = CART_CHECKOUT_BUTTON_TEXT_DEFAULT;
+      var CART_CHECKOUT_LOADING_TEXT_DEFAULT = "Hang Tight...";
+      exports.CART_CHECKOUT_LOADING_TEXT_DEFAULT = CART_CHECKOUT_LOADING_TEXT_DEFAULT;
+      var CHECKOUT_PLACE_ORDER_BUTTON_TEXT_DEFAULT = "Place Order";
+      exports.CHECKOUT_PLACE_ORDER_BUTTON_TEXT_DEFAULT = CHECKOUT_PLACE_ORDER_BUTTON_TEXT_DEFAULT;
+      var CHECKOUT_PLACE_ORDER_LOADING_TEXT_DEFAULT = "Placing Order...";
+      exports.CHECKOUT_PLACE_ORDER_LOADING_TEXT_DEFAULT = CHECKOUT_PLACE_ORDER_LOADING_TEXT_DEFAULT;
+      var CART_TYPE_KEY = "cartType";
+      exports.CART_TYPE_KEY = CART_TYPE_KEY;
+      var ALIGN_KEY = "align";
+      exports.ALIGN_KEY = ALIGN_KEY;
+      var ALIGN_DEFAULT = "rightDropdown";
+      exports.ALIGN_DEFAULT = ALIGN_DEFAULT;
+      var CART_TYPE_DROPDOWN_ON_OPEN_KEY = "openOn";
+      exports.CART_TYPE_DROPDOWN_ON_OPEN_KEY = CART_TYPE_DROPDOWN_ON_OPEN_KEY;
+      var CART_PRODUCT_ADDED_KEY = "openWhenProductAdded";
+      exports.CART_PRODUCT_ADDED_KEY = CART_PRODUCT_ADDED_KEY;
+      var CART_PRODUCT_ADDED_KEYPATH = ["data", "commerce", CART_PRODUCT_ADDED_KEY];
+      exports.CART_PRODUCT_ADDED_KEYPATH = CART_PRODUCT_ADDED_KEYPATH;
+      var CART_PRODUCT_ADDED_DEFAULT = true;
+      exports.CART_PRODUCT_ADDED_DEFAULT = CART_PRODUCT_ADDED_DEFAULT;
+      var COMMERCE_CART_PUBLISHED_SITE_ACTION_ATTR = "data-wf-cart-action";
+      exports.COMMERCE_CART_PUBLISHED_SITE_ACTION_ATTR = COMMERCE_CART_PUBLISHED_SITE_ACTION_ATTR;
+      var COMMERCE_CART_PUBLISHED_SITE_ACTIONS = {
+        UPDATE_ITEM_QUANTITY: "update-item-quantity",
+        REMOVE_ITEM: "remove-item"
+      };
+      exports.COMMERCE_CART_PUBLISHED_SITE_ACTIONS = COMMERCE_CART_PUBLISHED_SITE_ACTIONS;
+      var COMMERCE_CART_ITEM_ID_ATTR = "data-wf-item-id";
+      exports.COMMERCE_CART_ITEM_ID_ATTR = COMMERCE_CART_ITEM_ID_ATTR;
+      var COMMERCE_SKU_COLLECTION_SLUG = "sku";
+      exports.COMMERCE_SKU_COLLECTION_SLUG = COMMERCE_SKU_COLLECTION_SLUG;
+      var COMMERCE_SKU_FIELD_SLUG = "sku";
+      exports.COMMERCE_SKU_FIELD_SLUG = COMMERCE_SKU_FIELD_SLUG;
+      var COMMERCE_PRODUCT_COLLECTION_SLUG = "product";
+      exports.COMMERCE_PRODUCT_COLLECTION_SLUG = COMMERCE_PRODUCT_COLLECTION_SLUG;
+      var COMMERCE_PRODUCT_FIELD_SLUG = "product";
+      exports.COMMERCE_PRODUCT_FIELD_SLUG = COMMERCE_PRODUCT_FIELD_SLUG;
+      var COMMERCE_CATEGORY_COLLECTION_SLUG = "category";
+      exports.COMMERCE_CATEGORY_COLLECTION_SLUG = COMMERCE_CATEGORY_COLLECTION_SLUG;
+      var COMMERCE_PLUGIN_KEY = "ecommerce";
+      exports.COMMERCE_PLUGIN_KEY = COMMERCE_PLUGIN_KEY;
+      var DEFAULT_SKU_SLUG = "default-sku";
+      exports.DEFAULT_SKU_SLUG = DEFAULT_SKU_SLUG;
+      var WF_BINDING_DATA_KEY = "data-wf-bindings";
+      exports.WF_BINDING_DATA_KEY = WF_BINDING_DATA_KEY;
+      var WF_CONDITION_DATA_KEY = "data-wf-conditions";
+      exports.WF_CONDITION_DATA_KEY = WF_CONDITION_DATA_KEY;
+      var WF_COLLECTION_DATA_KEY = "data-wf-collection";
+      exports.WF_COLLECTION_DATA_KEY = WF_COLLECTION_DATA_KEY;
+      var WF_TEMPLATE_ID_DATA_KEY = "data-wf-template-id";
+      exports.WF_TEMPLATE_ID_DATA_KEY = WF_TEMPLATE_ID_DATA_KEY;
+      var WF_SKU_BINDING_DATA_KEY = "data-wf-sku-bindings";
+      exports.WF_SKU_BINDING_DATA_KEY = WF_SKU_BINDING_DATA_KEY;
+      var WF_SKU_CONDITION_DATA_KEY = "data-wf-sku-conditions";
+      exports.WF_SKU_CONDITION_DATA_KEY = WF_SKU_CONDITION_DATA_KEY;
+      var WF_TEMPLATE_TYPE = "text/x-wf-template";
+      exports.WF_TEMPLATE_TYPE = WF_TEMPLATE_TYPE;
+      var INFO_ERR = "INFO_ERROR";
+      var SHIPPING_ERR = "SHIPPING_ERROR";
+      var BILLING_ERR = "BILLING_ERROR";
+      var PAYMENT_ERR = "PAYMENT_ERROR";
+      var PRICING_ERR = "PRICING_ERROR";
+      var ORDER_MIN_ERR = "ORDER_MINIMUM_ERROR";
+      var ORDER_EXTRAS_ERR = "ORDER_EXTRAS_ERROR";
+      var PRODUCT_ERR = "PRODUCT_ERROR";
+      var INVALID_DISCOUNT_ERR = "INVALID_DISCOUNT_ERROR";
+      var EXPIRED_DISCOUNT_ERR = "EXPIRED_DISCOUNT_ERROR";
+      var USAGE_REACHED_DISCOUNT_ERR = "USAGE_REACHED_DISCOUNT_ERROR";
+      var REQUIREMENTS_NOT_MET_DISCOUNT_ERR = "REQUIREMENTS_NOT_MET_DISCOUNT_ERROR";
+      var COMMERCE_ERROR_CATEGORY = {
+        GENERAL: {
