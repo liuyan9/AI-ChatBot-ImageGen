@@ -32081,3 +32081,477 @@
         const config = _breakpointsConfig.LARGER_BREAKPOINTS_CONFIG[breakpointId];
         let prop;
         let value;
+        if ("minWidth" in config) {
+          prop = "min-width";
+          value = config.minWidth;
+        }
+        if ("maxWidth" in config) {
+          prop = "max-width";
+          value = config.maxWidth;
+        }
+        if (prop === void 0 || value === void 0) {
+          throw new Error('Bad breakpoint config, expected either "minWidth" or "maxWidth".');
+        }
+        return {
+          name: breakpointId,
+          query: `(${prop}: ${value}px)`
+        };
+      });
+      var StyleMapObserver = class {
+        constructor(element, options) {
+          (0, _defineProperty2.default)(this, "styles", void 0);
+          (0, _defineProperty2.default)(this, "observer", void 0);
+          (0, _defineProperty2.default)(this, "mediaQueries", []);
+          (0, _defineProperty2.default)(this, "options", {
+            onChange: () => {
+            }
+          });
+          (0, _defineProperty2.default)(this, "dispatch", () => {
+            this.options.onChange(this.getAppliedStyles());
+          });
+          (0, _defineProperty2.default)(this, "handleMutationObserver", (mutationList) => {
+            mutationList.forEach((mutation) => {
+              if (mutation.type === "attributes" && mutation.attributeName === STYLE_MAP_ATTR && mutation.target.hasAttribute(STYLE_MAP_ATTR)) {
+                const styleMapJSON = mutation.target.getAttribute(STYLE_MAP_ATTR);
+                if (styleMapJSON) {
+                  this.setStylesFromJSON(styleMapJSON);
+                  this.dispatch();
+                }
+              }
+            });
+          });
+          this.options = options;
+          if (element.hasAttribute(STYLE_MAP_ATTR)) {
+            const styleMapJSON = element.getAttribute(STYLE_MAP_ATTR);
+            if (styleMapJSON) {
+              this.setStylesFromJSON(styleMapJSON);
+              const doc = element.ownerDocument;
+              const win = doc.defaultView;
+              this.mediaQueries = ORDERED_MEDIA_QUERIES.map((mq) => (0, _extends2.default)({}, mq, {
+                listener: win.matchMedia(mq.query)
+              }));
+              this.observer = new win.MutationObserver(this.handleMutationObserver);
+              this.observer.observe(element, {
+                attributes: true
+              });
+              this.mediaQueries.forEach(({
+                listener
+              }) => {
+                listener.addListener(this.dispatch);
+              });
+              this.dispatch();
+            }
+          }
+        }
+        setStylesFromJSON(styleMapJSON) {
+          try {
+            this.styles = JSON.parse(styleMapJSON);
+          } catch (e) {
+            this.styles = {};
+          }
+        }
+        getAppliedStyles() {
+          if (!this.styles) {
+            return;
+          }
+          const styles = this.styles;
+          const appliedStyles = this.mediaQueries.reduce((stylesMap, {
+            listener,
+            name
+          }) => listener.matches ? (0, _merge.default)(stylesMap, styles[name]) : stylesMap, {});
+          return appliedStyles;
+        }
+        destroy() {
+          if (this.observer) {
+            this.observer.disconnect();
+          }
+          this.mediaQueries.forEach(({
+            listener
+          }) => {
+            listener.removeListener(this.dispatch);
+          });
+        }
+      };
+      exports.default = StyleMapObserver;
+      (0, _defineProperty2.default)(StyleMapObserver, "appliedStylesToStripeElementStyles", (appliedStylesMap) => {
+        if (!appliedStylesMap) {
+          return {};
+        }
+        const appliedStylesMapWithUpdatedColorValues = Object.keys(appliedStylesMap).reduce((updatedStyles, styleKey) => {
+          const colorVal = appliedStylesMap[styleKey].color;
+          const textShadowVal = appliedStylesMap[styleKey].textShadow && appliedStylesMap[styleKey].textShadow.split(/(?=hsla)/);
+          updatedStyles[styleKey] = appliedStylesMap[styleKey];
+          if (colorVal) {
+            updatedStyles[styleKey].color = (0, _tinycolor.default)(colorVal).toRgbString();
+          }
+          if (textShadowVal && textShadowVal.length > 1) {
+            updatedStyles[styleKey].textShadow = textShadowVal[0] + (0, _tinycolor.default)(textShadowVal[1]).toRgbString();
+          }
+          return updatedStyles;
+        }, {});
+        const styles = (0, _extends2.default)({}, appliedStylesMapWithUpdatedColorValues.noPseudo, {
+          ":hover": appliedStylesMapWithUpdatedColorValues.hover,
+          ":focus": appliedStylesMapWithUpdatedColorValues.focus,
+          "::placeholder": appliedStylesMapWithUpdatedColorValues.placeholder
+        });
+        return {
+          base: styles,
+          invalid: styles,
+          empty: styles,
+          complete: styles
+        };
+      });
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/debug.js
+  var require_debug = __commonJS({
+    "shared/render/plugins/Commerce/modules/debug.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = void 0;
+      var _default = {
+        log: (...args) => {
+          if (false) {
+            console.log(...args);
+          }
+        },
+        error: (...args) => {
+          if (false) {
+            console.log(...args);
+          }
+        }
+      };
+      exports.default = _default;
+    }
+  });
+
+  // node_modules/lodash/_baseSlice.js
+  var require_baseSlice = __commonJS({
+    "node_modules/lodash/_baseSlice.js"(exports, module) {
+      function baseSlice(array, start, end) {
+        var index = -1, length = array.length;
+        if (start < 0) {
+          start = -start > length ? 0 : length + start;
+        }
+        end = end > length ? length : end;
+        if (end < 0) {
+          end += length;
+        }
+        length = start > end ? 0 : end - start >>> 0;
+        start >>>= 0;
+        var result = Array(length);
+        while (++index < length) {
+          result[index] = array[index + start];
+        }
+        return result;
+      }
+      module.exports = baseSlice;
+    }
+  });
+
+  // node_modules/lodash/_castSlice.js
+  var require_castSlice = __commonJS({
+    "node_modules/lodash/_castSlice.js"(exports, module) {
+      var baseSlice = require_baseSlice();
+      function castSlice(array, start, end) {
+        var length = array.length;
+        end = end === void 0 ? length : end;
+        return !start && end >= length ? array : baseSlice(array, start, end);
+      }
+      module.exports = castSlice;
+    }
+  });
+
+  // node_modules/lodash/_asciiToArray.js
+  var require_asciiToArray = __commonJS({
+    "node_modules/lodash/_asciiToArray.js"(exports, module) {
+      function asciiToArray(string) {
+        return string.split("");
+      }
+      module.exports = asciiToArray;
+    }
+  });
+
+  // node_modules/lodash/_unicodeToArray.js
+  var require_unicodeToArray = __commonJS({
+    "node_modules/lodash/_unicodeToArray.js"(exports, module) {
+      var rsAstralRange = "\\ud800-\\udfff";
+      var rsComboMarksRange = "\\u0300-\\u036f";
+      var reComboHalfMarksRange = "\\ufe20-\\ufe2f";
+      var rsComboSymbolsRange = "\\u20d0-\\u20ff";
+      var rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange;
+      var rsVarRange = "\\ufe0e\\ufe0f";
+      var rsAstral = "[" + rsAstralRange + "]";
+      var rsCombo = "[" + rsComboRange + "]";
+      var rsFitz = "\\ud83c[\\udffb-\\udfff]";
+      var rsModifier = "(?:" + rsCombo + "|" + rsFitz + ")";
+      var rsNonAstral = "[^" + rsAstralRange + "]";
+      var rsRegional = "(?:\\ud83c[\\udde6-\\uddff]){2}";
+      var rsSurrPair = "[\\ud800-\\udbff][\\udc00-\\udfff]";
+      var rsZWJ = "\\u200d";
+      var reOptMod = rsModifier + "?";
+      var rsOptVar = "[" + rsVarRange + "]?";
+      var rsOptJoin = "(?:" + rsZWJ + "(?:" + [rsNonAstral, rsRegional, rsSurrPair].join("|") + ")" + rsOptVar + reOptMod + ")*";
+      var rsSeq = rsOptVar + reOptMod + rsOptJoin;
+      var rsSymbol = "(?:" + [rsNonAstral + rsCombo + "?", rsCombo, rsRegional, rsSurrPair, rsAstral].join("|") + ")";
+      var reUnicode = RegExp(rsFitz + "(?=" + rsFitz + ")|" + rsSymbol + rsSeq, "g");
+      function unicodeToArray(string) {
+        return string.match(reUnicode) || [];
+      }
+      module.exports = unicodeToArray;
+    }
+  });
+
+  // node_modules/lodash/_stringToArray.js
+  var require_stringToArray = __commonJS({
+    "node_modules/lodash/_stringToArray.js"(exports, module) {
+      var asciiToArray = require_asciiToArray();
+      var hasUnicode = require_hasUnicode();
+      var unicodeToArray = require_unicodeToArray();
+      function stringToArray(string) {
+        return hasUnicode(string) ? unicodeToArray(string) : asciiToArray(string);
+      }
+      module.exports = stringToArray;
+    }
+  });
+
+  // node_modules/lodash/_createCaseFirst.js
+  var require_createCaseFirst = __commonJS({
+    "node_modules/lodash/_createCaseFirst.js"(exports, module) {
+      var castSlice = require_castSlice();
+      var hasUnicode = require_hasUnicode();
+      var stringToArray = require_stringToArray();
+      var toString = require_toString();
+      function createCaseFirst(methodName) {
+        return function(string) {
+          string = toString(string);
+          var strSymbols = hasUnicode(string) ? stringToArray(string) : void 0;
+          var chr = strSymbols ? strSymbols[0] : string.charAt(0);
+          var trailing = strSymbols ? castSlice(strSymbols, 1).join("") : string.slice(1);
+          return chr[methodName]() + trailing;
+        };
+      }
+      module.exports = createCaseFirst;
+    }
+  });
+
+  // node_modules/lodash/upperFirst.js
+  var require_upperFirst = __commonJS({
+    "node_modules/lodash/upperFirst.js"(exports, module) {
+      var createCaseFirst = require_createCaseFirst();
+      var upperFirst = createCaseFirst("toUpperCase");
+      module.exports = upperFirst;
+    }
+  });
+
+  // node_modules/lodash/capitalize.js
+  var require_capitalize = __commonJS({
+    "node_modules/lodash/capitalize.js"(exports, module) {
+      var toString = require_toString();
+      var upperFirst = require_upperFirst();
+      function capitalize(string) {
+        return upperFirst(toString(string).toLowerCase());
+      }
+      module.exports = capitalize;
+    }
+  });
+
+  // node_modules/lodash/_basePropertyOf.js
+  var require_basePropertyOf = __commonJS({
+    "node_modules/lodash/_basePropertyOf.js"(exports, module) {
+      function basePropertyOf(object) {
+        return function(key) {
+          return object == null ? void 0 : object[key];
+        };
+      }
+      module.exports = basePropertyOf;
+    }
+  });
+
+  // node_modules/lodash/_deburrLetter.js
+  var require_deburrLetter = __commonJS({
+    "node_modules/lodash/_deburrLetter.js"(exports, module) {
+      var basePropertyOf = require_basePropertyOf();
+      var deburredLetters = {
+        // Latin-1 Supplement block.
+        "\xC0": "A",
+        "\xC1": "A",
+        "\xC2": "A",
+        "\xC3": "A",
+        "\xC4": "A",
+        "\xC5": "A",
+        "\xE0": "a",
+        "\xE1": "a",
+        "\xE2": "a",
+        "\xE3": "a",
+        "\xE4": "a",
+        "\xE5": "a",
+        "\xC7": "C",
+        "\xE7": "c",
+        "\xD0": "D",
+        "\xF0": "d",
+        "\xC8": "E",
+        "\xC9": "E",
+        "\xCA": "E",
+        "\xCB": "E",
+        "\xE8": "e",
+        "\xE9": "e",
+        "\xEA": "e",
+        "\xEB": "e",
+        "\xCC": "I",
+        "\xCD": "I",
+        "\xCE": "I",
+        "\xCF": "I",
+        "\xEC": "i",
+        "\xED": "i",
+        "\xEE": "i",
+        "\xEF": "i",
+        "\xD1": "N",
+        "\xF1": "n",
+        "\xD2": "O",
+        "\xD3": "O",
+        "\xD4": "O",
+        "\xD5": "O",
+        "\xD6": "O",
+        "\xD8": "O",
+        "\xF2": "o",
+        "\xF3": "o",
+        "\xF4": "o",
+        "\xF5": "o",
+        "\xF6": "o",
+        "\xF8": "o",
+        "\xD9": "U",
+        "\xDA": "U",
+        "\xDB": "U",
+        "\xDC": "U",
+        "\xF9": "u",
+        "\xFA": "u",
+        "\xFB": "u",
+        "\xFC": "u",
+        "\xDD": "Y",
+        "\xFD": "y",
+        "\xFF": "y",
+        "\xC6": "Ae",
+        "\xE6": "ae",
+        "\xDE": "Th",
+        "\xFE": "th",
+        "\xDF": "ss",
+        // Latin Extended-A block.
+        "\u0100": "A",
+        "\u0102": "A",
+        "\u0104": "A",
+        "\u0101": "a",
+        "\u0103": "a",
+        "\u0105": "a",
+        "\u0106": "C",
+        "\u0108": "C",
+        "\u010A": "C",
+        "\u010C": "C",
+        "\u0107": "c",
+        "\u0109": "c",
+        "\u010B": "c",
+        "\u010D": "c",
+        "\u010E": "D",
+        "\u0110": "D",
+        "\u010F": "d",
+        "\u0111": "d",
+        "\u0112": "E",
+        "\u0114": "E",
+        "\u0116": "E",
+        "\u0118": "E",
+        "\u011A": "E",
+        "\u0113": "e",
+        "\u0115": "e",
+        "\u0117": "e",
+        "\u0119": "e",
+        "\u011B": "e",
+        "\u011C": "G",
+        "\u011E": "G",
+        "\u0120": "G",
+        "\u0122": "G",
+        "\u011D": "g",
+        "\u011F": "g",
+        "\u0121": "g",
+        "\u0123": "g",
+        "\u0124": "H",
+        "\u0126": "H",
+        "\u0125": "h",
+        "\u0127": "h",
+        "\u0128": "I",
+        "\u012A": "I",
+        "\u012C": "I",
+        "\u012E": "I",
+        "\u0130": "I",
+        "\u0129": "i",
+        "\u012B": "i",
+        "\u012D": "i",
+        "\u012F": "i",
+        "\u0131": "i",
+        "\u0134": "J",
+        "\u0135": "j",
+        "\u0136": "K",
+        "\u0137": "k",
+        "\u0138": "k",
+        "\u0139": "L",
+        "\u013B": "L",
+        "\u013D": "L",
+        "\u013F": "L",
+        "\u0141": "L",
+        "\u013A": "l",
+        "\u013C": "l",
+        "\u013E": "l",
+        "\u0140": "l",
+        "\u0142": "l",
+        "\u0143": "N",
+        "\u0145": "N",
+        "\u0147": "N",
+        "\u014A": "N",
+        "\u0144": "n",
+        "\u0146": "n",
+        "\u0148": "n",
+        "\u014B": "n",
+        "\u014C": "O",
+        "\u014E": "O",
+        "\u0150": "O",
+        "\u014D": "o",
+        "\u014F": "o",
+        "\u0151": "o",
+        "\u0154": "R",
+        "\u0156": "R",
+        "\u0158": "R",
+        "\u0155": "r",
+        "\u0157": "r",
+        "\u0159": "r",
+        "\u015A": "S",
+        "\u015C": "S",
+        "\u015E": "S",
+        "\u0160": "S",
+        "\u015B": "s",
+        "\u015D": "s",
+        "\u015F": "s",
+        "\u0161": "s",
+        "\u0162": "T",
+        "\u0164": "T",
+        "\u0166": "T",
+        "\u0163": "t",
+        "\u0165": "t",
+        "\u0167": "t",
+        "\u0168": "U",
+        "\u016A": "U",
+        "\u016C": "U",
+        "\u016E": "U",
+        "\u0170": "U",
+        "\u0172": "U",
+        "\u0169": "u",
+        "\u016B": "u",
+        "\u016D": "u",
+        "\u016F": "u",
+        "\u0171": "u",
+        "\u0173": "u",
+        "\u0174": "W",
+        "\u0175": "w",
+        "\u0176": "Y",
+        "\u0177": "y",
