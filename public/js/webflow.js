@@ -33014,3 +33014,478 @@
       var REQUIREMENTS_NOT_MET_DISCOUNT_ERR = "REQUIREMENTS_NOT_MET_DISCOUNT_ERROR";
       var COMMERCE_ERROR_CATEGORY = {
         GENERAL: {
+          id: "GENERAL",
+          label: "General Errors"
+        },
+        PRODUCT: {
+          id: "PRODUCT",
+          label: "Product Errors"
+        },
+        BILLING: {
+          id: "BILLING",
+          label: "Billing Errors"
+        },
+        DISCOUNT: {
+          id: "DISCOUNT",
+          label: "Discount Errors"
+        },
+        SUBSCRIPTION: {
+          id: "SUBSCRIPTION",
+          label: "Subscription Errors"
+        }
+      };
+      exports.COMMERCE_ERROR_CATEGORY = COMMERCE_ERROR_CATEGORY;
+      var CHECKOUT_ERRORS = {
+        INFO: {
+          id: INFO_ERR,
+          name: "General customer info error",
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          copy: "There was an error processing your customer info. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "commerce", INFO_ERR]
+        },
+        SHIPPING: {
+          id: SHIPPING_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Shipping not available",
+          copy: "Sorry. We can\u2019t ship your order to the address provided.",
+          path: ["data", "commerce", SHIPPING_ERR]
+        },
+        EXTRAS: {
+          id: ORDER_EXTRAS_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Merchant setting changed",
+          copy: "A merchant setting has changed that impacts your cart. Please refresh and try again.",
+          path: ["data", "commerce", ORDER_EXTRAS_ERR],
+          requiresRefresh: true
+        },
+        PRICING: {
+          id: PRICING_ERR,
+          category: COMMERCE_ERROR_CATEGORY.PRODUCT,
+          name: "Product price changed",
+          copy: "The prices of one or more items in your cart have changed. Please refresh this page and try again.",
+          path: ["data", "commerce", PRICING_ERR],
+          requiresRefresh: true
+        },
+        PRODUCT: {
+          id: PRODUCT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.PRODUCT,
+          name: "Product removed",
+          copy: "One or more of the products in your cart have been removed. Please refresh the page and try again.",
+          path: ["data", "commerce", PRODUCT_ERR],
+          requiresRefresh: true
+        },
+        PAYMENT: {
+          id: PAYMENT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.BILLING,
+          name: "General payment error",
+          copy: "There was an error processing your payment. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "commerce", PAYMENT_ERR]
+        },
+        BILLING: {
+          id: BILLING_ERR,
+          category: COMMERCE_ERROR_CATEGORY.BILLING,
+          name: "Card declined",
+          copy: "Your payment could not be completed with the payment information provided. Please make sure that your card and billing address information is correct, or try a different payment card, to complete this order. Contact us if you continue to have problems.",
+          path: ["data", "commerce", BILLING_ERR]
+        },
+        MINIMUM: {
+          id: ORDER_MIN_ERR,
+          category: COMMERCE_ERROR_CATEGORY.BILLING,
+          name: "Order minimum not met",
+          copy: "The order minimum was not met. Add more items to your cart to continue.",
+          path: ["data", "commerce", ORDER_MIN_ERR],
+          note: {
+            copy: "You can customize this message with the exact minimum based on your Stripe account's settlement currency.",
+            cta: {
+              copy: "Go to Stripe docs",
+              link: "https://stripe.com/docs/currencies#minimum-and-maximum-charge-amounts"
+            }
+          }
+        },
+        INVALID_DISCOUNT: {
+          id: INVALID_DISCOUNT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.DISCOUNT,
+          name: "Invalid discount error",
+          copy: "This discount is invalid.",
+          path: ["data", "commerce", INVALID_DISCOUNT_ERR]
+        },
+        EXPIRED_DISCOUNT: {
+          id: EXPIRED_DISCOUNT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.DISCOUNT,
+          name: "Discount expired",
+          copy: "This discount is no longer available.",
+          path: ["data", "commerce", EXPIRED_DISCOUNT_ERR]
+        },
+        USAGE_REACHED_DISCOUNT: {
+          id: USAGE_REACHED_DISCOUNT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.DISCOUNT,
+          name: "Discount usage limit reached",
+          copy: "This discount is no longer available.",
+          path: ["data", "commerce", USAGE_REACHED_DISCOUNT_ERR]
+        },
+        REQUIREMENTS_NOT_MET_DISCOUNT: {
+          id: REQUIREMENTS_NOT_MET_DISCOUNT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.DISCOUNT,
+          name: "Discount requirements not met",
+          copy: "Your order does not meet the requirements for this discount.",
+          path: ["data", "commerce", REQUIREMENTS_NOT_MET_DISCOUNT_ERR]
+        }
+      };
+      exports.CHECKOUT_ERRORS = CHECKOUT_ERRORS;
+      var QUANTITY_ERR = "QUANTITY_ERROR";
+      var CHECKOUT_ERR = "CHECKOUT_ERROR";
+      var GENERAL_ERR = "GENERAL_ERROR";
+      var CART_ORDER_MIN_ERR = "CART_ORDER_MIN_ERROR";
+      var SUBSCRIPTION_ERR = "SUBSCRIPTION_ERR";
+      var CART_ERRORS = {
+        QUANTITY: {
+          id: QUANTITY_ERR,
+          name: "Quantity not available",
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          copy: "Product is not available in this quantity.",
+          path: ["data", "commerce", QUANTITY_ERR]
+        },
+        GENERAL: {
+          id: GENERAL_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "General error",
+          copy: "Something went wrong when adding this item to the cart.",
+          path: ["data", "commerce", GENERAL_ERR]
+        },
+        CHECKOUT: {
+          id: CHECKOUT_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Checkout disabled",
+          copy: "Checkout is disabled on this site.",
+          path: ["data", "commerce", CHECKOUT_ERR]
+        },
+        CART_ORDER_MIN: {
+          id: CART_ORDER_MIN_ERR,
+          category: COMMERCE_ERROR_CATEGORY.BILLING,
+          name: "Order minimum not met",
+          copy: "The order minimum was not met. Add more items to your cart to continue.",
+          path: ["data", "commerce", CART_ORDER_MIN_ERR]
+        },
+        SUBSCRIPTION_ERROR: {
+          id: SUBSCRIPTION_ERR,
+          category: COMMERCE_ERROR_CATEGORY.SUBSCRIPTION,
+          name: "Subscription not verified",
+          copy: "Before you purchase, please use your email invite to verify your address so we can send order updates.",
+          path: ["data", "commerce", SUBSCRIPTION_ERR]
+        }
+      };
+      exports.CART_ERRORS = CART_ERRORS;
+      var ADD_TO_CART_QUANTITY_ERR = "ADD_TO_CART_QUANTITY_ERROR";
+      var ADD_TO_CART_GENERAL_ERR = "ADD_TO_CART_GENERAL_ERROR";
+      var ADD_TO_CART_MIXED_ERR = "ADD_TO_CART_MIXED_ERROR";
+      var ADD_TO_CART_ERRORS = {
+        QUANTITY: {
+          id: ADD_TO_CART_QUANTITY_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Quantity not available",
+          copy: "Product is not available in this quantity.",
+          path: ["data", "commerce", ADD_TO_CART_QUANTITY_ERR]
+        },
+        GENERAL: {
+          id: ADD_TO_CART_GENERAL_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Add to Cart error",
+          copy: "Something went wrong when adding this item to the cart.",
+          path: ["data", "commerce", ADD_TO_CART_GENERAL_ERR]
+        },
+        MIXED_CART: {
+          id: ADD_TO_CART_MIXED_ERR,
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Add to mixed Cart error",
+          copy: "You can\u2019t purchase another product with a subscription."
+        },
+        BUY_NOW: {
+          id: "BUY_NOW_ERROR",
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Buy now error",
+          copy: "Something went wrong when trying to purchase this item."
+        },
+        CHECKOUT_DISABLED: {
+          id: "CHECKOUT_DISABLED_ERROR",
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Checkout disabled",
+          copy: "Checkout is disabled on this site."
+        },
+        SELECT_ALL_OPTIONS: {
+          id: "SELECT_ALL_OPTIONS",
+          category: COMMERCE_ERROR_CATEGORY.GENERAL,
+          name: "Option selection required",
+          copy: "Please select an option in each set.",
+          path: ["data", "commerce", "SELECT_ALL_OPTIONS"]
+        }
+      };
+      exports.ADD_TO_CART_ERRORS = ADD_TO_CART_ERRORS;
+      var DATA_ATTR_ANIMATION_EASING = "data-wf-cart-easing";
+      exports.DATA_ATTR_ANIMATION_EASING = DATA_ATTR_ANIMATION_EASING;
+      var ANIMATION_EASING_DEFAULT = "ease-out-quad";
+      exports.ANIMATION_EASING_DEFAULT = ANIMATION_EASING_DEFAULT;
+      var ANIMATION_EASING_KEY = "easingType";
+      exports.ANIMATION_EASING_KEY = ANIMATION_EASING_KEY;
+      var ANIMATION_EASING_KEYPATH = ["data", "commerce", ANIMATION_EASING_KEY];
+      exports.ANIMATION_EASING_KEYPATH = ANIMATION_EASING_KEYPATH;
+      var DATA_ATTR_ANIMATION_DURATION = "data-wf-cart-duration";
+      exports.DATA_ATTR_ANIMATION_DURATION = DATA_ATTR_ANIMATION_DURATION;
+      var ANIMATION_DURATION_DEFAULT = 300;
+      exports.ANIMATION_DURATION_DEFAULT = ANIMATION_DURATION_DEFAULT;
+      var ANIMATION_DURATION_KEY = "duration";
+      exports.ANIMATION_DURATION_KEY = ANIMATION_DURATION_KEY;
+      var ANIMATION_DURATION_KEYPATH = ["data", "commerce", ANIMATION_DURATION_KEY];
+      exports.ANIMATION_DURATION_KEYPATH = ANIMATION_DURATION_KEYPATH;
+      var DATA_ATTR_PUBLISHABLE_KEY = "data-publishable-key";
+      exports.DATA_ATTR_PUBLISHABLE_KEY = DATA_ATTR_PUBLISHABLE_KEY;
+      var EDITABLE_STYLE_NAMES = ["backgroundColor", "backgroundSize", "backgroundPosition", "backgroundImage", "backgroundRepeat", "border", "borderRadius", "boxShadow", "clear", "color", "cursor", "direction", "display", "filter", "float", "fontFamily", "fontSize", "fontStyle", "fontWeight", "height", "lineHeight", "letterSpacing", "listStyleType", "marginBottom", "marginLeft", "marginRight", "marginTop", "maxHeight", "minHeight", "maxWidth", "minWidth", "mixBlendMode", "opacity", "overflow", "outlineColor", "outlineOffset", "outlineStyle", "outlineWidth", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "position", "textAlign", "textColumns", "textDecoration", "textIndent", "textTransform", "textShadow", "transform", "transition", "whiteSpace", "width"];
+      exports.EDITABLE_STYLE_NAMES = EDITABLE_STYLE_NAMES;
+      var symbolMap = {
+        aed: "\u062F.\u0625",
+        afn: "\u060B",
+        all: "L",
+        amd: "\u058F",
+        ang: "\u0192",
+        aoa: "Kz",
+        ars: "$",
+        aud: "$",
+        awg: "\u0192",
+        azn: "\u20BC",
+        bam: "KM",
+        bbd: "$",
+        bdt: "\u09F3",
+        bgn: "\u043B\u0432",
+        bhd: ".\u062F.\u0628",
+        bif: "FBu",
+        bmd: "$",
+        bnd: "$",
+        bob: "$b",
+        brl: "R$",
+        bsd: "$",
+        btc: "\u0E3F",
+        btn: "Nu.",
+        bwp: "P",
+        byr: "Br",
+        byn: "Br",
+        bzd: "BZ$",
+        cad: "$",
+        cdf: "FC",
+        chf: "CHF",
+        clp: "$",
+        cny: "\xA5",
+        cop: "$",
+        crc: "\u20A1",
+        cuc: "$",
+        cup: "\u20B1",
+        cve: "$",
+        czk: "K\u010D",
+        djf: "Fdj",
+        dkk: "kr",
+        dop: "RD$",
+        dzd: "\u062F\u062C",
+        eek: "kr",
+        egp: "\xA3",
+        ern: "Nfk",
+        etb: "Br",
+        eth: "\u039E",
+        eur: "\u20AC",
+        fjd: "$",
+        fkp: "\xA3",
+        gbp: "\xA3",
+        gel: "\u20BE",
+        ggp: "\xA3",
+        ghc: "\u20B5",
+        ghs: "GH\u20B5",
+        gip: "\xA3",
+        gmd: "D",
+        gnf: "FG",
+        gtq: "Q",
+        gyd: "$",
+        hkd: "$",
+        hnl: "L",
+        hrk: "kn",
+        htg: "G",
+        huf: "Ft",
+        idr: "Rp",
+        ils: "\u20AA",
+        imp: "\xA3",
+        inr: "\u20B9",
+        iqd: "\u0639.\u062F",
+        irr: "\uFDFC",
+        isk: "kr",
+        jep: "\xA3",
+        jmd: "J$",
+        jod: "JD",
+        jpy: "\xA5",
+        kes: "KSh",
+        kgs: "\u043B\u0432",
+        khr: "\u17DB",
+        kmf: "CF",
+        kpw: "\u20A9",
+        krw: "\u20A9",
+        kwd: "KD",
+        kyd: "$",
+        kzt: "\u043B\u0432",
+        lak: "\u20AD",
+        lbp: "\xA3",
+        lkr: "\u20A8",
+        lrd: "$",
+        lsl: "M",
+        ltc: "\u0141",
+        ltl: "Lt",
+        lvl: "Ls",
+        lyd: "LD",
+        mad: "MAD",
+        mdl: "lei",
+        mga: "Ar",
+        mkd: "\u0434\u0435\u043D",
+        mmk: "K",
+        mnt: "\u20AE",
+        mop: "MOP$",
+        mro: "UM",
+        mru: "UM",
+        mur: "\u20A8",
+        mvr: "Rf",
+        mwk: "MK",
+        mxn: "$",
+        myr: "RM",
+        mzn: "MT",
+        nad: "$",
+        ngn: "\u20A6",
+        nio: "C$",
+        nok: "kr",
+        npr: "\u20A8",
+        nzd: "$",
+        omr: "\uFDFC",
+        pab: "B/.",
+        pen: "S/.",
+        pgk: "K",
+        php: "\u20B1",
+        pkr: "\u20A8",
+        pln: "z\u0142",
+        pyg: "Gs",
+        qar: "\uFDFC",
+        rmb: "\uFFE5",
+        ron: "lei",
+        rsd: "\u0414\u0438\u043D.",
+        rub: "\u20BD",
+        rwf: "R\u20A3",
+        sar: "\uFDFC",
+        sbd: "$",
+        scr: "\u20A8",
+        sdg: "\u062C.\u0633.",
+        sek: "kr",
+        sgd: "$",
+        shp: "\xA3",
+        sll: "Le",
+        sos: "S",
+        srd: "$",
+        ssp: "\xA3",
+        std: "Db",
+        stn: "Db",
+        svc: "$",
+        syp: "\xA3",
+        szl: "E",
+        thb: "\u0E3F",
+        tjs: "SM",
+        tmt: "T",
+        tnd: "\u062F.\u062A",
+        top: "T$",
+        trl: "\u20A4",
+        try: "\u20BA",
+        ttd: "TT$",
+        tvd: "$",
+        twd: "NT$",
+        tzs: "TSh",
+        uah: "\u20B4",
+        ugx: "USh",
+        usd: "$",
+        uyu: "$U",
+        uzs: "\u043B\u0432",
+        vef: "Bs",
+        vnd: "\u20AB",
+        vuv: "VT",
+        wst: "WS$",
+        xaf: "FCFA",
+        xbt: "\u0243",
+        xcd: "$",
+        xof: "CFA",
+        xpf: "\u20A3",
+        yer: "\uFDFC",
+        zar: "R",
+        zwd: "Z$"
+      };
+      exports.symbolMap = symbolMap;
+      var CHECKOUT_BINDING_ROOT_QUERY_PATH = ["database", "commerceOrder"];
+      exports.CHECKOUT_BINDING_ROOT_QUERY_PATH = CHECKOUT_BINDING_ROOT_QUERY_PATH;
+      var ORDER_TYPE = {
+        REQUIRE_SHIPPING: "shipping",
+        NO_SHIPPING: "noShipping"
+      };
+      exports.ORDER_TYPE = ORDER_TYPE;
+      var RENDER_TREE_EVENT = "wf-render-tree";
+      exports.RENDER_TREE_EVENT = RENDER_TREE_EVENT;
+      var NEEDS_REFRESH = "data-wf-needs-refresh";
+      exports.NEEDS_REFRESH = NEEDS_REFRESH;
+      var REQUIRES_SHIPPING = "data-wf-order-requires-shipping";
+      exports.REQUIRES_SHIPPING = REQUIRES_SHIPPING;
+      var STRIPE_ELEMENT_INSTANCE = "data-wf-stripe-element-instance";
+      exports.STRIPE_ELEMENT_INSTANCE = STRIPE_ELEMENT_INSTANCE;
+      var STRIPE_ELEMENT_TYPE = "data-wf-stripe-element-type";
+      exports.STRIPE_ELEMENT_TYPE = STRIPE_ELEMENT_TYPE;
+      var STRIPE_ELEMENT_STYLE = "data-wf-stripe-style";
+      exports.STRIPE_ELEMENT_STYLE = STRIPE_ELEMENT_STYLE;
+      var ADD_TO_CART_LOADING = "data-wf-atc-loading";
+      exports.ADD_TO_CART_LOADING = ADD_TO_CART_LOADING;
+      var CHANGE_CART_EVENT = "wf-change-cart-state";
+      exports.CHANGE_CART_EVENT = CHANGE_CART_EVENT;
+      var ADD_TO_CART_ERROR_MESSAGE = ".w-add-to-cart-error-msg";
+      exports.ADD_TO_CART_ERROR_MESSAGE = ADD_TO_CART_ERROR_MESSAGE;
+      var getATCErrorMessageForType = (errorType) => `data-w-add-to-cart-${errorType}-error`;
+      exports.getATCErrorMessageForType = getATCErrorMessageForType;
+      var CHECKOUT_DISABLED_ERROR_MESSAGE = "data-w-add-to-cart-checkout-disabled-error";
+      exports.CHECKOUT_DISABLED_ERROR_MESSAGE = CHECKOUT_DISABLED_ERROR_MESSAGE;
+      var CHECKOUT_QUERY = "data-wf-checkout-query";
+      exports.CHECKOUT_QUERY = CHECKOUT_QUERY;
+      var getCheckoutErrorMessageForType = (errorType) => `data-w-${errorType}-error`;
+      exports.getCheckoutErrorMessageForType = getCheckoutErrorMessageForType;
+      var REQUIRES_ACTION = "requires_action";
+      exports.REQUIRES_ACTION = REQUIRES_ACTION;
+      var CART_GENERAL_ERROR_MESSAGE = "data-w-cart-general-error";
+      exports.CART_GENERAL_ERROR_MESSAGE = CART_GENERAL_ERROR_MESSAGE;
+      var CART_CHECKOUT_ERROR_MESSAGE = "data-w-cart-checkout-error";
+      exports.CART_CHECKOUT_ERROR_MESSAGE = CART_CHECKOUT_ERROR_MESSAGE;
+      var CART_CHECKOUT_ERROR_MESSAGE_SELECTOR = ".w-checkout-error-msg";
+      exports.CART_CHECKOUT_ERROR_MESSAGE_SELECTOR = CART_CHECKOUT_ERROR_MESSAGE_SELECTOR;
+      var CART_ERROR_MESSAGE = "cart-error-msg";
+      exports.CART_ERROR_MESSAGE = CART_ERROR_MESSAGE;
+      var CART_ERROR_MESSAGE_SELECTOR = `.w-${CART_ERROR_MESSAGE}`;
+      exports.CART_ERROR_MESSAGE_SELECTOR = CART_ERROR_MESSAGE_SELECTOR;
+      var CART_OPEN = "data-cart-open";
+      exports.CART_OPEN = CART_OPEN;
+      var CART_TYPE = "data-wf-cart-type";
+      exports.CART_TYPE = CART_TYPE;
+      var CART_QUERY = "data-wf-cart-query";
+      exports.CART_QUERY = CART_QUERY;
+      var PAYPAL_ELEMENT_INSTANCE = "data-wf-paypal-element";
+      exports.PAYPAL_ELEMENT_INSTANCE = PAYPAL_ELEMENT_INSTANCE;
+      var PAYPAL_BUTTON_ELEMENT_INSTANCE = "data-wf-paypal-button";
+      exports.PAYPAL_BUTTON_ELEMENT_INSTANCE = PAYPAL_BUTTON_ELEMENT_INSTANCE;
+      var getCartErrorMessageForType = (errorType) => `data-w-cart-${errorType}-error`;
+      exports.getCartErrorMessageForType = getCartErrorMessageForType;
+      var ORDER_QUERY = "data-wf-order-query";
+      exports.ORDER_QUERY = ORDER_QUERY;
+      var STRIPE_ECOMMERCE_KEY = "data-wf-ecomm-key";
+      exports.STRIPE_ECOMMERCE_KEY = STRIPE_ECOMMERCE_KEY;
+      var STRIPE_ECOMMERCE_ACCOUNT_ID = "data-wf-ecomm-acct-id";
+      exports.STRIPE_ECOMMERCE_ACCOUNT_ID = STRIPE_ECOMMERCE_ACCOUNT_ID;
+      var EASINGS = {
+        ease: "Ease",
+        "ease-in": "Ease In",
+        "ease-out": "Ease Out",
+        "ease-in-out": "Ease In Out",
+        linear: "Linear",
+        "ease-in-quad": "Ease In Quad",
+        "ease-in-cubic": "Ease In Cubic",
+        "ease-in-quart": "Ease In Quart",
+        "ease-in-quint": "Ease In Quint",
