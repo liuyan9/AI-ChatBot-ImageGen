@@ -33489,3 +33489,464 @@
         "ease-in-cubic": "Ease In Cubic",
         "ease-in-quart": "Ease In Quart",
         "ease-in-quint": "Ease In Quint",
+        "ease-in-sine": "Ease In Sine",
+        "ease-in-expo": "Ease In Expo",
+        "ease-in-circ": "Ease In Circ",
+        "ease-in-back": "Ease In Back",
+        "ease-out-quad": "Ease Out Quad",
+        "ease-out-cubic": "Ease Out Cubic",
+        "ease-out-quart": "Ease Out Quart",
+        "ease-out-quint": "Ease Out Quint",
+        "ease-out-sine": "Ease Out Sine",
+        "ease-out-expo": "Ease Out Expo",
+        "ease-out-circ": "Ease Out Circ",
+        "ease-out-back": "Ease Out Back",
+        "ease-in-out-quad": "Ease In Out Quad",
+        "ease-in-out-cubic": "Ease In Out Cubic",
+        "ease-in-out-quart": "Ease In Out Quart",
+        "ease-in-out-quint": "Ease In Out Quint",
+        "ease-in-out-sine": "Ease In Out Sine",
+        "ease-in-out-expo": "Ease In Out Expo",
+        "ease-in-out-circ": "Ease In Out Circ",
+        "ease-in-out-back": "Ease In Out Back"
+      };
+      exports.EASINGS = EASINGS;
+      var EASE_DEFAULT = "ease-out-quad";
+      exports.EASE_DEFAULT = EASE_DEFAULT;
+      var SECTION_NAMES = {
+        ECOMMERCE: "Ecommerce",
+        CHECKOUT_PAGE: "Checkout Page",
+        ORDER_CONFIRMATION_PAGE: "Order Confirmation Page",
+        PAYPAL_CHECKOUT_PAGE: "Checkout (PayPal) Page"
+      };
+      exports.SECTION_NAMES = SECTION_NAMES;
+      var COMMERCE_DEFAULT_COPY = {
+        INFO_ERROR: CHECKOUT_ERRORS.INFO.copy,
+        SHIPPING_ERROR: CHECKOUT_ERRORS.SHIPPING.copy,
+        ORDER_EXTRAS_ERROR: CHECKOUT_ERRORS.EXTRAS.copy,
+        PRICING_ERROR: CHECKOUT_ERRORS.PRICING.copy,
+        PRODUCT_ERROR: CHECKOUT_ERRORS.PRODUCT.copy,
+        PAYMENT_ERROR: CHECKOUT_ERRORS.PAYMENT.copy,
+        BILLING_ERROR: CHECKOUT_ERRORS.BILLING.copy,
+        ORDER_MINIMUM_ERROR: CHECKOUT_ERRORS.MINIMUM.copy,
+        INVALID_DISCOUNT_ERROR: CHECKOUT_ERRORS.INVALID_DISCOUNT.copy,
+        EXPIRED_DISCOUNT_ERROR: CHECKOUT_ERRORS.EXPIRED_DISCOUNT.copy,
+        USAGE_REACHED_DISCOUNT_ERROR: CHECKOUT_ERRORS.USAGE_REACHED_DISCOUNT.copy,
+        REQUIREMENTS_NOT_MET_DISCOUNT_ERROR: CHECKOUT_ERRORS.REQUIREMENTS_NOT_MET_DISCOUNT.copy,
+        COMMERCE_ADD_TO_CART_BUTTON_DEFAULT: "Add to Cart",
+        COMMERCE_ADD_TO_CART_BUTTON_WAITING: "Adding to cart...",
+        COMMERCE_BUY_NOW_BUTTON_DEFAULT: "Buy now",
+        SUBSCRIPTION_BUTTON_DEFAULT: "Subscribe now",
+        QUANTITY_ERROR: "Product is not available in this quantity.",
+        GENERAL_ERROR: "Something went wrong when adding this item to the cart.",
+        CHECKOUT_ERROR: "Checkout is disabled on this site.",
+        CART_ORDER_MIN_ERROR: "The order minimum was not met. Add more items to your cart to continue.",
+        SUBSCRIPTION_ERR: "Before you purchase, please use your email invite to verify your address so we can send order updates.",
+        ADD_TO_CART_QUANTITY_ERROR: "Product is not available in this quantity.",
+        ADD_TO_CART_GENERAL_ERROR: "Something went wrong when adding this item to the cart.",
+        ADD_TO_CART_MIXED_ERROR: "You can\u2019t purchase another product with a subscription.",
+        BUY_NOW_ERROR: "Something went wrong when trying to purchase this item.",
+        CHECKOUT_DISABLED_ERROR: "Checkout is disabled on this site.",
+        SELECT_ALL_OPTIONS: "Please select an option in each set."
+      };
+      exports.COMMERCE_DEFAULT_COPY = COMMERCE_DEFAULT_COPY;
+    }
+  });
+
+  // packages/systems/commerce/constants/bindingContextConstants.js
+  var require_bindingContextConstants = __commonJS({
+    "packages/systems/commerce/constants/bindingContextConstants.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY = void 0;
+      var PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY = "commerce-products-type";
+      exports.PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY = PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY;
+    }
+  });
+
+  // packages/systems/commerce/constants/paypalCurrencyList.js
+  var require_paypalCurrencyList = __commonJS({
+    "packages/systems/commerce/constants/paypalCurrencyList.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.paypalCurrencyList = void 0;
+      var paypalCurrencyList = [
+        /*
+         * ----------------------------------------------------------------------------
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         *
+         * This const is duplicated to @packages/systems/core/constants/SharedConfig.js
+         * to avoid bundling this entire SharedConfig file in the webflow.js published
+         * site bundle. Once we have support for bundling for the Dashboard (this
+         * config is injected in to window.SharedConfig for angular), we should
+         * be able to delete the const in SharedConfig and use the commerce/consts
+         * package whenever `paypalCurrencyList` const is needed.
+         *
+         * In the meantime, if you make changes to this const, please make sure to
+         * update in the other location as well.
+         *
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * ----------------------------------------------------------------------------
+         */
+        {
+          code: "AUD",
+          digits: 2,
+          minCharge: 1,
+          name: "Australian Dollar"
+        },
+        {
+          code: "BRL",
+          digits: 2,
+          minCharge: 1,
+          name: "Brazilian Real"
+        },
+        {
+          code: "CAD",
+          digits: 2,
+          minCharge: 1,
+          name: "Canadian Dollar"
+        },
+        {
+          code: "CNY",
+          digits: 2,
+          minCharge: 1,
+          name: "Chinese Renmenbi"
+        },
+        {
+          code: "CZK",
+          digits: 2,
+          minCharge: 1,
+          name: "Czech Koruna"
+        },
+        {
+          code: "DKK",
+          digits: 2,
+          minCharge: 1,
+          name: "Danish Krone"
+        },
+        {
+          code: "EUR",
+          digits: 2,
+          minCharge: 1,
+          name: "Euro"
+        },
+        {
+          code: "HKD",
+          digits: 2,
+          minCharge: 1,
+          name: "Hong Kong Dollar"
+        },
+        // HUF is currently disabled, due to issues with PayPal's 0-decimal implementation
+        // See: https://github.com/webflow/webflow/issues/32865
+        // {code: 'HUF', digits: 0, minCharge: 1, name: 'Hungarian Forint'},
+        {
+          code: "INR",
+          digits: 2,
+          minCharge: 1,
+          name: "Indian Rupee"
+        },
+        {
+          code: "ILS",
+          digits: 2,
+          minCharge: 1,
+          name: "Israeli New Sheqel"
+        },
+        {
+          code: "JPY",
+          digits: 0,
+          minCharge: 1,
+          name: "Japanese Yen"
+        },
+        {
+          code: "MYR",
+          digits: 2,
+          minCharge: 1,
+          name: "Malaysian Ringgit"
+        },
+        {
+          code: "MXN",
+          digits: 2,
+          minCharge: 1,
+          name: "Mexican Peso"
+        },
+        {
+          code: "TWD",
+          digits: 0,
+          minCharge: 1,
+          name: "New Taiwan Dollar"
+        },
+        {
+          code: "NZD",
+          digits: 2,
+          minCharge: 1,
+          name: "New Zealand Dollar"
+        },
+        {
+          code: "NOK",
+          digits: 2,
+          minCharge: 1,
+          name: "Norwegian Krone"
+        },
+        {
+          code: "PHP",
+          digits: 2,
+          minCharge: 1,
+          name: "Philippine Peso"
+        },
+        {
+          code: "PLN",
+          digits: 2,
+          minCharge: 1,
+          name: "Polish Z\u0142oty"
+        },
+        {
+          code: "GBP",
+          digits: 2,
+          minCharge: 1,
+          name: "British Pound"
+        },
+        {
+          code: "RUB",
+          digits: 2,
+          minCharge: 1,
+          name: "Russian Ruble"
+        },
+        {
+          code: "SGD",
+          digits: 2,
+          minCharge: 1,
+          name: "Singapore Dollar"
+        },
+        {
+          code: "SEK",
+          digits: 2,
+          minCharge: 1,
+          name: "Swedish Krona"
+        },
+        {
+          code: "CHF",
+          digits: 2,
+          minCharge: 1,
+          name: "Swiss Franc"
+        },
+        {
+          code: "THB",
+          digits: 2,
+          minCharge: 1,
+          name: "Thai Baht"
+        },
+        {
+          code: "USD",
+          digits: 2,
+          minCharge: 1,
+          name: "United States Dollar"
+        }
+      ];
+      exports.paypalCurrencyList = paypalCurrencyList;
+    }
+  });
+
+  // packages/systems/commerce/constants/stripeCurrencyList.js
+  var require_stripeCurrencyList = __commonJS({
+    "packages/systems/commerce/constants/stripeCurrencyList.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.stripeCurrencyList = void 0;
+      var stripeCurrencyList = [
+        /*
+         * ----------------------------------------------------------------------------
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         *
+         * This const is duplicated to @packages/systems/core/constants/SharedConfig.js
+         * to avoid bundling this entire SharedConfig file in the webflow.js published
+         * site bundle. Once we have support for bundling for the Dashboard (this
+         * config is injected in to window.SharedConfig for angular), we should
+         * be able to delete the const in SharedConfig and use the commerce/consts
+         * package whenever `stripeCurrencyList` const is needed.
+         *
+         * In the meantime, if you make changes to this const, please make sure to
+         * update in the other location as well.
+         *
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+         * ----------------------------------------------------------------------------
+         */
+        {
+          code: "AED",
+          digits: 2,
+          minCharge: 0,
+          name: "United Arab Emirates Dirham"
+        },
+        {
+          code: "AFN",
+          digits: 2,
+          minCharge: 0,
+          name: "Afghanistan Afghani"
+        },
+        {
+          code: "ALL",
+          digits: 2,
+          minCharge: 0,
+          name: "Albanian Lek"
+        },
+        {
+          code: "AMD",
+          digits: 2,
+          minCharge: 0,
+          name: "Armenia Dram"
+        },
+        {
+          code: "ANG",
+          digits: 2,
+          minCharge: 0,
+          name: "Netherlands Antillean Gulden"
+        },
+        {
+          code: "AOA",
+          digits: 2,
+          minCharge: 0,
+          name: "Angola Kwanza"
+        },
+        {
+          code: "ARS",
+          digits: 2,
+          minCharge: 0,
+          name: "Argentine Peso"
+        },
+        {
+          code: "AUD",
+          digits: 2,
+          minCharge: 50,
+          name: "Australian Dollar"
+        },
+        {
+          code: "AWG",
+          digits: 2,
+          minCharge: 0,
+          name: "Aruban Florin"
+        },
+        {
+          code: "AZN",
+          digits: 2,
+          minCharge: 0,
+          name: "Azerbaijan Manat"
+        },
+        {
+          code: "BAM",
+          digits: 2,
+          minCharge: 0,
+          name: "Bosnia and Herzegovina Convertible Marka"
+        },
+        {
+          code: "BBD",
+          digits: 2,
+          minCharge: 0,
+          name: "Barbadian Dollar"
+        },
+        {
+          code: "BDT",
+          digits: 2,
+          minCharge: 0,
+          name: "Bangladeshi Taka"
+        },
+        {
+          code: "BGN",
+          digits: 2,
+          minCharge: 0,
+          name: "Bulgaria Lev"
+        },
+        {
+          code: "BIF",
+          digits: 0,
+          minCharge: 0,
+          name: "Burundian Franc"
+        },
+        {
+          code: "BMD",
+          digits: 2,
+          minCharge: 0,
+          name: "Bermudian Dollar"
+        },
+        {
+          code: "BND",
+          digits: 2,
+          minCharge: 0,
+          name: "Brunei Dollar"
+        },
+        {
+          code: "BOB",
+          digits: 2,
+          minCharge: 0,
+          name: "Bolivian Boliviano"
+        },
+        {
+          code: "BRL",
+          digits: 2,
+          minCharge: 50,
+          name: "Brazilian Real"
+        },
+        {
+          code: "BSD",
+          digits: 2,
+          minCharge: 0,
+          name: "Bahamian Dollar"
+        },
+        {
+          code: "BWP",
+          digits: 2,
+          minCharge: 0,
+          name: "Botswana Pula"
+        },
+        {
+          code: "BZD",
+          digits: 2,
+          minCharge: 0,
+          name: "Belize Dollar"
+        },
+        {
+          code: "CAD",
+          digits: 2,
+          minCharge: 50,
+          name: "Canadian Dollar"
+        },
+        {
+          code: "CDF",
+          digits: 2,
+          minCharge: 0,
+          name: "Congo/Kinshasa Franc"
+        },
+        {
+          code: "CHF",
+          digits: 2,
+          minCharge: 50,
+          name: "Swiss Franc"
+        },
+        {
+          code: "CLP",
+          digits: 0,
+          minCharge: 0,
+          name: "Chilean Peso"
+        },
+        {
+          code: "CNY",
+          digits: 2,
+          minCharge: 0,
+          name: "Chinese Renminbi Yuan"
+        },
