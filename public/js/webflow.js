@@ -34391,3 +34391,456 @@
           minCharge: 0,
           name: "Serbia Dinar"
         },
+        {
+          code: "RUB",
+          digits: 2,
+          minCharge: 0,
+          name: "Russian Ruble"
+        },
+        {
+          code: "RWF",
+          digits: 0,
+          minCharge: 0,
+          name: "Rwanda Franc"
+        },
+        {
+          code: "SAR",
+          digits: 2,
+          minCharge: 0,
+          name: "Saudi Riyal"
+        },
+        {
+          code: "SBD",
+          digits: 2,
+          minCharge: 0,
+          name: "Solomon Islands Dollar"
+        },
+        {
+          code: "SCR",
+          digits: 2,
+          minCharge: 0,
+          name: "Seychellois Rupee"
+        },
+        {
+          code: "SEK",
+          digits: 2,
+          minCharge: 300,
+          name: "Swedish Krona"
+        },
+        {
+          code: "SGD",
+          digits: 2,
+          minCharge: 50,
+          name: "Singapore Dollar"
+        },
+        {
+          code: "SHP",
+          digits: 2,
+          minCharge: 0,
+          name: "Saint Helenian Pound"
+        },
+        {
+          code: "SLL",
+          digits: 2,
+          minCharge: 0,
+          name: "Sierra Leonean Leone"
+        },
+        {
+          code: "SOS",
+          digits: 2,
+          minCharge: 0,
+          name: "Somali Shilling"
+        },
+        {
+          code: "SRD",
+          digits: 2,
+          minCharge: 0,
+          name: "Suriname Dollar"
+        },
+        {
+          code: "STD",
+          digits: 2,
+          minCharge: 0,
+          name: "S\xE3o Tom\xE9 and Pr\xEDncipe Dobra"
+        },
+        {
+          code: "SZL",
+          digits: 2,
+          minCharge: 0,
+          name: "Swazi Lilangeni"
+        },
+        {
+          code: "THB",
+          digits: 2,
+          minCharge: 0,
+          name: "Thai Baht"
+        },
+        {
+          code: "TJS",
+          digits: 2,
+          minCharge: 0,
+          name: "Tajikistan Somoni"
+        },
+        {
+          code: "TOP",
+          digits: 2,
+          minCharge: 0,
+          name: "Tongan Pa\u02BBanga"
+        },
+        {
+          code: "TRY",
+          digits: 2,
+          minCharge: 0,
+          name: "Turkey Lira"
+        },
+        {
+          code: "TTD",
+          digits: 2,
+          minCharge: 0,
+          name: "Trinidad and Tobago Dollar"
+        },
+        {
+          code: "TWD",
+          digits: 2,
+          minCharge: 0,
+          name: "New Taiwan Dollar"
+        },
+        {
+          code: "TZS",
+          digits: 2,
+          minCharge: 0,
+          name: "Tanzanian Shilling"
+        },
+        {
+          code: "UAH",
+          digits: 2,
+          minCharge: 0,
+          name: "Ukrainian Hryvnia"
+        },
+        {
+          code: "UGX",
+          digits: 0,
+          minCharge: 0,
+          name: "Ugandan Shilling"
+        },
+        // See above.
+        {
+          code: "USD",
+          digits: 2,
+          minCharge: 50,
+          name: "United States Dollar"
+        },
+        {
+          code: "UYU",
+          digits: 2,
+          minCharge: 0,
+          name: "Uruguayan Peso"
+        },
+        {
+          code: "UZS",
+          digits: 2,
+          minCharge: 0,
+          name: "Uzbekistani Som"
+        },
+        {
+          code: "VND",
+          digits: 0,
+          minCharge: 0,
+          name: "Vietnamese \u0110\u1ED3ng"
+        },
+        {
+          code: "VUV",
+          digits: 0,
+          minCharge: 0,
+          name: "Vanuatu Vatu"
+        },
+        {
+          code: "WST",
+          digits: 2,
+          minCharge: 0,
+          name: "Samoan Tala"
+        },
+        {
+          code: "XAF",
+          digits: 0,
+          minCharge: 0,
+          name: "Central African Cfa Franc"
+        },
+        {
+          code: "XCD",
+          digits: 2,
+          minCharge: 0,
+          name: "East Caribbean Dollar"
+        },
+        {
+          code: "XOF",
+          digits: 0,
+          minCharge: 0,
+          name: "West African Cfa Franc"
+        },
+        {
+          code: "XPF",
+          digits: 0,
+          minCharge: 0,
+          name: "Cfp Franc"
+        },
+        {
+          code: "YER",
+          digits: 2,
+          minCharge: 0,
+          name: "Yemeni Rial"
+        },
+        {
+          code: "ZAR",
+          digits: 2,
+          minCharge: 0,
+          name: "South African Rand"
+        },
+        {
+          code: "ZMW",
+          digits: 2,
+          minCharge: 0,
+          name: "Zambia Kwacha"
+        }
+      ];
+      exports.stripeCurrencyList = stripeCurrencyList;
+    }
+  });
+
+  // packages/systems/commerce/constants/index.js
+  var require_constants2 = __commonJS({
+    "packages/systems/commerce/constants/index.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _exportNames = {
+        ORDER_ID_RE: true,
+        SHIPPING_METHODS: true,
+        DEFAULT_TAX_CATEGORY: true,
+        INVENTORY_TYPE_FINITE: true,
+        INVENTORY_TYPE_INFINITE: true,
+        INFINITE_INVENTORY: true,
+        MAX_TOTAL_ORDER_PRICE: true,
+        MAX_PRODUCT_DIMENSION: true,
+        MAX_MEMBERSHIP_PRODUCTS: true,
+        MAX_SEARCH_LIMIT: true,
+        PRICE_TEMPLATE_CURRENCY_SYMBOL: true,
+        PRICE_TEMPLATE_AMOUNT: true,
+        PRICE_TEMPLATE_CURRENCY_CODE: true,
+        PRICE_TEMPLATE_OPTIONS: true,
+        DEFAULT_PRICE_TEMPLATE_VALUE: true,
+        CSV_CURRENCY_TEMPLATE: true,
+        CSV_INTEGRATION_CURRENCY_TEMPLATE: true,
+        DOWNLOAD_FILES_FAKE_DATA: true,
+        DOWNLOAD_FILES_KEY_PATH: true,
+        DOWNLOAD_FILES_EDITABLE_FIELDS: true,
+        SUBSCRIPTION_INTERVAL_ENUM: true,
+        SUBSCRIPTION_STATUS_ENUM: true,
+        SUBSCRIPTION_STATUS_PRETTY_ENUM: true,
+        STRIPE_SUBSCRIPTION_STATUS_ENUM: true,
+        ACTIVE_STRIPE_SUBSCRIPTION_STATUSES: true,
+        ECOMMERCE_PROVIDER_NAME_ENUM: true,
+        BILLING_METHOD_TYPES: true,
+        PHYSICAL_PRODUCT_TYPE: true,
+        DIGITAL_PRODUCT_TYPE: true,
+        SERVICE_PRODUCT_TYPE: true,
+        MEMBERSHIP_PRODUCT_TYPE: true,
+        ADVANCED_PRODUCT_TYPE: true,
+        TEMPLATE_PRODUCT_TYPES: true,
+        PRODUCT_TYPE_HELP_TEXT: true,
+        DEFAULT_PRODUCT_TYPE_ID: true,
+        DISCOUNTS_CSV_IMPORT_EXPORT_COLUMNS: true,
+        REQUIRED_DISCOUNT_IMPORT_FIELDS: true,
+        STRIPE_DISCONNECT_SUBSCRIPTIONS_ERROR_MESSAGE: true,
+        ORDER_SORT_MODES: true,
+        SUBSCRIPTION_SORT_MODES: true,
+        PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY: true,
+        paypalCurrencyList: true,
+        stripeCurrencyList: true
+      };
+      exports.PRICE_TEMPLATE_OPTIONS = exports.PRICE_TEMPLATE_CURRENCY_SYMBOL = exports.PRICE_TEMPLATE_CURRENCY_CODE = exports.PRICE_TEMPLATE_AMOUNT = exports.PHYSICAL_PRODUCT_TYPE = exports.ORDER_SORT_MODES = exports.ORDER_ID_RE = exports.MEMBERSHIP_PRODUCT_TYPE = exports.MAX_TOTAL_ORDER_PRICE = exports.MAX_SEARCH_LIMIT = exports.MAX_PRODUCT_DIMENSION = exports.MAX_MEMBERSHIP_PRODUCTS = exports.INVENTORY_TYPE_INFINITE = exports.INVENTORY_TYPE_FINITE = exports.INFINITE_INVENTORY = exports.ECOMMERCE_PROVIDER_NAME_ENUM = exports.DOWNLOAD_FILES_KEY_PATH = exports.DOWNLOAD_FILES_FAKE_DATA = exports.DOWNLOAD_FILES_EDITABLE_FIELDS = exports.DISCOUNTS_CSV_IMPORT_EXPORT_COLUMNS = exports.DIGITAL_PRODUCT_TYPE = exports.DEFAULT_TAX_CATEGORY = exports.DEFAULT_PRODUCT_TYPE_ID = exports.DEFAULT_PRICE_TEMPLATE_VALUE = exports.CSV_INTEGRATION_CURRENCY_TEMPLATE = exports.CSV_CURRENCY_TEMPLATE = exports.BILLING_METHOD_TYPES = exports.ADVANCED_PRODUCT_TYPE = exports.ACTIVE_STRIPE_SUBSCRIPTION_STATUSES = void 0;
+      Object.defineProperty(exports, "PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY", {
+        enumerable: true,
+        get: function() {
+          return _bindingContextConstants.PRODUCTS_BINDING_CONTEXT_EXTERNAL_KEY;
+        }
+      });
+      exports.TEMPLATE_PRODUCT_TYPES = exports.SUBSCRIPTION_STATUS_PRETTY_ENUM = exports.SUBSCRIPTION_STATUS_ENUM = exports.SUBSCRIPTION_SORT_MODES = exports.SUBSCRIPTION_INTERVAL_ENUM = exports.STRIPE_SUBSCRIPTION_STATUS_ENUM = exports.STRIPE_DISCONNECT_SUBSCRIPTIONS_ERROR_MESSAGE = exports.SHIPPING_METHODS = exports.SERVICE_PRODUCT_TYPE = exports.REQUIRED_DISCOUNT_IMPORT_FIELDS = exports.PRODUCT_TYPE_HELP_TEXT = void 0;
+      Object.defineProperty(exports, "paypalCurrencyList", {
+        enumerable: true,
+        get: function() {
+          return _paypalCurrencyList.paypalCurrencyList;
+        }
+      });
+      Object.defineProperty(exports, "stripeCurrencyList", {
+        enumerable: true,
+        get: function() {
+          return _stripeCurrencyList.stripeCurrencyList;
+        }
+      });
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _camelCase = _interopRequireDefault(require_camelCase());
+      var _pluginConstants = require_pluginConstants();
+      Object.keys(_pluginConstants).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _pluginConstants[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _pluginConstants[key];
+          }
+        });
+      });
+      var _bindingContextConstants = require_bindingContextConstants();
+      var _paypalCurrencyList = require_paypalCurrencyList();
+      var _stripeCurrencyList = require_stripeCurrencyList();
+      var ORDER_ID_RE = /^[0-9a-f]{5,}$/;
+      exports.ORDER_ID_RE = ORDER_ID_RE;
+      var SHIPPING_METHOD_FLAT = "flat-rate";
+      var SHIPPING_METHOD_PERCENTAGE = "percentage";
+      var SHIPPING_METHOD_PRICE = "price";
+      var SHIPPING_METHOD_QUANTITY = "quantity";
+      var SHIPPING_METHOD_WEIGHT = "weight";
+      var SHIPPING_METHODS = Object.freeze({
+        FLAT: SHIPPING_METHOD_FLAT,
+        PERCENTAGE: SHIPPING_METHOD_PERCENTAGE,
+        PRICE: SHIPPING_METHOD_PRICE,
+        QUANTITY: SHIPPING_METHOD_QUANTITY,
+        WEIGHT: SHIPPING_METHOD_WEIGHT
+      });
+      exports.SHIPPING_METHODS = SHIPPING_METHODS;
+      var DEFAULT_TAX_CATEGORY = "standard-taxable";
+      exports.DEFAULT_TAX_CATEGORY = DEFAULT_TAX_CATEGORY;
+      var INVENTORY_TYPE_FINITE = "finite";
+      exports.INVENTORY_TYPE_FINITE = INVENTORY_TYPE_FINITE;
+      var INVENTORY_TYPE_INFINITE = "infinite";
+      exports.INVENTORY_TYPE_INFINITE = INVENTORY_TYPE_INFINITE;
+      var INFINITE_INVENTORY = {
+        inventoryType: INVENTORY_TYPE_INFINITE,
+        quantity: 0
+      };
+      exports.INFINITE_INVENTORY = INFINITE_INVENTORY;
+      var MAX_TOTAL_ORDER_PRICE = 99999999;
+      exports.MAX_TOTAL_ORDER_PRICE = MAX_TOTAL_ORDER_PRICE;
+      var MAX_PRODUCT_DIMENSION = 9e15;
+      exports.MAX_PRODUCT_DIMENSION = MAX_PRODUCT_DIMENSION;
+      var MAX_MEMBERSHIP_PRODUCTS = 20;
+      exports.MAX_MEMBERSHIP_PRODUCTS = MAX_MEMBERSHIP_PRODUCTS;
+      var MAX_SEARCH_LIMIT = 100;
+      exports.MAX_SEARCH_LIMIT = MAX_SEARCH_LIMIT;
+      function _withDerivedValue({
+        label,
+        type = "PlainText",
+        path = (0, _camelCase.default)(label),
+        options = {
+          readOnly: false,
+          isNotAddable: false
+        }
+      }) {
+        return (0, _extends2.default)({
+          label,
+          type
+        }, options, {
+          value: JSON.stringify({
+            path,
+            type
+          })
+        });
+      }
+      var PRICE_TEMPLATE_CURRENCY_SYMBOL = _withDerivedValue({
+        label: "Currency symbol",
+        path: "symbol"
+      });
+      exports.PRICE_TEMPLATE_CURRENCY_SYMBOL = PRICE_TEMPLATE_CURRENCY_SYMBOL;
+      var PRICE_TEMPLATE_AMOUNT = _withDerivedValue({
+        label: "Amount",
+        type: "CommercePrice",
+        options: {
+          readOnly: true,
+          isNotAddable: true
+        }
+      });
+      exports.PRICE_TEMPLATE_AMOUNT = PRICE_TEMPLATE_AMOUNT;
+      var PRICE_TEMPLATE_CURRENCY_CODE = _withDerivedValue({
+        label: "Currency code"
+      });
+      exports.PRICE_TEMPLATE_CURRENCY_CODE = PRICE_TEMPLATE_CURRENCY_CODE;
+      var PRICE_TEMPLATE_OPTIONS = [PRICE_TEMPLATE_CURRENCY_SYMBOL, PRICE_TEMPLATE_AMOUNT, PRICE_TEMPLATE_CURRENCY_CODE];
+      exports.PRICE_TEMPLATE_OPTIONS = PRICE_TEMPLATE_OPTIONS;
+      var _intoToken = (option) => `{{wf ${option.value} }}`;
+      var DEFAULT_PRICE_TEMPLATE_VALUE = [_intoToken(PRICE_TEMPLATE_CURRENCY_SYMBOL), " ", _intoToken(PRICE_TEMPLATE_AMOUNT), " ", _intoToken(PRICE_TEMPLATE_CURRENCY_CODE)].join("");
+      exports.DEFAULT_PRICE_TEMPLATE_VALUE = DEFAULT_PRICE_TEMPLATE_VALUE;
+      var CSV_CURRENCY_TEMPLATE = [_intoToken(PRICE_TEMPLATE_CURRENCY_SYMBOL), _intoToken(PRICE_TEMPLATE_AMOUNT)].join("");
+      exports.CSV_CURRENCY_TEMPLATE = CSV_CURRENCY_TEMPLATE;
+      var CSV_INTEGRATION_CURRENCY_TEMPLATE = [_intoToken(PRICE_TEMPLATE_AMOUNT), " ", _intoToken(PRICE_TEMPLATE_CURRENCY_CODE)].join("");
+      exports.CSV_INTEGRATION_CURRENCY_TEMPLATE = CSV_INTEGRATION_CURRENCY_TEMPLATE;
+      var DOWNLOAD_FILES_FAKE_DATA = [{
+        id: "5d8fcb6d94dd1853060fb3b3",
+        name: "The modern web design process - Webflow Ebook.pdf",
+        url: "https://assets-global.website-files.com/5cf6b7202bf8199f50d43e6c/5e9dd8a680b972888929747b_The%20modern%20web%20design%20process%20-%20Webflow%20Ebook.pdf"
+      }, {
+        id: "5d8fcb6d94dd1853060fb3b4",
+        name: "The freelance web designers guide - Webflow Ebook.pdf",
+        url: "https://assets-global.website-files.com/5cf6b7202bf8199f50d43e6c/5e9dd8e6abe52b33243a22cf_The%20freelance%20web%20designer%E2%80%99s%20guide%20-%20Webflow%20Ebook.pdf"
+      }];
+      exports.DOWNLOAD_FILES_FAKE_DATA = DOWNLOAD_FILES_FAKE_DATA;
+      var DOWNLOAD_FILES_KEY_PATH = "download-files";
+      exports.DOWNLOAD_FILES_KEY_PATH = DOWNLOAD_FILES_KEY_PATH;
+      var DOWNLOAD_FILES_EDITABLE_FIELDS = {
+        name: true,
+        url: true
+      };
+      exports.DOWNLOAD_FILES_EDITABLE_FIELDS = DOWNLOAD_FILES_EDITABLE_FIELDS;
+      var SUBSCRIPTION_INTERVAL_ENUM = ["day", "week", "month", "year"];
+      exports.SUBSCRIPTION_INTERVAL_ENUM = SUBSCRIPTION_INTERVAL_ENUM;
+      var SUBSCRIPTION_STATUS_ENUM = {
+        active: "active",
+        pastdue: "pastdue",
+        unpaid: "unpaid",
+        canceled: "canceled",
+        cancelPending: "cancelPending",
+        incomplete: "incomplete",
+        incompleteExpired: "incompleteExpired",
+        trialing: "trialing",
+        unknown: `unknown`
+      };
+      exports.SUBSCRIPTION_STATUS_ENUM = SUBSCRIPTION_STATUS_ENUM;
+      var SUBSCRIPTION_STATUS_PRETTY_ENUM = {
+        active: "active",
+        pastdue: "pastdue",
+        unpaid: "unpaid",
+        canceled: "canceled",
+        cancelPending: "cancelPending",
+        incomplete: "incomplete",
+        incompleteExpired: "incompleteExpired",
+        trialing: "in trial",
+        unknown: `unknown`
+      };
+      exports.SUBSCRIPTION_STATUS_PRETTY_ENUM = SUBSCRIPTION_STATUS_PRETTY_ENUM;
+      var STRIPE_SUBSCRIPTION_STATUS_ENUM = {
+        active: "active",
+        past_due: "past_due",
+        unpaid: "unpaid",
+        canceled: "canceled",
+        incomplete: "incomplete",
+        incomplete_expired: "incomplete_expired",
+        trialing: "trialing"
+      };
+      exports.STRIPE_SUBSCRIPTION_STATUS_ENUM = STRIPE_SUBSCRIPTION_STATUS_ENUM;
+      var ACTIVE_STRIPE_SUBSCRIPTION_STATUSES = [STRIPE_SUBSCRIPTION_STATUS_ENUM.active, STRIPE_SUBSCRIPTION_STATUS_ENUM.past_due, STRIPE_SUBSCRIPTION_STATUS_ENUM.trialing];
+      exports.ACTIVE_STRIPE_SUBSCRIPTION_STATUSES = ACTIVE_STRIPE_SUBSCRIPTION_STATUSES;
+      var ECOMMERCE_PROVIDER_NAME_ENUM = {
+        stripe: "stripe"
+      };
+      exports.ECOMMERCE_PROVIDER_NAME_ENUM = ECOMMERCE_PROVIDER_NAME_ENUM;
+      var BILLING_METHOD_TYPES = {
+        subscription: "subscription",
+        oneTime: "one-time"
+      };
+      exports.BILLING_METHOD_TYPES = BILLING_METHOD_TYPES;
