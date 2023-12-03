@@ -33950,3 +33950,444 @@
           minCharge: 0,
           name: "Chinese Renminbi Yuan"
         },
+        {
+          code: "COP",
+          digits: 2,
+          minCharge: 0,
+          name: "Colombian Peso"
+        },
+        {
+          code: "CRC",
+          digits: 2,
+          minCharge: 0,
+          name: "Costa Rican Col\xF3n"
+        },
+        {
+          code: "CVE",
+          digits: 2,
+          minCharge: 0,
+          name: "Cape Verdean Escudo"
+        },
+        // See above.
+        {
+          code: "CZK",
+          digits: 2,
+          minCharge: 0,
+          name: "Czech Koruna"
+        },
+        {
+          code: "DJF",
+          digits: 0,
+          minCharge: 0,
+          name: "Djiboutian Franc"
+        },
+        {
+          code: "DKK",
+          digits: 2,
+          minCharge: 250,
+          name: "Danish Krone"
+        },
+        {
+          code: "DOP",
+          digits: 2,
+          minCharge: 0,
+          name: "Dominican Peso"
+        },
+        {
+          code: "DZD",
+          digits: 2,
+          minCharge: 0,
+          name: "Algerian Dinar"
+        },
+        {
+          code: "EGP",
+          digits: 2,
+          minCharge: 0,
+          name: "Egyptian Pound"
+        },
+        {
+          code: "ETB",
+          digits: 2,
+          minCharge: 0,
+          name: "Ethiopian Birr"
+        },
+        {
+          code: "EUR",
+          digits: 2,
+          minCharge: 50,
+          name: "Euro"
+        },
+        {
+          code: "FJD",
+          digits: 2,
+          minCharge: 0,
+          name: "Fijian Dollar"
+        },
+        {
+          code: "FKP",
+          digits: 2,
+          minCharge: 0,
+          name: "Falkland Islands Pound"
+        },
+        {
+          code: "GBP",
+          digits: 2,
+          minCharge: 30,
+          name: "British Pound"
+        },
+        {
+          code: "GEL",
+          digits: 2,
+          minCharge: 0,
+          name: "Georgia Lari"
+        },
+        {
+          code: "GIP",
+          digits: 2,
+          minCharge: 0,
+          name: "Gibraltar Pound"
+        },
+        {
+          code: "GMD",
+          digits: 2,
+          minCharge: 0,
+          name: "Gambian Dalasi"
+        },
+        {
+          code: "GNF",
+          digits: 0,
+          minCharge: 0,
+          name: "Guinean Franc"
+        },
+        {
+          code: "GTQ",
+          digits: 2,
+          minCharge: 0,
+          name: "Guatemalan Quetzal"
+        },
+        {
+          code: "GYD",
+          digits: 2,
+          minCharge: 0,
+          name: "Guyanese Dollar"
+        },
+        {
+          code: "HKD",
+          digits: 2,
+          minCharge: 400,
+          name: "Hong Kong Dollar"
+        },
+        {
+          code: "HNL",
+          digits: 2,
+          minCharge: 0,
+          name: "Honduran Lempira"
+        },
+        {
+          code: "HRK",
+          digits: 2,
+          minCharge: 0,
+          name: "Croatian Kuna"
+        },
+        {
+          code: "HTG",
+          digits: 2,
+          minCharge: 0,
+          name: "Haitian Gourde"
+        },
+        {
+          code: "HUF",
+          digits: 2,
+          minCharge: 0,
+          name: "Hungarian Forint"
+        },
+        {
+          code: "IDR",
+          digits: 2,
+          minCharge: 0,
+          name: "Indonesian Rupiah"
+        },
+        {
+          code: "ILS",
+          digits: 2,
+          minCharge: 0,
+          name: "Israeli New Sheqel"
+        },
+        {
+          code: "INR",
+          digits: 2,
+          minCharge: 50,
+          name: "Indian Rupee"
+        },
+        {
+          code: "ISK",
+          digits: 2,
+          minCharge: 0,
+          name: "Icelandic Kr\xF3na"
+        },
+        // See above.
+        {
+          code: "JMD",
+          digits: 2,
+          minCharge: 0,
+          name: "Jamaican Dollar"
+        },
+        {
+          code: "JPY",
+          digits: 0,
+          minCharge: 50,
+          name: "Japanese Yen"
+        },
+        {
+          code: "KES",
+          digits: 2,
+          minCharge: 0,
+          name: "Kenyan Shilling"
+        },
+        {
+          code: "KGS",
+          digits: 2,
+          minCharge: 0,
+          name: "Kyrgyzstan Som"
+        },
+        {
+          code: "KHR",
+          digits: 2,
+          minCharge: 0,
+          name: "Cambodian Riel"
+        },
+        {
+          code: "KMF",
+          digits: 0,
+          minCharge: 0,
+          name: "Comorian Franc"
+        },
+        {
+          code: "KRW",
+          digits: 0,
+          minCharge: 0,
+          name: "South Korean Won"
+        },
+        {
+          code: "KYD",
+          digits: 2,
+          minCharge: 0,
+          name: "Cayman Islands Dollar"
+        },
+        {
+          code: "KZT",
+          digits: 2,
+          minCharge: 0,
+          name: "Kazakhstani Tenge"
+        },
+        {
+          code: "LAK",
+          digits: 2,
+          minCharge: 0,
+          name: "Lao Kip"
+        },
+        {
+          code: "LBP",
+          digits: 2,
+          minCharge: 0,
+          name: "Lebanese Pound"
+        },
+        {
+          code: "LKR",
+          digits: 2,
+          minCharge: 0,
+          name: "Sri Lankan Rupee"
+        },
+        {
+          code: "LRD",
+          digits: 2,
+          minCharge: 0,
+          name: "Liberian Dollar"
+        },
+        {
+          code: "LSL",
+          digits: 2,
+          minCharge: 0,
+          name: "Lesotho Loti"
+        },
+        {
+          code: "MAD",
+          digits: 2,
+          minCharge: 0,
+          name: "Moroccan Dirham"
+        },
+        {
+          code: "MDL",
+          digits: 2,
+          minCharge: 0,
+          name: "Moldovan Leu"
+        },
+        {
+          code: "MGA",
+          digits: 0,
+          minCharge: 0,
+          name: "Madagascar Ariary"
+        },
+        // See above.
+        {
+          code: "MKD",
+          digits: 2,
+          minCharge: 0,
+          name: "Macedonia Denar"
+        },
+        {
+          code: "MMK",
+          digits: 2,
+          minCharge: 0,
+          name: "Myanmar (Burma) Kyat"
+        },
+        {
+          code: "MNT",
+          digits: 2,
+          minCharge: 0,
+          name: "Mongolian T\xF6gr\xF6g"
+        },
+        {
+          code: "MOP",
+          digits: 2,
+          minCharge: 0,
+          name: "Macanese Pataca"
+        },
+        {
+          code: "MRO",
+          digits: 2,
+          minCharge: 0,
+          name: "Mauritanian Ouguiya"
+        },
+        {
+          code: "MUR",
+          digits: 2,
+          minCharge: 0,
+          name: "Mauritian Rupee"
+        },
+        {
+          code: "MVR",
+          digits: 2,
+          minCharge: 0,
+          name: "Maldivian Rufiyaa"
+        },
+        {
+          code: "MWK",
+          digits: 2,
+          minCharge: 0,
+          name: "Malawian Kwacha"
+        },
+        {
+          code: "MXN",
+          digits: 2,
+          minCharge: 1e3,
+          name: "Mexican Peso"
+        },
+        {
+          code: "MYR",
+          digits: 2,
+          minCharge: 200,
+          name: "Malaysian Ringgit"
+        },
+        {
+          code: "MZN",
+          digits: 2,
+          minCharge: 0,
+          name: "Mozambique Metical"
+        },
+        {
+          code: "NAD",
+          digits: 2,
+          minCharge: 0,
+          name: "Namibian Dollar"
+        },
+        {
+          code: "NGN",
+          digits: 2,
+          minCharge: 0,
+          name: "Nigerian Naira"
+        },
+        {
+          code: "NIO",
+          digits: 2,
+          minCharge: 0,
+          name: "Nicaraguan C\xF3rdoba"
+        },
+        {
+          code: "NOK",
+          digits: 2,
+          minCharge: 300,
+          name: "Norwegian Krone"
+        },
+        {
+          code: "NPR",
+          digits: 2,
+          minCharge: 0,
+          name: "Nepalese Rupee"
+        },
+        {
+          code: "NZD",
+          digits: 2,
+          minCharge: 50,
+          name: "New Zealand Dollar"
+        },
+        {
+          code: "PAB",
+          digits: 2,
+          minCharge: 0,
+          name: "Panamanian Balboa"
+        },
+        {
+          code: "PEN",
+          digits: 2,
+          minCharge: 0,
+          name: "Peruvian Nuevo Sol"
+        },
+        {
+          code: "PGK",
+          digits: 2,
+          minCharge: 0,
+          name: "Papua New Guinean Kina"
+        },
+        {
+          code: "PHP",
+          digits: 2,
+          minCharge: 0,
+          name: "Philippine Peso"
+        },
+        {
+          code: "PKR",
+          digits: 2,
+          minCharge: 0,
+          name: "Pakistani Rupee"
+        },
+        {
+          code: "PLN",
+          digits: 2,
+          minCharge: 200,
+          name: "Polish Z\u0142oty"
+        },
+        {
+          code: "PYG",
+          digits: 0,
+          minCharge: 0,
+          name: "Paraguayan Guaran\xED"
+        },
+        {
+          code: "QAR",
+          digits: 2,
+          minCharge: 0,
+          name: "Qatari Riyal"
+        },
+        {
+          code: "RON",
+          digits: 2,
+          minCharge: 0,
+          name: "Romania Leu"
+        },
+        {
+          code: "RSD",
+          digits: 2,
+          minCharge: 0,
+          name: "Serbia Dinar"
+        },
