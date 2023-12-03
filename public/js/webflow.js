@@ -34844,3 +34844,434 @@
         oneTime: "one-time"
       };
       exports.BILLING_METHOD_TYPES = BILLING_METHOD_TYPES;
+      var DEFAULT_PRODUCT_TYPE_PRODUCT_FIELDS = [{
+        fieldSlug: "name",
+        required: true
+      }, {
+        fieldSlug: "slug",
+        required: true
+      }, {
+        fieldSlug: "sku-properties",
+        required: false
+      }, {
+        fieldSlug: "category",
+        required: false
+      }, {
+        fieldSlug: "description",
+        required: false
+      }, {
+        fieldSlug: "tax-category",
+        required: false
+      }, {
+        fieldSlug: "default-sku",
+        required: false
+      }, {
+        fieldSlug: "ec-product-type",
+        required: false
+      }, {
+        fieldSlug: "options",
+        required: false
+      }];
+      var DEFAULT_PRODUCT_TYPE_SKU_FIELDS = [{
+        fieldSlug: "sku-values",
+        required: false
+      }, {
+        fieldSlug: "product",
+        required: false
+      }, {
+        fieldSlug: "main-image",
+        required: false
+      }, {
+        fieldSlug: "more-images",
+        required: false
+      }, {
+        fieldSlug: "price",
+        required: true
+      }, {
+        fieldSlug: "compare-at-price",
+        required: false
+      }, {
+        fieldSlug: "ec-sku-subscription-plan",
+        required: false
+      }, {
+        fieldSlug: "sku",
+        required: false
+      }, {
+        fieldSlug: "ec-sku-billing-method",
+        required: false
+      }, {
+        fieldSlug: "track-inventory",
+        required: false
+      }, {
+        fieldSlug: "quantity",
+        required: false
+      }];
+      var PHYSICAL_PRODUCT_TYPE = {
+        name: "Physical",
+        id: "ff42fee0113744f693a764e3431a9cc2",
+        fields: {
+          product: [...DEFAULT_PRODUCT_TYPE_PRODUCT_FIELDS, {
+            fieldSlug: "shippable",
+            required: false
+          }],
+          sku: [...DEFAULT_PRODUCT_TYPE_SKU_FIELDS, {
+            fieldSlug: "weight",
+            required: false
+          }, {
+            fieldSlug: "width",
+            required: false
+          }, {
+            fieldSlug: "height",
+            required: false
+          }, {
+            fieldSlug: "length",
+            required: false
+          }]
+        }
+      };
+      exports.PHYSICAL_PRODUCT_TYPE = PHYSICAL_PRODUCT_TYPE;
+      var DIGITAL_PRODUCT_TYPE = {
+        name: "Digital",
+        id: "f22027db68002190aef89a4a2b7ac8a1",
+        fields: {
+          product: [...DEFAULT_PRODUCT_TYPE_PRODUCT_FIELDS],
+          sku: [...DEFAULT_PRODUCT_TYPE_SKU_FIELDS, {
+            fieldSlug: "download-files",
+            required: true
+          }]
+        }
+      };
+      exports.DIGITAL_PRODUCT_TYPE = DIGITAL_PRODUCT_TYPE;
+      var SERVICE_PRODUCT_TYPE = {
+        name: "Service",
+        id: "c599e43b1a1c34d5a323aedf75d3adf6",
+        fields: {
+          product: [...DEFAULT_PRODUCT_TYPE_PRODUCT_FIELDS],
+          sku: [...DEFAULT_PRODUCT_TYPE_SKU_FIELDS]
+        }
+      };
+      exports.SERVICE_PRODUCT_TYPE = SERVICE_PRODUCT_TYPE;
+      var MEMBERSHIP_PRODUCT_TYPE = {
+        name: "Membership",
+        id: "e348fd487d0102946c9179d2a94bb613",
+        fields: {
+          product: [...DEFAULT_PRODUCT_TYPE_PRODUCT_FIELDS, {
+            fieldSlug: "shippable",
+            required: false
+          }],
+          sku: [...DEFAULT_PRODUCT_TYPE_SKU_FIELDS, {
+            fieldSlug: "weight",
+            required: false
+          }, {
+            fieldSlug: "width",
+            required: false
+          }, {
+            fieldSlug: "height",
+            required: false
+          }, {
+            fieldSlug: "length",
+            required: false
+          }, {
+            fieldSlug: "download-files",
+            required: false
+          }, {
+            fieldSlug: "include-downloads",
+            required: false
+          }]
+        }
+      };
+      exports.MEMBERSHIP_PRODUCT_TYPE = MEMBERSHIP_PRODUCT_TYPE;
+      var ADVANCED_PRODUCT_TYPE = {
+        name: "Advanced",
+        id: "b6ccc1830db4b1babeb06a9ac5f6dd76"
+      };
+      exports.ADVANCED_PRODUCT_TYPE = ADVANCED_PRODUCT_TYPE;
+      var TEMPLATE_PRODUCT_TYPES = [PHYSICAL_PRODUCT_TYPE, DIGITAL_PRODUCT_TYPE, SERVICE_PRODUCT_TYPE, MEMBERSHIP_PRODUCT_TYPE, ADVANCED_PRODUCT_TYPE];
+      exports.TEMPLATE_PRODUCT_TYPES = TEMPLATE_PRODUCT_TYPES;
+      var templateProductTypeIds = TEMPLATE_PRODUCT_TYPES.reduce((ids, t) => {
+        ids[t.id] = "";
+        return ids;
+      }, {});
+      var PRODUCT_TYPE_HELP_TEXT = {
+        [PHYSICAL_PRODUCT_TYPE.id]: "Physical products are shipped to the customer (e.g., merchandise, apparel).",
+        [DIGITAL_PRODUCT_TYPE.id]: "Digital products are immediately downloadable by the customer after checkout (e.g., audio files, ebooks).",
+        [SERVICE_PRODUCT_TYPE.id]: "Service products do not require a shipping address during checkout (e.g., classes, consultations).",
+        [MEMBERSHIP_PRODUCT_TYPE.id]: "Membership products give users access to gated content through recurring or one-time payment (e.g., subscriptions, one-time membership fee). Membership products require a user login and can only be purchased once.",
+        [ADVANCED_PRODUCT_TYPE.id]: "Advanced products provide all available customizable options."
+      };
+      exports.PRODUCT_TYPE_HELP_TEXT = PRODUCT_TYPE_HELP_TEXT;
+      var DEFAULT_PRODUCT_TYPE_ID = PHYSICAL_PRODUCT_TYPE.id;
+      exports.DEFAULT_PRODUCT_TYPE_ID = DEFAULT_PRODUCT_TYPE_ID;
+      var DISCOUNTS_CSV_IMPORT_EXPORT_COLUMNS = [
+        "name",
+        "code",
+        "notes",
+        "type",
+        "percentOff",
+        "amountOff",
+        "validOn",
+        "expiresOn",
+        "enabled",
+        // 'active' is being replaced with 'enabled'
+        "orderMinimum",
+        // archived is disabled until we have UI for it
+        // 'archived',
+        "totalUsage",
+        "maxAmountOff",
+        // NOTE: for dot-notation fields to be properly expanded
+        // during import, you need to add the camel-case flattened property to
+        // the 'KEYS_TO_EXPAND' variable in `entrypoints/server/lib/ecommerce/csvImport/discountCsvImport.js`
+        // Example: 'usage.limit.total' -> 'usageLimitTotal'
+        "usage.limit.total",
+        "usage.limit.customer",
+        "appliesTo.scope",
+        "appliesTo.filter",
+        "appliesTo.applyOnce"
+      ];
+      exports.DISCOUNTS_CSV_IMPORT_EXPORT_COLUMNS = DISCOUNTS_CSV_IMPORT_EXPORT_COLUMNS;
+      var REQUIRED_DISCOUNT_IMPORT_FIELDS = [
+        "name",
+        "code",
+        "type",
+        ["percentOff", "amountOff"]
+        // we want either percentOff or amountOff present or both
+      ];
+      exports.REQUIRED_DISCOUNT_IMPORT_FIELDS = REQUIRED_DISCOUNT_IMPORT_FIELDS;
+      var STRIPE_DISCONNECT_SUBSCRIPTIONS_ERROR_MESSAGE = "Stripe disconnect attempted with non-canceled subscriptions";
+      exports.STRIPE_DISCONNECT_SUBSCRIPTIONS_ERROR_MESSAGE = STRIPE_DISCONNECT_SUBSCRIPTIONS_ERROR_MESSAGE;
+      var ORDER_SORT_MODES = Object.freeze({
+        "-count": "-purchasedItemsCount -_id",
+        count: "purchasedItemsCount _id",
+        "-name": "-customerInfo.fullName -_id",
+        name: "customerInfo.fullName _id",
+        "-orderid": "-orderId",
+        orderid: "orderId",
+        "-paid": "-customerPaid.unit -customerPaid.value -_id",
+        paid: "customerPaid.unit customerPaid.value _id",
+        "-status": "-statusCode -_id",
+        status: "statusCode _id",
+        "-time": "-acceptedOn -_id",
+        time: "acceptedOn _id"
+      });
+      exports.ORDER_SORT_MODES = ORDER_SORT_MODES;
+      var SUBSCRIPTION_SORT_MODES = Object.freeze({
+        "-lastBilled": "-lastInvoiced -_id",
+        lastBilled: "lastInvoiced _id",
+        "-nextBilling": "-paidUntil -_id",
+        nextBilling: "paidUntil _id",
+        "-orderid": "-orderId",
+        orderid: "orderId",
+        "-purchased": "-subCreatedOn -_id",
+        purchased: "subCreatedOn _id",
+        "-status": "-status -_id",
+        status: "status _id",
+        "-trialing": "-trialing -_id",
+        trialing: "trialing _id"
+      });
+      exports.SUBSCRIPTION_SORT_MODES = SUBSCRIPTION_SORT_MODES;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/stripeStore.js
+  var require_stripeStore = __commonJS({
+    "shared/render/plugins/Commerce/modules/stripeStore.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.generateShippingOptionsFromMethods = exports.generateDisplayItemsFromOrder = exports.StripeStore = void 0;
+      var _StyleMapObserver = _interopRequireDefault(require_StyleMapObserver());
+      var _debug = _interopRequireDefault(require_debug());
+      var _constants = require_constants2();
+      var StripeStore = class {
+        constructor(docElement) {
+          if (window.Webflow.env("design") || window.Webflow.env("preview")) {
+            return;
+          }
+          const stripeJsElement = docElement.querySelector(`[${_constants.STRIPE_ECOMMERCE_KEY}]`);
+          if (!stripeJsElement) {
+            this.store = {
+              initialized: false,
+              stripe: {},
+              elements: [],
+              elementInstances: [],
+              cartPaymentRequests: [],
+              styleMapObservers: {}
+            };
+            return _debug.default.error("Stripe has not been set up for this project \u2013 Go to the project's Ecommerce Payment settings in the Designer to link Stripe.");
+          }
+          const ecommKey = stripeJsElement.getAttribute(_constants.STRIPE_ECOMMERCE_KEY);
+          const ecommAccountId = stripeJsElement.getAttribute(_constants.STRIPE_ECOMMERCE_ACCOUNT_ID);
+          const stripeOpts = ecommAccountId ? {
+            stripeAccount: ecommAccountId,
+            apiVersion: "2020-03-02"
+          } : null;
+          const stripe = window.Stripe(ecommKey, stripeOpts);
+          this.store = {
+            initialized: true,
+            stripe,
+            elements: [],
+            elementInstances: [],
+            cartPaymentRequests: [],
+            styleMapObservers: {}
+          };
+        }
+        isInitialized() {
+          return this.store.initialized;
+        }
+        getStripeInstance() {
+          return this.store.stripe;
+        }
+        getElementsInstance(index) {
+          return this.store.elements[index];
+        }
+        getElement(type, index) {
+          return this.store.elementInstances[index][type];
+        }
+        createElementsInstance(index) {
+          if (this.store.elements[index]) {
+            throw new Error(`Storage already exists for checkout form instance ${index}`);
+          } else {
+            const stripeInstance = this.getStripeInstance();
+            this.store.elements[index] = stripeInstance.elements();
+            this.store.elementInstances[index] = {};
+          }
+        }
+        // FIXME: weak type is used
+        // eslint-disable-next-line flowtype/no-weak-types
+        createElement(type, index, options) {
+          if (!this.isInitialized()) {
+            throw new Error("Stripe has not been set up for this project \u2013 Go to the project's Ecommerce Payment settings in the Designer to link Stripe.");
+          }
+          if (this.store.elementInstances[index][type]) {
+            throw new Error(`Stripe Element of type ${type} for instance ${index} already exists on this page`);
+          }
+          const el = this.store.elements[index].create(type, options);
+          this.store.elementInstances[index][type] = el;
+          return el;
+        }
+        // FIXME: weak type is used
+        // eslint-disable-next-line flowtype/no-weak-types
+        updateCartPaymentRequest(index, orderData, siteData) {
+          const stripeInstance = this.getStripeInstance();
+          const requiresShipping = Boolean(orderData.statusFlags.requiresShipping);
+          const options = {
+            country: siteData.businessAddress.country || siteData.defaultCountry || "US",
+            currency: siteData.defaultCurrency.toLowerCase(),
+            total: {
+              amount: orderData.subtotal.value,
+              label: "Subtotal",
+              pending: true
+            },
+            displayItems: generateDisplayItemsFromOrder(orderData, false),
+            requestPayerName: true,
+            requestPayerEmail: true,
+            requestPayerPhone: false,
+            requestShipping: requiresShipping
+          };
+          try {
+            this.store.cartPaymentRequests[index] = stripeInstance.paymentRequest(options);
+          } catch (error) {
+            let ignoreError = false;
+            if (error.name === "IntegrationError") {
+              const unsupportedCountryPattern = /country should be one of the following strings(?:.*)You specified: (.*)./;
+              const matches = error.message.match(unsupportedCountryPattern);
+              ignoreError = Boolean(matches);
+            }
+            if (!ignoreError) {
+              throw error;
+            } else {
+              console.error(error);
+            }
+          }
+          return this.store.cartPaymentRequests[index];
+        }
+        getCartPaymentRequest(index) {
+          return this.store.cartPaymentRequests[index];
+        }
+      };
+      exports.StripeStore = StripeStore;
+      var generateDisplayItemsFromOrder = (orderData, showExtraItems) => [...orderData.userItems.map((item) => ({
+        label: `${item.product.f_name_} ${item.count > 1 ? `(${item.count})` : ""}`,
+        amount: item.rowTotal.value
+      })), ...showExtraItems ? orderData.extraItems.map((item) => ({
+        label: item.name,
+        amount: item.price.value
+      })) : []];
+      exports.generateDisplayItemsFromOrder = generateDisplayItemsFromOrder;
+      var generateShippingOptionsFromMethods = (shippingMethods) => shippingMethods.map((method) => ({
+        id: method.id,
+        label: method.name,
+        detail: method.description || "",
+        amount: method.price.value
+      }));
+      exports.generateShippingOptionsFromMethods = generateShippingOptionsFromMethods;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/eventHandlerProxyWithApolloClient.js
+  var require_eventHandlerProxyWithApolloClient = __commonJS({
+    "shared/render/plugins/Commerce/modules/eventHandlerProxyWithApolloClient.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = void 0;
+      var _defineProperty2 = _interopRequireDefault(require_defineProperty2());
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _stripeStore = require_stripeStore();
+      var enumeratePrototypeProps = (obj, propNames = []) => {
+        if (obj == null) {
+          return propNames;
+        }
+        return propNames.concat(enumeratePrototypeProps(Object.getPrototypeOf(obj))).concat(Object.keys(obj));
+      };
+      var createEventProxy = (event, currentTarget) => {
+        const propertyDefinitions = enumeratePrototypeProps(event).filter((propName) => propName !== "currentTarget").reduce((proxies, propName) => {
+          proxies[propName] = // $FlowFixMe Object.keys is "unsound", always infers `string` as output
+          typeof event[propName] === "function" ? (
+            // Proxy all the event methods so they will act on the original event:
+            // $FlowFixMe Object.keys is "unsound", always infers `string` as output
+            {
+              value: (...args) => event[propName](...args)
+            }
+          ) : (
+            // Proxy static props/getters because invoking them directly may result in "Illegal invokation" error.
+            // $FlowFixMe Object.keys is "unsound", always infers `string` as output
+            {
+              get: () => event[propName]
+            }
+          );
+          return proxies;
+        }, {});
+        const retargetedEvent = Object.create(event, (0, _extends2.default)({
+          // set currentTarget to the matched node:
+          currentTarget: {
+            value: currentTarget
+          }
+        }, propertyDefinitions));
+        return retargetedEvent;
+      };
+      var EventHandlerProxyWithApolloClient = class {
+        // FIXME: weak type is used
+        // eslint-disable-next-line flowtype/no-weak-types
+        constructor(apolloClient, stripeStore) {
+          (0, _defineProperty2.default)(this, "on", (eventName, eventMatcher, handler) => {
+            const existingHandlers = this.eventHandlers[eventName] instanceof Array ? this.eventHandlers[eventName] : [];
+            this.eventHandlers[eventName] = [...existingHandlers, this.createHandlerProxy(eventName, eventMatcher, handler)];
+            return this;
+          });
+          (0, _defineProperty2.default)(this, "createHandlerProxy", (eventName, eventMatcher, handler) => (event) => {
+            const match = eventMatcher(event);
+            const eventProxy = match instanceof Element ? createEventProxy(event, match) : event;
+            if (match) {
+              handler(eventProxy, this.apolloClient, this.stripeStore);
+            }
+          });
+          (0, _defineProperty2.default)(this, "attachHandlers", (target) => {
+            Object.keys(this.eventHandlers).forEach((eventName) => {
+              const handlerProxies = this.eventHandlers[eventName];
+              handlerProxies.forEach((handlerProxy) => target.addEventListener(eventName, handlerProxy, true));
+            });
