@@ -35275,3 +35275,434 @@
               const handlerProxies = this.eventHandlers[eventName];
               handlerProxies.forEach((handlerProxy) => target.addEventListener(eventName, handlerProxy, true));
             });
+            return this;
+          });
+          (0, _defineProperty2.default)(this, "removeHandlers", (target) => {
+            Object.keys(this.eventHandlers).forEach((eventName) => {
+              const handlerProxies = this.eventHandlers[eventName];
+              handlerProxies.forEach((handlerProxy) => target.removeEventListener(eventName, handlerProxy, true));
+            });
+            return this;
+          });
+          this.eventHandlers = {};
+          this.apolloClient = apolloClient;
+          this.stripeStore = stripeStore;
+        }
+      };
+      exports.default = EventHandlerProxyWithApolloClient;
+    }
+  });
+
+  // node_modules/graphql/jsutils/invariant.js
+  var require_invariant2 = __commonJS({
+    "node_modules/graphql/jsutils/invariant.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = invariant;
+      function invariant(condition, message) {
+        if (!condition) {
+          throw new Error(message);
+        }
+      }
+    }
+  });
+
+  // node_modules/graphql/language/source.js
+  var require_source = __commonJS({
+    "node_modules/graphql/language/source.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.Source = void 0;
+      var _invariant = require_invariant2();
+      var _invariant2 = _interopRequireDefault(_invariant);
+      function _interopRequireDefault(obj) {
+        return obj && obj.__esModule ? obj : { default: obj };
+      }
+      function _classCallCheck(instance, Constructor) {
+        if (!(instance instanceof Constructor)) {
+          throw new TypeError("Cannot call a class as a function");
+        }
+      }
+      var Source = exports.Source = function Source2(body, name, locationOffset) {
+        _classCallCheck(this, Source2);
+        this.body = body;
+        this.name = name || "GraphQL request";
+        this.locationOffset = locationOffset || { line: 1, column: 1 };
+        !(this.locationOffset.line > 0) ? (0, _invariant2.default)(0, "line in locationOffset is 1-indexed and must be positive") : void 0;
+        !(this.locationOffset.column > 0) ? (0, _invariant2.default)(0, "column in locationOffset is 1-indexed and must be positive") : void 0;
+      };
+    }
+  });
+
+  // node_modules/graphql/language/location.js
+  var require_location = __commonJS({
+    "node_modules/graphql/language/location.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.getLocation = getLocation;
+      function getLocation(source, position) {
+        var lineRegexp = /\r\n|[\n\r]/g;
+        var line = 1;
+        var column = position + 1;
+        var match = void 0;
+        while ((match = lineRegexp.exec(source.body)) && match.index < position) {
+          line += 1;
+          column = position + 1 - (match.index + match[0].length);
+        }
+        return { line, column };
+      }
+    }
+  });
+
+  // node_modules/graphql/error/printError.js
+  var require_printError = __commonJS({
+    "node_modules/graphql/error/printError.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.printError = printError;
+      var _location = require_location();
+      function printError(error) {
+        var printedLocations = [];
+        if (error.nodes) {
+          error.nodes.forEach(function(node) {
+            if (node.loc) {
+              printedLocations.push(highlightSourceAtLocation(node.loc.source, (0, _location.getLocation)(node.loc.source, node.loc.start)));
+            }
+          });
+        } else if (error.source && error.locations) {
+          var source = error.source;
+          error.locations.forEach(function(location) {
+            printedLocations.push(highlightSourceAtLocation(source, location));
+          });
+        }
+        return printedLocations.length === 0 ? error.message : [error.message].concat(printedLocations).join("\n\n") + "\n";
+      }
+      function highlightSourceAtLocation(source, location) {
+        var line = location.line;
+        var lineOffset = source.locationOffset.line - 1;
+        var columnOffset = getColumnOffset(source, location);
+        var contextLine = line + lineOffset;
+        var contextColumn = location.column + columnOffset;
+        var prevLineNum = (contextLine - 1).toString();
+        var lineNum = contextLine.toString();
+        var nextLineNum = (contextLine + 1).toString();
+        var padLen = nextLineNum.length;
+        var lines = source.body.split(/\r\n|[\n\r]/g);
+        lines[0] = whitespace(source.locationOffset.column - 1) + lines[0];
+        var outputLines = [source.name + " (" + contextLine + ":" + contextColumn + ")", line >= 2 && lpad(padLen, prevLineNum) + ": " + lines[line - 2], lpad(padLen, lineNum) + ": " + lines[line - 1], whitespace(2 + padLen + contextColumn - 1) + "^", line < lines.length && lpad(padLen, nextLineNum) + ": " + lines[line]];
+        return outputLines.filter(Boolean).join("\n");
+      }
+      function getColumnOffset(source, location) {
+        return location.line === 1 ? source.locationOffset.column - 1 : 0;
+      }
+      function whitespace(len) {
+        return Array(len + 1).join(" ");
+      }
+      function lpad(len, str) {
+        return whitespace(len - str.length) + str;
+      }
+    }
+  });
+
+  // node_modules/graphql/error/GraphQLError.js
+  var require_GraphQLError = __commonJS({
+    "node_modules/graphql/error/GraphQLError.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.GraphQLError = GraphQLError;
+      var _printError = require_printError();
+      var _location = require_location();
+      function GraphQLError(message, nodes, source, positions, path, originalError, extensions) {
+        var _nodes = Array.isArray(nodes) ? nodes.length !== 0 ? nodes : void 0 : nodes ? [nodes] : void 0;
+        var _source = source;
+        if (!_source && _nodes) {
+          var node = _nodes[0];
+          _source = node && node.loc && node.loc.source;
+        }
+        var _positions = positions;
+        if (!_positions && _nodes) {
+          _positions = _nodes.reduce(function(list, node2) {
+            if (node2.loc) {
+              list.push(node2.loc.start);
+            }
+            return list;
+          }, []);
+        }
+        if (_positions && _positions.length === 0) {
+          _positions = void 0;
+        }
+        var _locations = void 0;
+        if (positions && source) {
+          _locations = positions.map(function(pos) {
+            return (0, _location.getLocation)(source, pos);
+          });
+        } else if (_nodes) {
+          _locations = _nodes.reduce(function(list, node2) {
+            if (node2.loc) {
+              list.push((0, _location.getLocation)(node2.loc.source, node2.loc.start));
+            }
+            return list;
+          }, []);
+        }
+        Object.defineProperties(this, {
+          message: {
+            value: message,
+            // By being enumerable, JSON.stringify will include `message` in the
+            // resulting output. This ensures that the simplest possible GraphQL
+            // service adheres to the spec.
+            enumerable: true,
+            writable: true
+          },
+          locations: {
+            // Coercing falsey values to undefined ensures they will not be included
+            // in JSON.stringify() when not provided.
+            value: _locations || void 0,
+            // By being enumerable, JSON.stringify will include `locations` in the
+            // resulting output. This ensures that the simplest possible GraphQL
+            // service adheres to the spec.
+            enumerable: true
+          },
+          path: {
+            // Coercing falsey values to undefined ensures they will not be included
+            // in JSON.stringify() when not provided.
+            value: path || void 0,
+            // By being enumerable, JSON.stringify will include `path` in the
+            // resulting output. This ensures that the simplest possible GraphQL
+            // service adheres to the spec.
+            enumerable: true
+          },
+          nodes: {
+            value: _nodes || void 0
+          },
+          source: {
+            value: _source || void 0
+          },
+          positions: {
+            value: _positions || void 0
+          },
+          originalError: {
+            value: originalError
+          },
+          extensions: {
+            value: extensions || originalError && originalError.extensions
+          }
+        });
+        if (originalError && originalError.stack) {
+          Object.defineProperty(this, "stack", {
+            value: originalError.stack,
+            writable: true,
+            configurable: true
+          });
+        } else if (Error.captureStackTrace) {
+          Error.captureStackTrace(this, GraphQLError);
+        } else {
+          Object.defineProperty(this, "stack", {
+            value: Error().stack,
+            writable: true,
+            configurable: true
+          });
+        }
+      }
+      GraphQLError.prototype = Object.create(Error.prototype, {
+        constructor: { value: GraphQLError },
+        name: { value: "GraphQLError" },
+        toString: {
+          value: function toString() {
+            return (0, _printError.printError)(this);
+          }
+        }
+      });
+    }
+  });
+
+  // node_modules/graphql/error/syntaxError.js
+  var require_syntaxError = __commonJS({
+    "node_modules/graphql/error/syntaxError.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.syntaxError = syntaxError;
+      var _GraphQLError = require_GraphQLError();
+      function syntaxError(source, position, description) {
+        return new _GraphQLError.GraphQLError("Syntax Error: " + description, void 0, source, [position]);
+      }
+    }
+  });
+
+  // node_modules/graphql/error/locatedError.js
+  var require_locatedError = __commonJS({
+    "node_modules/graphql/error/locatedError.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.locatedError = locatedError;
+      var _GraphQLError = require_GraphQLError();
+      function locatedError(originalError, nodes, path) {
+        if (originalError && Array.isArray(originalError.path)) {
+          return originalError;
+        }
+        return new _GraphQLError.GraphQLError(originalError && originalError.message, originalError && originalError.nodes || nodes, originalError && originalError.source, originalError && originalError.positions, path, originalError);
+      }
+    }
+  });
+
+  // node_modules/graphql/error/formatError.js
+  var require_formatError = __commonJS({
+    "node_modules/graphql/error/formatError.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _extends = Object.assign || function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      };
+      exports.formatError = formatError;
+      var _invariant = require_invariant2();
+      var _invariant2 = _interopRequireDefault(_invariant);
+      function _interopRequireDefault(obj) {
+        return obj && obj.__esModule ? obj : { default: obj };
+      }
+      function formatError(error) {
+        !error ? (0, _invariant2.default)(0, "Received null or undefined error.") : void 0;
+        return _extends({}, error.extensions, {
+          message: error.message || "An unknown error occurred.",
+          locations: error.locations,
+          path: error.path
+        });
+      }
+    }
+  });
+
+  // node_modules/graphql/error/index.js
+  var require_error = __commonJS({
+    "node_modules/graphql/error/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _GraphQLError = require_GraphQLError();
+      Object.defineProperty(exports, "GraphQLError", {
+        enumerable: true,
+        get: function get() {
+          return _GraphQLError.GraphQLError;
+        }
+      });
+      var _syntaxError = require_syntaxError();
+      Object.defineProperty(exports, "syntaxError", {
+        enumerable: true,
+        get: function get() {
+          return _syntaxError.syntaxError;
+        }
+      });
+      var _locatedError = require_locatedError();
+      Object.defineProperty(exports, "locatedError", {
+        enumerable: true,
+        get: function get() {
+          return _locatedError.locatedError;
+        }
+      });
+      var _printError = require_printError();
+      Object.defineProperty(exports, "printError", {
+        enumerable: true,
+        get: function get() {
+          return _printError.printError;
+        }
+      });
+      var _formatError = require_formatError();
+      Object.defineProperty(exports, "formatError", {
+        enumerable: true,
+        get: function get() {
+          return _formatError.formatError;
+        }
+      });
+    }
+  });
+
+  // node_modules/graphql/language/blockStringValue.js
+  var require_blockStringValue = __commonJS({
+    "node_modules/graphql/language/blockStringValue.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = blockStringValue;
+      function blockStringValue(rawString) {
+        var lines = rawString.split(/\r\n|[\n\r]/g);
+        var commonIndent = null;
+        for (var i = 1; i < lines.length; i++) {
+          var line = lines[i];
+          var indent = leadingWhitespace(line);
+          if (indent < line.length && (commonIndent === null || indent < commonIndent)) {
+            commonIndent = indent;
+            if (commonIndent === 0) {
+              break;
+            }
+          }
+        }
+        if (commonIndent) {
+          for (var _i = 1; _i < lines.length; _i++) {
+            lines[_i] = lines[_i].slice(commonIndent);
+          }
+        }
+        while (lines.length > 0 && isBlank(lines[0])) {
+          lines.shift();
+        }
+        while (lines.length > 0 && isBlank(lines[lines.length - 1])) {
+          lines.pop();
+        }
+        return lines.join("\n");
+      }
+      function leadingWhitespace(str) {
+        var i = 0;
+        while (i < str.length && (str[i] === " " || str[i] === "	")) {
+          i++;
+        }
+        return i;
+      }
+      function isBlank(str) {
+        return leadingWhitespace(str) === str.length;
+      }
+    }
+  });
+
+  // node_modules/graphql/language/lexer.js
+  var require_lexer = __commonJS({
+    "node_modules/graphql/language/lexer.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.TokenKind = void 0;
+      exports.createLexer = createLexer;
+      exports.getTokenDesc = getTokenDesc;
+      var _error = require_error();
+      var _blockStringValue = require_blockStringValue();
+      var _blockStringValue2 = _interopRequireDefault(_blockStringValue);
+      function _interopRequireDefault(obj) {
+        return obj && obj.__esModule ? obj : { default: obj };
+      }
+      function createLexer(source, options) {
+        var startOfFileToken = new Tok(TokenKind.SOF, 0, 0, 0, 0, null);
+        var lexer = {
+          source,
+          options,
