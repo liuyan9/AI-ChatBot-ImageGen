@@ -37511,3 +37511,452 @@
       var isNil = (value) => value == null;
       exports.isNil = isNil;
       var notNil = complement(isNil);
+      exports.notNil = notNil;
+      var either = (predicateA, predicateB) => (...args) => predicateA(...args) || predicateB(...args);
+      exports.either = either;
+      var both = (predicateA, predicateB) => (...args) => predicateA(...args) && predicateB(...args);
+      exports.both = both;
+      var when = (predicate) => (whenTrueFn) => (value) => predicate(value) ? whenTrueFn(value) : value;
+      exports.when = when;
+      var has = (key) => (object) => hasOwn.call(object, key);
+      exports.has = has;
+      var prop = (key) => (object) => object[key];
+      exports.prop = prop;
+      var assocReducer = (acc, key) => {
+        acc.result[key] = acc.source[key];
+        return acc;
+      };
+      var assoc = (key) => {
+        const hasKey = has(key);
+        return (value) => (object) => {
+          if (hasKey(object) && object[key] === value) {
+            return object;
+          }
+          const result = objectKeys(object).reduce(assocReducer, {
+            source: object,
+            result: {}
+          }).result;
+          result[key] = value;
+          return result;
+        };
+      };
+      exports.assoc = assoc;
+      var dissocReducer = (acc, key) => {
+        if (acc.exclude !== key) {
+          acc.result[key] = acc.source[key];
+        }
+        return acc;
+      };
+      var dissoc = (key) => {
+        const hasKey = has(key);
+        return (object) => hasKey(object) ? objectKeys(object).reduce(dissocReducer, {
+          source: object,
+          result: {},
+          exclude: key
+        }).result : object;
+      };
+      exports.dissoc = dissoc;
+      var adjust = (f) => (key) => {
+        const hasKey = has(key);
+        return (obj) => hasKey(obj) ? assoc(key)(f(obj[key]))(obj) : obj;
+      };
+      exports.adjust = adjust;
+      var unionWith = (combine) => (first) => first === emptyObject ? identity : (second) => {
+        if (second === emptyObject)
+          return first;
+        let changedFromFirst = false;
+        let changedFromSecond = false;
+        const result = {};
+        for (const key in second) {
+          const secondVal = second[key];
+          if (key in first) {
+            const firstVal = first[key];
+            const finalVal = combine(firstVal)(secondVal);
+            if (finalVal !== secondVal) {
+              changedFromSecond = true;
+            }
+            if (finalVal !== firstVal) {
+              changedFromFirst = true;
+            }
+            result[key] = finalVal;
+          } else {
+            changedFromFirst = true;
+            result[key] = secondVal;
+          }
+        }
+        for (const key in first) {
+          if (key in result)
+            continue;
+          changedFromSecond = true;
+          result[key] = first[key];
+        }
+        if (!changedFromFirst)
+          return first;
+        if (!changedFromSecond)
+          return second;
+        return result;
+      };
+      exports.unionWith = unionWith;
+      var union = unionWith(constant);
+      exports.union = union;
+      var unionTo = flip(union);
+      exports.unionTo = unionTo;
+      var omitReducer = (acc, key) => {
+        if (acc.exclude.includes(key)) {
+          acc.changed = true;
+        } else {
+          acc.result[key] = acc.source[key];
+        }
+        return acc;
+      };
+      var omit = (keys) => {
+        const len = keys.length;
+        if (len === 0) {
+          return identity;
+        }
+        if (len === 1) {
+          return dissoc(keys[0]);
+        }
+        return (object) => {
+          const {
+            result,
+            changed
+          } = objectKeys(object).reduce(omitReducer, {
+            source: object,
+            exclude: keys,
+            changed: false,
+            result: {}
+          });
+          return changed ? result : object;
+        };
+      };
+      exports.omit = omit;
+      var pickReducer = (acc, key) => {
+        if (hasOwn.call(acc.source, key)) {
+          acc.result[key] = acc.source[key];
+        }
+        return acc;
+      };
+      var pick = (keys) => (source) => keys.reduce(pickReducer, {
+        source,
+        result: {}
+      }).result;
+      exports.pick = pick;
+      var pickByReducer = (acc, key) => {
+        const value = acc.source[key];
+        if (acc.predicate(value)) {
+          acc.result[key] = value;
+        } else {
+          acc.changed = true;
+        }
+        return acc;
+      };
+      var pickBy = (predicate) => (object) => {
+        const {
+          result,
+          changed
+        } = objectKeys(object).reduce(pickByReducer, {
+          source: object,
+          predicate,
+          changed: false,
+          result: {}
+        });
+        return changed ? result : object;
+      };
+      exports.pickBy = pickBy;
+      var lookup = (key) => {
+        const hasKey = has(key);
+        return (object) => hasKey(object) ? (0, _option.Some)(object[key]) : _option.None;
+      };
+      exports.lookup = lookup;
+      var lookupWithDefault = (defaultValue) => (key) => {
+        const hasKey = has(key);
+        return (object) => hasKey(object) ? object[key] : defaultValue;
+      };
+      exports.lookupWithDefault = lookupWithDefault;
+      var find = (pred) => (array) => {
+        const index = array.findIndex(pred);
+        return index === -1 ? _option.None : (0, _option.Some)(array[index]);
+      };
+      exports.find = find;
+      var binaryThrush = (v, f) => f(v);
+      var pipe = (fns) => (value) => fns.reduce(binaryThrush, value);
+      exports.pipe = pipe;
+      var zipWith = (f) => (xs) => (ys) => {
+        const rv = [];
+        let idx = 0;
+        const len = Math.min(xs.length, ys.length);
+        while (idx < len) {
+          rv[idx] = f(xs[idx])(ys[idx]);
+          idx += 1;
+        }
+        return rv;
+      };
+      exports.zipWith = zipWith;
+      var zip = zipWith((x) => (y) => [x, y]);
+      exports.zip = zip;
+      function getMinLength(arrays) {
+        if (arrays.length === 0)
+          return 0;
+        if (arrays.length === 1)
+          return arrays[0].length;
+        let min = arrays[0].length;
+        for (let i = 1, len = arrays.length; i < len; i++) {
+          const arr_len = arrays[i].length;
+          if (arr_len < min)
+            min = arr_len;
+        }
+        return min;
+      }
+      function zipCat(fn) {
+        return function zipCat_inner(arrays) {
+          const zipLength = getMinLength(arrays);
+          const rv = [];
+          for (let i = 0, len = arrays.length; i < len; i++) {
+            const array = arrays[i];
+            for (let j = 0, array_len = array.length; j < array_len; j++) {
+              const item = array[j];
+              if (j < zipLength) {
+                const existing = rv[j];
+                if (typeof existing !== "undefined") {
+                  rv[j] = fn(existing)(item);
+                } else {
+                  rv[j] = item;
+                }
+              } else {
+                rv.push(item);
+              }
+            }
+          }
+          return rv;
+        };
+      }
+      var map = (f) => (xs) => xs.map(f);
+      exports.map = map;
+      var mapArray = (f) => (xs) => {
+        let changed = false;
+        const ys = xs.reduce((res, x) => {
+          const newX = f(x);
+          if (newX !== x) {
+            changed = true;
+          }
+          res.push(newX);
+          return res;
+        }, []);
+        return changed ? ys : xs;
+      };
+      exports.mapArray = mapArray;
+      var filter = (f) => (xs) => xs.filter(f);
+      exports.filter = filter;
+      var reduce = (reducer) => (init) => (xs) => xs.reduce(reducer, init);
+      exports.reduce = reduce;
+      var reduceObject = (reducer) => (init) => (obj) => objectKeys(obj).reduce((result, key) => reducer(result)(obj[key]), init);
+      exports.reduceObject = reduceObject;
+      var objOf = (key) => (value) => ({
+        [key]: value
+      });
+      exports.objOf = objOf;
+      var concat = (ys) => ys.length ? (xs) => xs.length ? xs.concat(ys) : ys : identity;
+      exports.concat = concat;
+      var concatTo = flip(concat);
+      exports.concatTo = concatTo;
+      var append = (value) => concat([value]);
+      exports.append = append;
+      var constantIdentity = constant(identity);
+      exports.constantIdentity = constantIdentity;
+      var add = (x) => (y) => x + y;
+      exports.add = add;
+      var inc = (x) => x + 1;
+      exports.inc = inc;
+      var max = (x) => (y) => x > y ? x : y;
+      exports.max = max;
+      var parseIntWithRadix = (radix) => (num) => {
+        const parsed = parseInt(num, radix);
+        return isNaN(parsed) ? _option.None : (0, _option.Some)(parsed);
+      };
+      exports.parseIntWithRadix = parseIntWithRadix;
+      var safeParseInt = parseIntWithRadix(10);
+      exports.parseInt = safeParseInt;
+      var head = (xs) => xs.length ? (0, _option.Some)(xs[0]) : _option.None;
+      exports.head = head;
+      var last = (xs) => xs.length ? (0, _option.Some)(xs[xs.length - 1]) : _option.None;
+      exports.last = last;
+      var tail = (xs) => xs.slice(1);
+      exports.tail = tail;
+      var length = (xs) => xs.length;
+      exports.length = length;
+      var flatMap = (f) => reduce((result, item) => {
+        const ys = f(item);
+        if (!ys.length) {
+          return result;
+        }
+        const nextResult = result.length ? result : [];
+        nextResult.push.apply(nextResult, ys);
+        return nextResult;
+      })(emptyArray);
+      exports.flatMap = flatMap;
+      var flat = flatMap(identity);
+      exports.flat = flat;
+      var test = (regex) => (string) => {
+        regex.lastIndex = 0;
+        const result = regex.test(string);
+        regex.lastIndex = 0;
+        return result;
+      };
+      exports.test = test;
+      var match = (regex) => (string) => {
+        const result = string.match(regex);
+        return result ? (0, _option.Some)(result[0]) : _option.None;
+      };
+      exports.match = match;
+      var replace = (pattern) => (replacement) => (string) => string.replace(pattern, replacement);
+      exports.replace = replace;
+      var split = (pattern) => (string) => string.split(pattern);
+      exports.split = split;
+      var lens = (getter) => (setter) => (toFunctor) => (target) => toFunctor(getter(target)).map((focus) => setter(focus)(target));
+      exports.lens = lens;
+      var lensProp = (key) => lens(prop(key))(assoc(key));
+      exports.lensProp = lensProp;
+      var view = (
+        // $FlowIgnore
+        compose(compose(_Const.getConst))(thrush(_Const.Const))
+      );
+      exports.view = view;
+      var over = (l) => (f) => {
+        const toFunctor = compose(_Identity.Identity)(f);
+        return compose(_Identity.runIdentity)(l(toFunctor));
+      };
+      exports.over = over;
+      var set = (l) => compose(over(l))(constant);
+      exports.set = set;
+      var constantNone = constant(_option.None);
+      exports.constantNone = constantNone;
+      var noneToErr = (error) => (0, _option.maybe)((0, _result.Err)(error))(_result.Ok);
+      exports.noneToErr = noneToErr;
+      var okToOption = (0, _result.either)(constantNone)(_option.Some);
+      exports.okToOption = okToOption;
+      var errToOption = (0, _result.either)(_option.Some)(constantNone);
+      exports.errToOption = errToOption;
+      var tap = (unsafeFn) => (value) => {
+        unsafeFn(value);
+        return value;
+      };
+      exports.tap = tap;
+      var extractBool = (0, _option.maybe)(false)(identity);
+      exports.extractBool = extractBool;
+      var extractArray = (0, _option.maybe)(emptyArray)(identity);
+      exports.extractArray = extractArray;
+      var extractFunctionFromOption = (0, _option.maybe)(identity)(identity);
+      exports.extractFunctionFromOption = extractFunctionFromOption;
+      var extractFunctionFromResult = (0, _result.either)(constantIdentity)(identity);
+      exports.extractFunctionFromResult = extractFunctionFromResult;
+      var optionToArray = (0, _option.maybe)(emptyArray)(Array.of);
+      exports.optionToArray = optionToArray;
+      var optionOfEmptyArray = (0, _option.Some)(emptyArray);
+      var traverseOptions = (f) => (xs) => xs.reduce((option, x) => f(x).map(append).ap(option), optionOfEmptyArray);
+      exports.traverseOptions = traverseOptions;
+      var resultOfEmptyArray = (0, _result.Ok)(emptyArray);
+      var traverseResults = (f) => (xs) => xs.reduce((result, x) => f(x).map(append).ap(result), resultOfEmptyArray);
+      exports.traverseResults = traverseResults;
+      var resultOfEmptyObject = (0, _result.Ok)(emptyObject);
+      var traverseObjectResults = (f) => (obj) => objectKeys(obj).reduce((result, key) => f(obj[key]).map(assoc(key)).ap(result), resultOfEmptyObject);
+      exports.traverseObjectResults = traverseObjectResults;
+      var mapValues = (f) => (obj) => {
+        let changed = false;
+        const newObj = objectKeys(obj).reduce((result, key) => {
+          const oldVal = obj[key];
+          const newVal = f(oldVal);
+          if (oldVal !== newVal) {
+            changed = true;
+          }
+          result[key] = newVal;
+          return result;
+        }, {});
+        return changed ? newObj : obj;
+      };
+      exports.mapValues = mapValues;
+      var values = (obj) => Object.keys(obj).map((k) => obj[k]);
+      exports.values = values;
+      var entries = (obj) => {
+        const keys = Object.keys(obj);
+        return keys.map((key) => [key, obj[key]]);
+      };
+      exports.entries = entries;
+      var getDeepestValues = (obj) => {
+        return Object.keys(obj).flatMap((k) => obj[k] && typeof obj[k] === "object" ? getDeepestValues(obj[k]) : [obj[k]]);
+      };
+      exports.getDeepestValues = getDeepestValues;
+      var nth = (index) => (a) => index < 0 || index >= a.length ? _option.None : (0, _option.Some)(a[index]);
+      exports.nth = nth;
+    }
+  });
+
+  // packages/systems/users/constants/types.js
+  var require_types = __commonJS({
+    "packages/systems/users/constants/types.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.USYS_ACCESS_TYPES = void 0;
+      var USYS_ACCESS_TYPES = {
+        LOGGED_IN: "LOGGED_IN",
+        ADMIN_ALWAYS_VISIBLE: "ADMIN_ALWAYS_VISIBLE"
+      };
+      exports.USYS_ACCESS_TYPES = USYS_ACCESS_TYPES;
+    }
+  });
+
+  // packages/systems/users/constants/errorStates.js
+  var require_errorStates = __commonJS({
+    "packages/systems/users/constants/errorStates.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.updatePasswordErrorStates = exports.updateAccountErrorStates = exports.signUpErrorStates = exports.resetPasswordErrorStates = exports.logInErrorStates = exports.__DEPRECATED__logInErrorStates = exports.USER_FILE_UPLOAD_ERRORS = exports.UPDATE_PASSWORD_UI_ERROR_CODES = exports.UPDATE_ACCOUNT_ERROR_CODES = exports.SIGNUP_UI_ERROR_CODES = exports.SIGNUP_ERROR_CATEGORY = exports.SERVER_DATA_VALIDATION_ERRORS = exports.RESET_PASSWORD_UI_ERROR_CODES = exports.LOGIN_UI_ERROR_CODES = exports.FORM_TYPE_ERROR_PATH = exports.FORM_TOO_SMALL_ERROR_PATH = exports.FORM_TOO_LARGE_ERROR_PATH = exports.FORM_REQUIRED_ERROR_PATH = exports.FORM_GENERIC_ERROR_PATH = exports.ErrorStateToCopy = exports.ERROR_STATE = exports.ERROR_MSG_CLASS = exports.ERROR_ATTRIBUTE_PREFIX = void 0;
+      var ERROR_MSG_CLASS = "user-form-error-msg";
+      exports.ERROR_MSG_CLASS = ERROR_MSG_CLASS;
+      var ERROR_STATE = {
+        SIGNUP: "signup-error-state",
+        LOGIN: "login-error-state",
+        UPDATE_PASSWORD: "update-password-error-state",
+        RESET_PASSWORD: "reset-password-error-state",
+        ACCOUNT_UPDATE: "account-update-error-state"
+      };
+      exports.ERROR_STATE = ERROR_STATE;
+      var ErrorStateToCopy = (errorStateType, id) => {
+        if (errorStateType === "signup-error-state") {
+          var _signUpErrorStates$id, _signUpErrorStates$id2;
+          return (_signUpErrorStates$id = (_signUpErrorStates$id2 = signUpErrorStates[id]) === null || _signUpErrorStates$id2 === void 0 ? void 0 : _signUpErrorStates$id2.copy) !== null && _signUpErrorStates$id !== void 0 ? _signUpErrorStates$id : null;
+        }
+        if (errorStateType === "login-error-state") {
+          var _logInErrorStates$id$, _logInErrorStates$id;
+          return (_logInErrorStates$id$ = (_logInErrorStates$id = logInErrorStates[id]) === null || _logInErrorStates$id === void 0 ? void 0 : _logInErrorStates$id.copy) !== null && _logInErrorStates$id$ !== void 0 ? _logInErrorStates$id$ : null;
+        }
+        if (errorStateType === "update-password-error-state") {
+          var _updatePasswordErrorS, _updatePasswordErrorS2;
+          return (_updatePasswordErrorS = (_updatePasswordErrorS2 = updatePasswordErrorStates[id]) === null || _updatePasswordErrorS2 === void 0 ? void 0 : _updatePasswordErrorS2.copy) !== null && _updatePasswordErrorS !== void 0 ? _updatePasswordErrorS : null;
+        }
+        if (errorStateType === "reset-password-error-state") {
+          var _resetPasswordErrorSt, _resetPasswordErrorSt2;
+          return (_resetPasswordErrorSt = (_resetPasswordErrorSt2 = resetPasswordErrorStates[id]) === null || _resetPasswordErrorSt2 === void 0 ? void 0 : _resetPasswordErrorSt2.copy) !== null && _resetPasswordErrorSt !== void 0 ? _resetPasswordErrorSt : null;
+        }
+        if (errorStateType === "account-update-error-state") {
+          var _updateAccountErrorSt, _updateAccountErrorSt2;
+          return (_updateAccountErrorSt = (_updateAccountErrorSt2 = updateAccountErrorStates[id]) === null || _updateAccountErrorSt2 === void 0 ? void 0 : _updateAccountErrorSt2.copy) !== null && _updateAccountErrorSt !== void 0 ? _updateAccountErrorSt : null;
+        }
+        console.error(`copy for ${errorStateType} not found`);
+        return null;
+      };
+      exports.ErrorStateToCopy = ErrorStateToCopy;
+      var SERVER_DATA_VALIDATION_ERRORS = {
+        RequiredError: "EmptyValue",
+        MinSizeError: "MinSizeError",
+        MaxSizeError: "MaxSizeError",
+        ExtensionsError: "ExtensionsError",
+        DefaultError: "DefaultError"
+      };
+      exports.SERVER_DATA_VALIDATION_ERRORS = SERVER_DATA_VALIDATION_ERRORS;
+      var LOGIN_UI_ERROR_CODES = {
+        GENERAL_ERROR: "GENERAL_ERROR",
