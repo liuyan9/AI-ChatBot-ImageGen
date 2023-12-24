@@ -37960,3 +37960,453 @@
       exports.SERVER_DATA_VALIDATION_ERRORS = SERVER_DATA_VALIDATION_ERRORS;
       var LOGIN_UI_ERROR_CODES = {
         GENERAL_ERROR: "GENERAL_ERROR",
+        INVALID_EMAIL_OR_PASSWORD: "INVALID_EMAIL_OR_PASSWORD"
+      };
+      exports.LOGIN_UI_ERROR_CODES = LOGIN_UI_ERROR_CODES;
+      var SIGNUP_UI_ERROR_CODES = {
+        GENERAL_ERROR: "GENERAL_ERROR",
+        NOT_ALLOWED: "NOT_ALLOWED",
+        NOT_VERIFIED: "NOT_VERIFIED",
+        EMAIL_ALREADY_EXIST: "EMAIL_ALREADY_EXIST",
+        USE_INVITE_EMAIL: "USE_INVITE_EMAIL",
+        INVALID_EMAIL: "INVALID_EMAIL",
+        INVALID_PASSWORD: "INVALID_PASSWORD",
+        EXPIRED_TOKEN: "EXPIRED_TOKEN",
+        VALIDATION_FAILED: "VALIDATION_FAILED",
+        REQUIRED: "REQUIRED"
+      };
+      exports.SIGNUP_UI_ERROR_CODES = SIGNUP_UI_ERROR_CODES;
+      var ERROR_ATTRIBUTE_PREFIX = {
+        SIGNUP: "wf-signup-form",
+        LOGIN: "wf-login-form",
+        RESET_PASSWORD: "wf-reset-pw-form",
+        UPDATE_PASSWORD: "wf-update-pw-form",
+        ACCOUNT_UPDATE: "wf-account-update-form"
+      };
+      exports.ERROR_ATTRIBUTE_PREFIX = ERROR_ATTRIBUTE_PREFIX;
+      var UPDATE_PASSWORD_UI_ERROR_CODES = {
+        GENERAL_ERROR: "GENERAL_ERROR",
+        WEAK_PASSWORD: "WEAK_PASSWORD"
+      };
+      exports.UPDATE_PASSWORD_UI_ERROR_CODES = UPDATE_PASSWORD_UI_ERROR_CODES;
+      var RESET_PASSWORD_UI_ERROR_CODES = {
+        GENERAL_ERROR: "GENERAL_ERROR"
+      };
+      exports.RESET_PASSWORD_UI_ERROR_CODES = RESET_PASSWORD_UI_ERROR_CODES;
+      var TOO_LARGE_ERR = "TOO_LARGE_ERROR";
+      var TOO_SMALL_ERR = "TOO_SMALL_ERROR";
+      var TYPE_ERR = "TYPE_ERROR";
+      var GENERIC_ERR = "GENERIC_ERROR";
+      var REQUIRED_ERR = "REQUIRED_ERROR";
+      var USER_FILE_UPLOAD_ERRORS = {
+        GENERIC: {
+          id: GENERIC_ERR,
+          msg: "Upload failed. Something went wrong. Please retry.",
+          path: ["data", "form", GENERIC_ERR]
+        },
+        TOO_LARGE: {
+          id: TOO_LARGE_ERR,
+          msg: "Upload failed. File too large.",
+          path: ["data", "form", TOO_LARGE_ERR]
+        },
+        TOO_SMALL: {
+          id: TOO_SMALL_ERR,
+          msg: "Upload failed. File too small.",
+          path: ["data", "form", TOO_SMALL_ERR]
+        },
+        TYPE: {
+          id: TYPE_ERR,
+          msg: "Upload failed. Invalid file type.",
+          path: ["data", "form", TYPE_ERR]
+        },
+        REQUIRED: {
+          id: REQUIRED_ERR,
+          msg: "Please upload a file.",
+          path: ["data", "form", REQUIRED_ERR]
+        }
+      };
+      exports.USER_FILE_UPLOAD_ERRORS = USER_FILE_UPLOAD_ERRORS;
+      var FORM_PATH = [{
+        in: "Record",
+        at: "form"
+      }];
+      var FORM_TOO_LARGE_ERROR_PATH = [...FORM_PATH, {
+        in: "Record",
+        at: TOO_LARGE_ERR
+      }];
+      exports.FORM_TOO_LARGE_ERROR_PATH = FORM_TOO_LARGE_ERROR_PATH;
+      var FORM_TOO_SMALL_ERROR_PATH = [...FORM_PATH, {
+        in: "Record",
+        at: TOO_SMALL_ERR
+      }];
+      exports.FORM_TOO_SMALL_ERROR_PATH = FORM_TOO_SMALL_ERROR_PATH;
+      var FORM_TYPE_ERROR_PATH = [...FORM_PATH, {
+        in: "Record",
+        at: TYPE_ERR
+      }];
+      exports.FORM_TYPE_ERROR_PATH = FORM_TYPE_ERROR_PATH;
+      var FORM_GENERIC_ERROR_PATH = [...FORM_PATH, {
+        in: "Record",
+        at: GENERIC_ERR
+      }];
+      exports.FORM_GENERIC_ERROR_PATH = FORM_GENERIC_ERROR_PATH;
+      var FORM_REQUIRED_ERROR_PATH = [...FORM_PATH, {
+        in: "Record",
+        at: REQUIRED_ERR
+      }];
+      exports.FORM_REQUIRED_ERROR_PATH = FORM_REQUIRED_ERROR_PATH;
+      var __DEPRECATED__logInErrorStates = {
+        [LOGIN_UI_ERROR_CODES.GENERAL_ERROR]: {
+          id: LOGIN_UI_ERROR_CODES.GENERAL_ERROR,
+          name: "General error",
+          copy: "We're having trouble logging you in. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", LOGIN_UI_ERROR_CODES.GENERAL_ERROR]
+        }
+      };
+      exports.__DEPRECATED__logInErrorStates = __DEPRECATED__logInErrorStates;
+      var logInErrorStates = {
+        [LOGIN_UI_ERROR_CODES.GENERAL_ERROR]: {
+          id: LOGIN_UI_ERROR_CODES.GENERAL_ERROR,
+          name: "General error",
+          copy: "We're having trouble logging you in. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", LOGIN_UI_ERROR_CODES.GENERAL_ERROR]
+        },
+        [LOGIN_UI_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD]: {
+          id: LOGIN_UI_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD,
+          name: "Wrong email or password",
+          copy: "Invalid email or password. Please try again.",
+          path: ["data", "users", LOGIN_UI_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD]
+        }
+      };
+      exports.logInErrorStates = logInErrorStates;
+      var SIGNUP_ERROR_CATEGORY = {
+        GENERAL: {
+          id: "GENERAL",
+          label: "General Errors"
+        },
+        EMAIL: {
+          id: "EMAIL",
+          label: "Email Errors"
+        },
+        PASSWORD: {
+          id: "PASSWORD",
+          label: "Password Errors"
+        },
+        INVITE: {
+          id: "INVITE",
+          label: "Invitation Errors"
+        },
+        VERFIICATION: {
+          id: "VERIFCATION",
+          label: "Verification Errors"
+        },
+        VALIDATION: {
+          id: "VALIDATION",
+          label: "Validation Errors"
+        }
+      };
+      exports.SIGNUP_ERROR_CATEGORY = SIGNUP_ERROR_CATEGORY;
+      var signUpErrorStates = {
+        [SIGNUP_UI_ERROR_CODES.GENERAL_ERROR]: {
+          id: SIGNUP_UI_ERROR_CODES.GENERAL_ERROR,
+          category: SIGNUP_ERROR_CATEGORY.GENERAL,
+          name: "General error",
+          copy: "There was an error signing you up. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.GENERAL_ERROR]
+        },
+        [SIGNUP_UI_ERROR_CODES.NOT_ALLOWED]: {
+          id: SIGNUP_UI_ERROR_CODES.NOT_ALLOWED,
+          category: SIGNUP_ERROR_CATEGORY.EMAIL,
+          name: "Email not allowed",
+          copy: "You're not allowed to access this site, please contact the admin for support.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.NOT_ALLOWED]
+        },
+        // email errors
+        [SIGNUP_UI_ERROR_CODES.INVALID_EMAIL]: {
+          id: SIGNUP_UI_ERROR_CODES.INVALID_EMAIL,
+          category: SIGNUP_ERROR_CATEGORY.EMAIL,
+          name: "Invalid email",
+          copy: "Make sure your email exists and is properly formatted (e.g., user@domain.com).",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.INVALID_EMAIL]
+        },
+        [SIGNUP_UI_ERROR_CODES.EMAIL_ALREADY_EXIST]: {
+          id: SIGNUP_UI_ERROR_CODES.EMAIL_ALREADY_EXIST,
+          category: SIGNUP_ERROR_CATEGORY.EMAIL,
+          name: "Email already exists",
+          copy: "An account with this email address already exists. Log in or reset your password.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.EMAIL_ALREADY_EXIST]
+        },
+        // invitation errors
+        [SIGNUP_UI_ERROR_CODES.USE_INVITE_EMAIL]: {
+          id: SIGNUP_UI_ERROR_CODES.USE_INVITE_EMAIL,
+          category: SIGNUP_ERROR_CATEGORY.INVITE,
+          name: "Must use invite email",
+          copy: "Use the same email address your invitation was sent to.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.USE_INVITE_EMAIL]
+        },
+        // password errors
+        [SIGNUP_UI_ERROR_CODES.INVALID_PASSWORD]: {
+          id: SIGNUP_UI_ERROR_CODES.INVALID_PASSWORD,
+          category: SIGNUP_ERROR_CATEGORY.PASSWORD,
+          name: "Invalid password",
+          copy: "Your password must be at least 8 characters.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.INVALID_PASSWORD]
+        },
+        // verification errors
+        [SIGNUP_UI_ERROR_CODES.NOT_VERIFIED]: {
+          id: SIGNUP_UI_ERROR_CODES.NOT_VERIFIED,
+          category: SIGNUP_ERROR_CATEGORY.VERFIICATION,
+          name: "Verification failed",
+          copy: "We couldn't verify your account. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.NOT_VERIFIED]
+        },
+        [SIGNUP_UI_ERROR_CODES.EXPIRED_TOKEN]: {
+          id: SIGNUP_UI_ERROR_CODES.EXPIRED_TOKEN,
+          category: SIGNUP_ERROR_CATEGORY.VERFIICATION,
+          name: "Verification expired",
+          copy: "This link has expired. A new link has been sent to your email. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.EXPIRED_TOKEN]
+        },
+        [SIGNUP_UI_ERROR_CODES.VALIDATION_FAILED]: {
+          id: SIGNUP_UI_ERROR_CODES.VALIDATION_FAILED,
+          category: SIGNUP_ERROR_CATEGORY.VALIDATION,
+          name: "Validation error",
+          copy: "There was an error in some of the information provided.",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.VALIDATION_FAILED]
+        },
+        [SIGNUP_UI_ERROR_CODES.REQUIRED]: {
+          id: SIGNUP_UI_ERROR_CODES.REQUIRED,
+          category: SIGNUP_ERROR_CATEGORY.VALIDATION,
+          name: "Missing information",
+          copy: "Fill out all required fields",
+          path: ["data", "users", SIGNUP_UI_ERROR_CODES.REQUIRED]
+        }
+      };
+      exports.signUpErrorStates = signUpErrorStates;
+      var updatePasswordErrorStates = {
+        [UPDATE_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR]: {
+          id: UPDATE_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR,
+          name: "General error",
+          copy: "There was an error updating your password. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", UPDATE_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR]
+        },
+        [UPDATE_PASSWORD_UI_ERROR_CODES.WEAK_PASSWORD]: {
+          id: UPDATE_PASSWORD_UI_ERROR_CODES.WEAK_PASSWORD,
+          name: "Weak password",
+          copy: "Your password must be at least 8 characters.",
+          path: ["data", "users", UPDATE_PASSWORD_UI_ERROR_CODES.WEAK_PASSWORD]
+        }
+      };
+      exports.updatePasswordErrorStates = updatePasswordErrorStates;
+      var resetPasswordErrorStates = {
+        [RESET_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR]: {
+          id: RESET_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR,
+          name: "General error",
+          copy: "There was an error resetting your password. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", RESET_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR]
+        }
+      };
+      exports.resetPasswordErrorStates = resetPasswordErrorStates;
+      var UPDATE_ACCOUNT_ERROR_CODES = {
+        GENERAL_ERROR: "GENERAL_ERROR"
+      };
+      exports.UPDATE_ACCOUNT_ERROR_CODES = UPDATE_ACCOUNT_ERROR_CODES;
+      var updateAccountErrorStates = {
+        [UPDATE_ACCOUNT_ERROR_CODES.GENERAL_ERROR]: {
+          id: UPDATE_ACCOUNT_ERROR_CODES.GENERAL_ERROR,
+          name: "General error",
+          copy: "There was an error updating your account. Please try again, or contact us if you continue to have problems.",
+          path: ["data", "users", UPDATE_ACCOUNT_ERROR_CODES.GENERAL_ERROR]
+        }
+      };
+      exports.updateAccountErrorStates = updateAccountErrorStates;
+    }
+  });
+
+  // packages/systems/users/constants/index.js
+  var require_constants3 = __commonJS({
+    "packages/systems/users/constants/index.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _exportNames = {
+        RESERVED_USER_PREFIX: true,
+        RESERVED_USER_FIELDS: true,
+        KEY_FROM_RESERVED_USER_FIELD: true,
+        NAMES_FROM_USER_FIELDS: true,
+        TEXT_INPUT_TYPE_TO_FIELD_TYPE: true,
+        USYS_UTILITY_KEYS: true,
+        USYS_DATA_ATTRS: true,
+        USYS_DOM_CLASS_NAMES: true,
+        USYS_FORM_TYPES: true,
+        USYS_INPUT_TYPES: true,
+        USYS_INPUT_SIGN_UP_IDS: true,
+        USYS_USER_STATES: true,
+        USYS_PAGE_SETTINGS: true,
+        USYS_RESERVED_SLUGS: true,
+        USYS_PAGE_UTIL_KEYS: true,
+        DEFAULT_STYLES: true,
+        PASSWORD_MIN_LENGTH: true,
+        PASSWORD_MAX_LENGTH: true,
+        SESSION_COOKIE_NAME: true,
+        LOGGEDIN_COOKIE_NAME: true,
+        DEFAULT_SESSION_DURATION_IN_MS: true,
+        DEFAULT_SESSION_TOKEN_DURATION_IN_MS: true,
+        DEFAULT_TOKEN_AGE_MS: true,
+        STARTER_MAX_NUM_USERS: true,
+        BASIC_MAX_NUM_USERS: true,
+        BUSINESS_MAX_NUM_USERS: true,
+        ECOMM_STANDARD_MAX_NUM_USERS: true,
+        ECOMM_PLUS_MAX_NUM_USERS: true,
+        HARD_LIMIT_MAX_NUM_USERS: true,
+        SUBSCRIPTION_USER_LIMITS: true,
+        MAX_NUM_GROUPS: true,
+        MIN_GROUP_ID_LENGTH: true,
+        MAX_GROUP_ID_LENGTH: true,
+        USYS_TOKEN_TYPES: true,
+        ACCESS_GROUP_INLINE_PRODUCT_FIELD_SLUG: true,
+        ACCESS_GROUP_ADMISSION_TYPE: true,
+        ACCESS_GROUP_FREE_TYPE: true,
+        SUBSCRIPTION_EMAIL_TYPES: true,
+        MEMBERSHIPS_EMAIL_KEYS: true,
+        EMAIL_TEMPLATE_TYPES: true,
+        CONFIRM_UNSAVED_CHANGES_COPY: true,
+        USER_FIELD_FORM_ID: true,
+        NEW_USER_FIELD_ID: true,
+        USER_FIELD_DEFAULTS: true,
+        DEFAULT_USER_FIELDS: true,
+        SETUP_GUIDE_KEYS: true,
+        SETUP_GUIDE_ALL_KEYS: true,
+        MAX_USER_DATA_FIELDS: true,
+        MAX_UPDATE_USER_DATA_FIELDS: true,
+        USYS_FIELD_PATH: true,
+        USYS_CONTEXT_PATH: true,
+        TEMP_STATE_PATH: true,
+        USER_ACCESS_META_OPTIONS: true,
+        EXCEEDS_MAX_FILE_SIZE_ERROR: true,
+        EXCEEDS_MAX_IMAGE_SIZE_ERROR: true,
+        NO_REQUIRED_ATTRIBUTE: true,
+        USER_STATUSES: true,
+        USER_PAGE_SIZE: true,
+        USER_CSV_IMPORT_STATUS_POLLING_INTERVAL: true,
+        USER_CSV_IMPORT_STATUS_MAX_TRIES: true
+      };
+      exports.USYS_UTILITY_KEYS = exports.USYS_USER_STATES = exports.USYS_TOKEN_TYPES = exports.USYS_RESERVED_SLUGS = exports.USYS_PAGE_UTIL_KEYS = exports.USYS_PAGE_SETTINGS = exports.USYS_INPUT_TYPES = exports.USYS_INPUT_SIGN_UP_IDS = exports.USYS_FORM_TYPES = exports.USYS_FIELD_PATH = exports.USYS_DOM_CLASS_NAMES = exports.USYS_DATA_ATTRS = exports.USYS_CONTEXT_PATH = exports.USER_STATUSES = exports.USER_PAGE_SIZE = exports.USER_FIELD_FORM_ID = exports.USER_FIELD_DEFAULTS = exports.USER_CSV_IMPORT_STATUS_POLLING_INTERVAL = exports.USER_CSV_IMPORT_STATUS_MAX_TRIES = exports.USER_ACCESS_META_OPTIONS = exports.TEXT_INPUT_TYPE_TO_FIELD_TYPE = exports.TEMP_STATE_PATH = exports.SUBSCRIPTION_USER_LIMITS = exports.SUBSCRIPTION_EMAIL_TYPES = exports.STARTER_MAX_NUM_USERS = exports.SETUP_GUIDE_KEYS = exports.SETUP_GUIDE_ALL_KEYS = exports.SESSION_COOKIE_NAME = exports.RESERVED_USER_PREFIX = exports.RESERVED_USER_FIELDS = exports.PASSWORD_MIN_LENGTH = exports.PASSWORD_MAX_LENGTH = exports.NO_REQUIRED_ATTRIBUTE = exports.NEW_USER_FIELD_ID = exports.NAMES_FROM_USER_FIELDS = exports.MIN_GROUP_ID_LENGTH = exports.MEMBERSHIPS_EMAIL_KEYS = exports.MAX_USER_DATA_FIELDS = exports.MAX_UPDATE_USER_DATA_FIELDS = exports.MAX_NUM_GROUPS = exports.MAX_GROUP_ID_LENGTH = exports.LOGGEDIN_COOKIE_NAME = exports.KEY_FROM_RESERVED_USER_FIELD = exports.HARD_LIMIT_MAX_NUM_USERS = exports.EXCEEDS_MAX_IMAGE_SIZE_ERROR = exports.EXCEEDS_MAX_FILE_SIZE_ERROR = exports.EMAIL_TEMPLATE_TYPES = exports.ECOMM_STANDARD_MAX_NUM_USERS = exports.ECOMM_PLUS_MAX_NUM_USERS = exports.DEFAULT_USER_FIELDS = exports.DEFAULT_TOKEN_AGE_MS = exports.DEFAULT_STYLES = exports.DEFAULT_SESSION_TOKEN_DURATION_IN_MS = exports.DEFAULT_SESSION_DURATION_IN_MS = exports.CONFIRM_UNSAVED_CHANGES_COPY = exports.BUSINESS_MAX_NUM_USERS = exports.BASIC_MAX_NUM_USERS = exports.ACCESS_GROUP_INLINE_PRODUCT_FIELD_SLUG = exports.ACCESS_GROUP_FREE_TYPE = exports.ACCESS_GROUP_ADMISSION_TYPE = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _utils = require_utils();
+      var _types = require_types();
+      Object.keys(_types).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _types[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _types[key];
+          }
+        });
+      });
+      var _errorStates = require_errorStates();
+      Object.keys(_errorStates).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _errorStates[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _errorStates[key];
+          }
+        });
+      });
+      var RESERVED_USER_PREFIX = "wf-user-field-";
+      exports.RESERVED_USER_PREFIX = RESERVED_USER_PREFIX;
+      var RESERVED_USER_FIELDS = {
+        name: RESERVED_USER_PREFIX + "name",
+        acceptPrivacy: RESERVED_USER_PREFIX + "accept-privacy",
+        acceptCommunications: RESERVED_USER_PREFIX + "accept-communications"
+      };
+      exports.RESERVED_USER_FIELDS = RESERVED_USER_FIELDS;
+      var KEY_FROM_RESERVED_USER_FIELD = {
+        [RESERVED_USER_PREFIX + "name"]: "name",
+        [RESERVED_USER_PREFIX + "accept-privacy"]: "acceptPrivacy",
+        [RESERVED_USER_PREFIX + "accept-communications"]: "acceptCommunications"
+      };
+      exports.KEY_FROM_RESERVED_USER_FIELD = KEY_FROM_RESERVED_USER_FIELD;
+      var NAMES_FROM_USER_FIELDS = {
+        [RESERVED_USER_PREFIX + "name"]: "Name",
+        [RESERVED_USER_PREFIX + "accept-privacy"]: "Accept privacy policy",
+        [RESERVED_USER_PREFIX + "accept-communications"]: "Accept communications",
+        PRIVACY_POLICY: "Accept privacy policy",
+        PASSWORD: "Password",
+        EMAIL: "Email"
+      };
+      exports.NAMES_FROM_USER_FIELDS = NAMES_FROM_USER_FIELDS;
+      var TEXT_INPUT_TYPE_TO_FIELD_TYPE = {
+        text: "PlainText",
+        password: "Password",
+        email: "Email",
+        number: "PlainText",
+        tel: "PlainText"
+      };
+      exports.TEXT_INPUT_TYPE_TO_FIELD_TYPE = TEXT_INPUT_TYPE_TO_FIELD_TYPE;
+      var USYS_UTILITY_KEYS = {
+        "usys-log-in": "usys-log-in",
+        "usys-sign-up": "usys-sign-up",
+        "usys-reset-password": "usys-reset-password",
+        "usys-update-password": "usys-update-password",
+        "usys-access-denied": "usys-access-denied",
+        "usys-user-account": "usys-user-account"
+      };
+      exports.USYS_UTILITY_KEYS = USYS_UTILITY_KEYS;
+      var USYS_DATA_ATTRS = {
+        formType: "data-wf-user-form-type",
+        inputType: "data-wf-user-form-input-type",
+        logout: "data-wf-user-logout",
+        login: "data-wf-user-login",
+        formError: "data-wf-user-form-error",
+        redirectUrl: "data-wf-user-form-redirect",
+        formVerification: "data-wf-user-form-verification",
+        userSubscriptions: "data-wf-user-subscriptions-list",
+        userSubscriptionsEmptyState: "data-wf-user-subscriptions-empty",
+        userAccount: "data-wf-user-account",
+        subscriptionCancel: "data-wf-user-subscription-cancel",
+        userId: "data-wf-user-id",
+        field: "data-wf-user-field",
+        fieldType: "data-wf-user-field-type",
+        fileUploadKey: "data-wf-user-file-upload-key",
+        unsavedFileUploadKey: "data-wf-unsaved-user-file-upload-key"
+      };
+      exports.USYS_DATA_ATTRS = USYS_DATA_ATTRS;
+      var USYS_DOM_CLASS_NAMES = {
+        formSuccess: "w-form-success",
+        formVerfication: "w-form-verification",
+        formError: "w-form-fail"
+      };
+      exports.USYS_DOM_CLASS_NAMES = USYS_DOM_CLASS_NAMES;
+      var USYS_FORM_TYPES = {
+        login: "login",
+        signup: "signup",
+        updatePassword: "updatePassword",
+        resetPassword: "resetPassword",
+        account: "userAccount"
+      };
+      exports.USYS_FORM_TYPES = USYS_FORM_TYPES;
+      var USYS_INPUT_TYPES = {
+        email: "email",
+        name: "name",
+        password: "password",
+        acceptPrivacy: "accept-privacy"
+      };
+      exports.USYS_INPUT_TYPES = USYS_INPUT_TYPES;
+      var USYS_INPUT_SIGN_UP_IDS = {
+        email: "wf-sign-up-email",
+        name: "wf-sign-up-name",
+        password: "wf-sign-up-password",
