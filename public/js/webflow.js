@@ -40694,3 +40694,460 @@
             var locale2, parentConfig = baseConfig;
             config.abbr = name;
             if (locales[name] != null) {
+              deprecateSimple(
+                "defineLocaleOverride",
+                "use moment.updateLocale(localeName, config) to change an existing locale. moment.defineLocale(localeName, config) should only be used for creating a new locale See http://momentjs.com/guides/#/warnings/define-locale/ for more info."
+              );
+              parentConfig = locales[name]._config;
+            } else if (config.parentLocale != null) {
+              if (locales[config.parentLocale] != null) {
+                parentConfig = locales[config.parentLocale]._config;
+              } else {
+                locale2 = loadLocale(config.parentLocale);
+                if (locale2 != null) {
+                  parentConfig = locale2._config;
+                } else {
+                  if (!localeFamilies[config.parentLocale]) {
+                    localeFamilies[config.parentLocale] = [];
+                  }
+                  localeFamilies[config.parentLocale].push({
+                    name,
+                    config
+                  });
+                  return null;
+                }
+              }
+            }
+            locales[name] = new Locale(mergeConfigs(parentConfig, config));
+            if (localeFamilies[name]) {
+              localeFamilies[name].forEach(function(x) {
+                defineLocale(x.name, x.config);
+              });
+            }
+            getSetGlobalLocale(name);
+            return locales[name];
+          } else {
+            delete locales[name];
+            return null;
+          }
+        }
+        function updateLocale(name, config) {
+          if (config != null) {
+            var locale2, tmpLocale, parentConfig = baseConfig;
+            tmpLocale = loadLocale(name);
+            if (tmpLocale != null) {
+              parentConfig = tmpLocale._config;
+            }
+            config = mergeConfigs(parentConfig, config);
+            locale2 = new Locale(config);
+            locale2.parentLocale = locales[name];
+            locales[name] = locale2;
+            getSetGlobalLocale(name);
+          } else {
+            if (locales[name] != null) {
+              if (locales[name].parentLocale != null) {
+                locales[name] = locales[name].parentLocale;
+              } else if (locales[name] != null) {
+                delete locales[name];
+              }
+            }
+          }
+          return locales[name];
+        }
+        function getLocale(key) {
+          var locale2;
+          if (key && key._locale && key._locale._abbr) {
+            key = key._locale._abbr;
+          }
+          if (!key) {
+            return globalLocale;
+          }
+          if (!isArray(key)) {
+            locale2 = loadLocale(key);
+            if (locale2) {
+              return locale2;
+            }
+            key = [key];
+          }
+          return chooseLocale(key);
+        }
+        function listLocales() {
+          return keys(locales);
+        }
+        function checkOverflow(m) {
+          var overflow;
+          var a = m._a;
+          if (a && getParsingFlags(m).overflow === -2) {
+            overflow = a[MONTH] < 0 || a[MONTH] > 11 ? MONTH : a[DATE] < 1 || a[DATE] > daysInMonth(a[YEAR], a[MONTH]) ? DATE : a[HOUR] < 0 || a[HOUR] > 24 || a[HOUR] === 24 && (a[MINUTE] !== 0 || a[SECOND] !== 0 || a[MILLISECOND] !== 0) ? HOUR : a[MINUTE] < 0 || a[MINUTE] > 59 ? MINUTE : a[SECOND] < 0 || a[SECOND] > 59 ? SECOND : a[MILLISECOND] < 0 || a[MILLISECOND] > 999 ? MILLISECOND : -1;
+            if (getParsingFlags(m)._overflowDayOfYear && (overflow < YEAR || overflow > DATE)) {
+              overflow = DATE;
+            }
+            if (getParsingFlags(m)._overflowWeeks && overflow === -1) {
+              overflow = WEEK;
+            }
+            if (getParsingFlags(m)._overflowWeekday && overflow === -1) {
+              overflow = WEEKDAY;
+            }
+            getParsingFlags(m).overflow = overflow;
+          }
+          return m;
+        }
+        function defaults(a, b, c) {
+          if (a != null) {
+            return a;
+          }
+          if (b != null) {
+            return b;
+          }
+          return c;
+        }
+        function currentDateArray(config) {
+          var nowValue = new Date(hooks.now());
+          if (config._useUTC) {
+            return [nowValue.getUTCFullYear(), nowValue.getUTCMonth(), nowValue.getUTCDate()];
+          }
+          return [nowValue.getFullYear(), nowValue.getMonth(), nowValue.getDate()];
+        }
+        function configFromArray(config) {
+          var i, date, input = [], currentDate, expectedWeekday, yearToUse;
+          if (config._d) {
+            return;
+          }
+          currentDate = currentDateArray(config);
+          if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
+            dayOfYearFromWeekInfo(config);
+          }
+          if (config._dayOfYear != null) {
+            yearToUse = defaults(config._a[YEAR], currentDate[YEAR]);
+            if (config._dayOfYear > daysInYear(yearToUse) || config._dayOfYear === 0) {
+              getParsingFlags(config)._overflowDayOfYear = true;
+            }
+            date = createUTCDate(yearToUse, 0, config._dayOfYear);
+            config._a[MONTH] = date.getUTCMonth();
+            config._a[DATE] = date.getUTCDate();
+          }
+          for (i = 0; i < 3 && config._a[i] == null; ++i) {
+            config._a[i] = input[i] = currentDate[i];
+          }
+          for (; i < 7; i++) {
+            config._a[i] = input[i] = config._a[i] == null ? i === 2 ? 1 : 0 : config._a[i];
+          }
+          if (config._a[HOUR] === 24 && config._a[MINUTE] === 0 && config._a[SECOND] === 0 && config._a[MILLISECOND] === 0) {
+            config._nextDay = true;
+            config._a[HOUR] = 0;
+          }
+          config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
+          expectedWeekday = config._useUTC ? config._d.getUTCDay() : config._d.getDay();
+          if (config._tzm != null) {
+            config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+          }
+          if (config._nextDay) {
+            config._a[HOUR] = 24;
+          }
+          if (config._w && typeof config._w.d !== "undefined" && config._w.d !== expectedWeekday) {
+            getParsingFlags(config).weekdayMismatch = true;
+          }
+        }
+        function dayOfYearFromWeekInfo(config) {
+          var w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow;
+          w = config._w;
+          if (w.GG != null || w.W != null || w.E != null) {
+            dow = 1;
+            doy = 4;
+            weekYear = defaults(w.GG, config._a[YEAR], weekOfYear(createLocal(), 1, 4).year);
+            week = defaults(w.W, 1);
+            weekday = defaults(w.E, 1);
+            if (weekday < 1 || weekday > 7) {
+              weekdayOverflow = true;
+            }
+          } else {
+            dow = config._locale._week.dow;
+            doy = config._locale._week.doy;
+            var curWeek = weekOfYear(createLocal(), dow, doy);
+            weekYear = defaults(w.gg, config._a[YEAR], curWeek.year);
+            week = defaults(w.w, curWeek.week);
+            if (w.d != null) {
+              weekday = w.d;
+              if (weekday < 0 || weekday > 6) {
+                weekdayOverflow = true;
+              }
+            } else if (w.e != null) {
+              weekday = w.e + dow;
+              if (w.e < 0 || w.e > 6) {
+                weekdayOverflow = true;
+              }
+            } else {
+              weekday = dow;
+            }
+          }
+          if (week < 1 || week > weeksInYear(weekYear, dow, doy)) {
+            getParsingFlags(config)._overflowWeeks = true;
+          } else if (weekdayOverflow != null) {
+            getParsingFlags(config)._overflowWeekday = true;
+          } else {
+            temp = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy);
+            config._a[YEAR] = temp.year;
+            config._dayOfYear = temp.dayOfYear;
+          }
+        }
+        var extendedIsoRegex = /^\s*((?:[+-]\d{6}|\d{4})-(?:\d\d-\d\d|W\d\d-\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?::\d\d(?::\d\d(?:[.,]\d+)?)?)?)([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+        var basicIsoRegex = /^\s*((?:[+-]\d{6}|\d{4})(?:\d\d\d\d|W\d\d\d|W\d\d|\d\d\d|\d\d))(?:(T| )(\d\d(?:\d\d(?:\d\d(?:[.,]\d+)?)?)?)([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+        var tzRegex = /Z|[+-]\d\d(?::?\d\d)?/;
+        var isoDates = [
+          ["YYYYYY-MM-DD", /[+-]\d{6}-\d\d-\d\d/],
+          ["YYYY-MM-DD", /\d{4}-\d\d-\d\d/],
+          ["GGGG-[W]WW-E", /\d{4}-W\d\d-\d/],
+          ["GGGG-[W]WW", /\d{4}-W\d\d/, false],
+          ["YYYY-DDD", /\d{4}-\d{3}/],
+          ["YYYY-MM", /\d{4}-\d\d/, false],
+          ["YYYYYYMMDD", /[+-]\d{10}/],
+          ["YYYYMMDD", /\d{8}/],
+          // YYYYMM is NOT allowed by the standard
+          ["GGGG[W]WWE", /\d{4}W\d{3}/],
+          ["GGGG[W]WW", /\d{4}W\d{2}/, false],
+          ["YYYYDDD", /\d{7}/]
+        ];
+        var isoTimes = [
+          ["HH:mm:ss.SSSS", /\d\d:\d\d:\d\d\.\d+/],
+          ["HH:mm:ss,SSSS", /\d\d:\d\d:\d\d,\d+/],
+          ["HH:mm:ss", /\d\d:\d\d:\d\d/],
+          ["HH:mm", /\d\d:\d\d/],
+          ["HHmmss.SSSS", /\d\d\d\d\d\d\.\d+/],
+          ["HHmmss,SSSS", /\d\d\d\d\d\d,\d+/],
+          ["HHmmss", /\d\d\d\d\d\d/],
+          ["HHmm", /\d\d\d\d/],
+          ["HH", /\d\d/]
+        ];
+        var aspNetJsonRegex = /^\/?Date\((\-?\d+)/i;
+        function configFromISO(config) {
+          var i, l, string = config._i, match = extendedIsoRegex.exec(string) || basicIsoRegex.exec(string), allowTime, dateFormat, timeFormat, tzFormat;
+          if (match) {
+            getParsingFlags(config).iso = true;
+            for (i = 0, l = isoDates.length; i < l; i++) {
+              if (isoDates[i][1].exec(match[1])) {
+                dateFormat = isoDates[i][0];
+                allowTime = isoDates[i][2] !== false;
+                break;
+              }
+            }
+            if (dateFormat == null) {
+              config._isValid = false;
+              return;
+            }
+            if (match[3]) {
+              for (i = 0, l = isoTimes.length; i < l; i++) {
+                if (isoTimes[i][1].exec(match[3])) {
+                  timeFormat = (match[2] || " ") + isoTimes[i][0];
+                  break;
+                }
+              }
+              if (timeFormat == null) {
+                config._isValid = false;
+                return;
+              }
+            }
+            if (!allowTime && timeFormat != null) {
+              config._isValid = false;
+              return;
+            }
+            if (match[4]) {
+              if (tzRegex.exec(match[4])) {
+                tzFormat = "Z";
+              } else {
+                config._isValid = false;
+                return;
+              }
+            }
+            config._f = dateFormat + (timeFormat || "") + (tzFormat || "");
+            configFromStringAndFormat(config);
+          } else {
+            config._isValid = false;
+          }
+        }
+        var rfc2822 = /^(?:(Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s)?(\d{1,2})\s(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(\d{2,4})\s(\d\d):(\d\d)(?::(\d\d))?\s(?:(UT|GMT|[ECMP][SD]T)|([Zz])|([+-]\d{4}))$/;
+        function extractFromRFC2822Strings(yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr) {
+          var result = [
+            untruncateYear(yearStr),
+            defaultLocaleMonthsShort.indexOf(monthStr),
+            parseInt(dayStr, 10),
+            parseInt(hourStr, 10),
+            parseInt(minuteStr, 10)
+          ];
+          if (secondStr) {
+            result.push(parseInt(secondStr, 10));
+          }
+          return result;
+        }
+        function untruncateYear(yearStr) {
+          var year = parseInt(yearStr, 10);
+          if (year <= 49) {
+            return 2e3 + year;
+          } else if (year <= 999) {
+            return 1900 + year;
+          }
+          return year;
+        }
+        function preprocessRFC2822(s) {
+          return s.replace(/\([^)]*\)|[\n\t]/g, " ").replace(/(\s\s+)/g, " ").replace(/^\s\s*/, "").replace(/\s\s*$/, "");
+        }
+        function checkWeekday(weekdayStr, parsedInput, config) {
+          if (weekdayStr) {
+            var weekdayProvided = defaultLocaleWeekdaysShort.indexOf(weekdayStr), weekdayActual = new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay();
+            if (weekdayProvided !== weekdayActual) {
+              getParsingFlags(config).weekdayMismatch = true;
+              config._isValid = false;
+              return false;
+            }
+          }
+          return true;
+        }
+        var obsOffsets = {
+          UT: 0,
+          GMT: 0,
+          EDT: -4 * 60,
+          EST: -5 * 60,
+          CDT: -5 * 60,
+          CST: -6 * 60,
+          MDT: -6 * 60,
+          MST: -7 * 60,
+          PDT: -7 * 60,
+          PST: -8 * 60
+        };
+        function calculateOffset(obsOffset, militaryOffset, numOffset) {
+          if (obsOffset) {
+            return obsOffsets[obsOffset];
+          } else if (militaryOffset) {
+            return 0;
+          } else {
+            var hm = parseInt(numOffset, 10);
+            var m = hm % 100, h = (hm - m) / 100;
+            return h * 60 + m;
+          }
+        }
+        function configFromRFC2822(config) {
+          var match = rfc2822.exec(preprocessRFC2822(config._i));
+          if (match) {
+            var parsedArray = extractFromRFC2822Strings(match[4], match[3], match[2], match[5], match[6], match[7]);
+            if (!checkWeekday(match[1], parsedArray, config)) {
+              return;
+            }
+            config._a = parsedArray;
+            config._tzm = calculateOffset(match[8], match[9], match[10]);
+            config._d = createUTCDate.apply(null, config._a);
+            config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+            getParsingFlags(config).rfc2822 = true;
+          } else {
+            config._isValid = false;
+          }
+        }
+        function configFromString(config) {
+          var matched = aspNetJsonRegex.exec(config._i);
+          if (matched !== null) {
+            config._d = /* @__PURE__ */ new Date(+matched[1]);
+            return;
+          }
+          configFromISO(config);
+          if (config._isValid === false) {
+            delete config._isValid;
+          } else {
+            return;
+          }
+          configFromRFC2822(config);
+          if (config._isValid === false) {
+            delete config._isValid;
+          } else {
+            return;
+          }
+          hooks.createFromInputFallback(config);
+        }
+        hooks.createFromInputFallback = deprecate(
+          "value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged and will be removed in an upcoming major release. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.",
+          function(config) {
+            config._d = /* @__PURE__ */ new Date(config._i + (config._useUTC ? " UTC" : ""));
+          }
+        );
+        hooks.ISO_8601 = function() {
+        };
+        hooks.RFC_2822 = function() {
+        };
+        function configFromStringAndFormat(config) {
+          if (config._f === hooks.ISO_8601) {
+            configFromISO(config);
+            return;
+          }
+          if (config._f === hooks.RFC_2822) {
+            configFromRFC2822(config);
+            return;
+          }
+          config._a = [];
+          getParsingFlags(config).empty = true;
+          var string = "" + config._i, i, parsedInput, tokens2, token2, skipped, stringLength = string.length, totalParsedInputLength = 0;
+          tokens2 = expandFormat(config._f, config._locale).match(formattingTokens) || [];
+          for (i = 0; i < tokens2.length; i++) {
+            token2 = tokens2[i];
+            parsedInput = (string.match(getParseRegexForToken(token2, config)) || [])[0];
+            if (parsedInput) {
+              skipped = string.substr(0, string.indexOf(parsedInput));
+              if (skipped.length > 0) {
+                getParsingFlags(config).unusedInput.push(skipped);
+              }
+              string = string.slice(string.indexOf(parsedInput) + parsedInput.length);
+              totalParsedInputLength += parsedInput.length;
+            }
+            if (formatTokenFunctions[token2]) {
+              if (parsedInput) {
+                getParsingFlags(config).empty = false;
+              } else {
+                getParsingFlags(config).unusedTokens.push(token2);
+              }
+              addTimeToArrayFromToken(token2, parsedInput, config);
+            } else if (config._strict && !parsedInput) {
+              getParsingFlags(config).unusedTokens.push(token2);
+            }
+          }
+          getParsingFlags(config).charsLeftOver = stringLength - totalParsedInputLength;
+          if (string.length > 0) {
+            getParsingFlags(config).unusedInput.push(string);
+          }
+          if (config._a[HOUR] <= 12 && getParsingFlags(config).bigHour === true && config._a[HOUR] > 0) {
+            getParsingFlags(config).bigHour = void 0;
+          }
+          getParsingFlags(config).parsedDateParts = config._a.slice(0);
+          getParsingFlags(config).meridiem = config._meridiem;
+          config._a[HOUR] = meridiemFixWrap(config._locale, config._a[HOUR], config._meridiem);
+          configFromArray(config);
+          checkOverflow(config);
+        }
+        function meridiemFixWrap(locale2, hour, meridiem2) {
+          var isPm;
+          if (meridiem2 == null) {
+            return hour;
+          }
+          if (locale2.meridiemHour != null) {
+            return locale2.meridiemHour(hour, meridiem2);
+          } else if (locale2.isPM != null) {
+            isPm = locale2.isPM(meridiem2);
+            if (isPm && hour < 12) {
+              hour += 12;
+            }
+            if (!isPm && hour === 12) {
+              hour = 0;
+            }
+            return hour;
+          } else {
+            return hour;
+          }
+        }
+        function configFromStringAndArray(config) {
+          var tempConfig, bestMoment, scoreToBeat, i, currentScore;
+          if (config._f.length === 0) {
+            getParsingFlags(config).invalidFormat = true;
+            config._d = /* @__PURE__ */ new Date(NaN);
+            return;
+          }
+          for (i = 0; i < config._f.length; i++) {
+            currentScore = 0;
+            tempConfig = copyConfig({}, config);
+            if (config._useUTC != null) {
+              tempConfig._useUTC = config._useUTC;
+            }
