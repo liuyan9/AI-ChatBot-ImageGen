@@ -43853,3 +43853,441 @@
           "MC|Europe/Monaco",
           "MD|Europe/Chisinau",
           "ME|Europe/Belgrade Europe/Podgorica",
+          "MF|America/Port_of_Spain America/Marigot",
+          "MG|Africa/Nairobi Indian/Antananarivo",
+          "MH|Pacific/Majuro Pacific/Kwajalein",
+          "MK|Europe/Belgrade Europe/Skopje",
+          "ML|Africa/Abidjan Africa/Bamako",
+          "MM|Asia/Yangon",
+          "MN|Asia/Ulaanbaatar Asia/Hovd Asia/Choibalsan",
+          "MO|Asia/Macau",
+          "MP|Pacific/Guam Pacific/Saipan",
+          "MQ|America/Martinique",
+          "MR|Africa/Abidjan Africa/Nouakchott",
+          "MS|America/Port_of_Spain America/Montserrat",
+          "MT|Europe/Malta",
+          "MU|Indian/Mauritius",
+          "MV|Indian/Maldives",
+          "MW|Africa/Maputo Africa/Blantyre",
+          "MX|America/Mexico_City America/Cancun America/Merida America/Monterrey America/Matamoros America/Mazatlan America/Chihuahua America/Ojinaga America/Hermosillo America/Tijuana America/Bahia_Banderas",
+          "MY|Asia/Kuala_Lumpur Asia/Kuching",
+          "MZ|Africa/Maputo",
+          "NA|Africa/Windhoek",
+          "NC|Pacific/Noumea",
+          "NE|Africa/Lagos Africa/Niamey",
+          "NF|Pacific/Norfolk",
+          "NG|Africa/Lagos",
+          "NI|America/Managua",
+          "NL|Europe/Amsterdam",
+          "NO|Europe/Oslo",
+          "NP|Asia/Kathmandu",
+          "NR|Pacific/Nauru",
+          "NU|Pacific/Niue",
+          "NZ|Pacific/Auckland Pacific/Chatham",
+          "OM|Asia/Dubai Asia/Muscat",
+          "PA|America/Panama",
+          "PE|America/Lima",
+          "PF|Pacific/Tahiti Pacific/Marquesas Pacific/Gambier",
+          "PG|Pacific/Port_Moresby Pacific/Bougainville",
+          "PH|Asia/Manila",
+          "PK|Asia/Karachi",
+          "PL|Europe/Warsaw",
+          "PM|America/Miquelon",
+          "PN|Pacific/Pitcairn",
+          "PR|America/Puerto_Rico",
+          "PS|Asia/Gaza Asia/Hebron",
+          "PT|Europe/Lisbon Atlantic/Madeira Atlantic/Azores",
+          "PW|Pacific/Palau",
+          "PY|America/Asuncion",
+          "QA|Asia/Qatar",
+          "RE|Indian/Reunion",
+          "RO|Europe/Bucharest",
+          "RS|Europe/Belgrade",
+          "RU|Europe/Kaliningrad Europe/Moscow Europe/Simferopol Europe/Kirov Europe/Astrakhan Europe/Volgograd Europe/Saratov Europe/Ulyanovsk Europe/Samara Asia/Yekaterinburg Asia/Omsk Asia/Novosibirsk Asia/Barnaul Asia/Tomsk Asia/Novokuznetsk Asia/Krasnoyarsk Asia/Irkutsk Asia/Chita Asia/Yakutsk Asia/Khandyga Asia/Vladivostok Asia/Ust-Nera Asia/Magadan Asia/Sakhalin Asia/Srednekolymsk Asia/Kamchatka Asia/Anadyr",
+          "RW|Africa/Maputo Africa/Kigali",
+          "SA|Asia/Riyadh",
+          "SB|Pacific/Guadalcanal",
+          "SC|Indian/Mahe",
+          "SD|Africa/Khartoum",
+          "SE|Europe/Stockholm",
+          "SG|Asia/Singapore",
+          "SH|Africa/Abidjan Atlantic/St_Helena",
+          "SI|Europe/Belgrade Europe/Ljubljana",
+          "SJ|Europe/Oslo Arctic/Longyearbyen",
+          "SK|Europe/Prague Europe/Bratislava",
+          "SL|Africa/Abidjan Africa/Freetown",
+          "SM|Europe/Rome Europe/San_Marino",
+          "SN|Africa/Abidjan Africa/Dakar",
+          "SO|Africa/Nairobi Africa/Mogadishu",
+          "SR|America/Paramaribo",
+          "SS|Africa/Juba",
+          "ST|Africa/Sao_Tome",
+          "SV|America/El_Salvador",
+          "SX|America/Curacao America/Lower_Princes",
+          "SY|Asia/Damascus",
+          "SZ|Africa/Johannesburg Africa/Mbabane",
+          "TC|America/Grand_Turk",
+          "TD|Africa/Ndjamena",
+          "TF|Indian/Reunion Indian/Kerguelen",
+          "TG|Africa/Abidjan Africa/Lome",
+          "TH|Asia/Bangkok",
+          "TJ|Asia/Dushanbe",
+          "TK|Pacific/Fakaofo",
+          "TL|Asia/Dili",
+          "TM|Asia/Ashgabat",
+          "TN|Africa/Tunis",
+          "TO|Pacific/Tongatapu",
+          "TR|Europe/Istanbul",
+          "TT|America/Port_of_Spain",
+          "TV|Pacific/Funafuti",
+          "TW|Asia/Taipei",
+          "TZ|Africa/Nairobi Africa/Dar_es_Salaam",
+          "UA|Europe/Simferopol Europe/Kiev Europe/Uzhgorod Europe/Zaporozhye",
+          "UG|Africa/Nairobi Africa/Kampala",
+          "UM|Pacific/Pago_Pago Pacific/Wake Pacific/Honolulu Pacific/Midway",
+          "US|America/New_York America/Detroit America/Kentucky/Louisville America/Kentucky/Monticello America/Indiana/Indianapolis America/Indiana/Vincennes America/Indiana/Winamac America/Indiana/Marengo America/Indiana/Petersburg America/Indiana/Vevay America/Chicago America/Indiana/Tell_City America/Indiana/Knox America/Menominee America/North_Dakota/Center America/North_Dakota/New_Salem America/North_Dakota/Beulah America/Denver America/Boise America/Phoenix America/Los_Angeles America/Anchorage America/Juneau America/Sitka America/Metlakatla America/Yakutat America/Nome America/Adak Pacific/Honolulu",
+          "UY|America/Montevideo",
+          "UZ|Asia/Samarkand Asia/Tashkent",
+          "VA|Europe/Rome Europe/Vatican",
+          "VC|America/Port_of_Spain America/St_Vincent",
+          "VE|America/Caracas",
+          "VG|America/Port_of_Spain America/Tortola",
+          "VI|America/Port_of_Spain America/St_Thomas",
+          "VN|Asia/Bangkok Asia/Ho_Chi_Minh",
+          "VU|Pacific/Efate",
+          "WF|Pacific/Wallis",
+          "WS|Pacific/Apia",
+          "YE|Asia/Riyadh Asia/Aden",
+          "YT|Africa/Nairobi Indian/Mayotte",
+          "ZA|Africa/Johannesburg",
+          "ZM|Africa/Maputo Africa/Lusaka",
+          "ZW|Africa/Maputo Africa/Harare"
+        ]
+      };
+    }
+  });
+
+  // node_modules/moment-timezone/index.js
+  var require_moment_timezone2 = __commonJS({
+    "node_modules/moment-timezone/index.js"(exports, module) {
+      var moment = module.exports = require_moment_timezone();
+      moment.tz.load(require_latest());
+    }
+  });
+
+  // node_modules/lodash/head.js
+  var require_head = __commonJS({
+    "node_modules/lodash/head.js"(exports, module) {
+      function head(array) {
+        return array && array.length ? array[0] : void 0;
+      }
+      module.exports = head;
+    }
+  });
+
+  // node_modules/lodash/first.js
+  var require_first = __commonJS({
+    "node_modules/lodash/first.js"(exports, module) {
+      module.exports = require_head();
+    }
+  });
+
+  // node_modules/lodash/last.js
+  var require_last = __commonJS({
+    "node_modules/lodash/last.js"(exports, module) {
+      function last(array) {
+        var length = array == null ? 0 : array.length;
+        return length ? array[length - 1] : void 0;
+      }
+      module.exports = last;
+    }
+  });
+
+  // packages/systems/dynamo/utils/ParamFieldPathUtils/ParamFieldPathUtils.js
+  var require_ParamFieldPathUtils = __commonJS({
+    "packages/systems/dynamo/utils/ParamFieldPathUtils/ParamFieldPathUtils.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.isFieldOfItemRef = exports.isFauxDynContextField = exports.isEmptyFieldPath = exports.getValueFieldSlug = exports.getItemRefSlug = exports.fieldPathsEqual = exports.createFieldPath = void 0;
+      var _first = _interopRequireDefault(require_first());
+      var _last = _interopRequireDefault(require_last());
+      var SEPARATOR = ":";
+      var EMPTY_STRING = "";
+      var isFieldOfItemRef = (fieldPath) => fieldPath.indexOf(SEPARATOR) !== -1;
+      exports.isFieldOfItemRef = isFieldOfItemRef;
+      var getValueFieldSlug = (fieldPath) => (0, _last.default)(fieldPath.split(SEPARATOR));
+      exports.getValueFieldSlug = getValueFieldSlug;
+      var getItemRefSlug = (fieldPath) => isFieldOfItemRef(fieldPath) ? (0, _first.default)(fieldPath.split(SEPARATOR)) : null;
+      exports.getItemRefSlug = getItemRefSlug;
+      var createFieldPath = (...fieldSlugs) => fieldSlugs.join(SEPARATOR);
+      exports.createFieldPath = createFieldPath;
+      var isEmptyFieldPath = (a) => a === EMPTY_STRING;
+      exports.isEmptyFieldPath = isEmptyFieldPath;
+      var fieldPathsEqual = (a, b) => a === b;
+      exports.fieldPathsEqual = fieldPathsEqual;
+      var isFauxDynContextField = (fieldPath) => !isFieldOfItemRef(fieldPath) && getValueFieldSlug(fieldPath) === "_id";
+      exports.isFauxDynContextField = isFauxDynContextField;
+    }
+  });
+
+  // packages/systems/dynamo/utils/ParamFieldPathUtils/index.js
+  var require_ParamFieldPathUtils2 = __commonJS({
+    "packages/systems/dynamo/utils/ParamFieldPathUtils/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _ParamFieldPathUtils = require_ParamFieldPathUtils();
+      Object.keys(_ParamFieldPathUtils).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (key in exports && exports[key] === _ParamFieldPathUtils[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _ParamFieldPathUtils[key];
+          }
+        });
+      });
+    }
+  });
+
+  // packages/systems/dynamo/utils/FilterUtils/FilterUtils.js
+  var require_FilterUtils = __commonJS({
+    "packages/systems/dynamo/utils/FilterUtils/FilterUtils.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.normalizeConditionFields = exports.convertConditionFieldsFromObjectToArray = void 0;
+      var _utils = require_utils();
+      var convertConditionFieldsFromObjectToArray = (fields) => {
+        const mapper = (fieldPath) => {
+          const type = fields[fieldPath].type;
+          return Object.entries(fields[fieldPath]).reduce((conditionFields, [operatorName, value]) => {
+            if (operatorName === "type") {
+              return conditionFields;
+            }
+            conditionFields.push({
+              fieldPath,
+              operatorName,
+              value,
+              type
+            });
+            return conditionFields;
+          }, []);
+        };
+        return (0, _utils.flatMap)(mapper)(Object.keys(fields));
+      };
+      exports.convertConditionFieldsFromObjectToArray = convertConditionFieldsFromObjectToArray;
+      var normalizeConditionFields = (fields = []) => {
+        if (Array.isArray(fields)) {
+          return fields;
+        }
+        return convertConditionFieldsFromObjectToArray(fields);
+      };
+      exports.normalizeConditionFields = normalizeConditionFields;
+    }
+  });
+
+  // packages/systems/dynamo/utils/FilterUtils/index.js
+  var require_FilterUtils2 = __commonJS({
+    "packages/systems/dynamo/utils/FilterUtils/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _FilterUtils = require_FilterUtils();
+      Object.keys(_FilterUtils).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (key in exports && exports[key] === _FilterUtils[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _FilterUtils[key];
+          }
+        });
+      });
+    }
+  });
+
+  // packages/systems/dynamo/utils/DynamoConditionUtils/index.js
+  var require_DynamoConditionUtils = __commonJS({
+    "packages/systems/dynamo/utils/DynamoConditionUtils/index.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.EXAMPLE_IMG_URL = void 0;
+      exports.castConditionValue = castConditionValue;
+      exports.castItemValue = castItemValue;
+      exports.getItemFieldValue = getItemFieldValue;
+      exports.parseDate = parseDate;
+      exports.test = test;
+      var _momentTimezone = _interopRequireDefault(require_moment_timezone2());
+      var _ParamFieldPathUtils = require_ParamFieldPathUtils2();
+      var _FilterUtils = require_FilterUtils2();
+      var EXAMPLE_IMG_URL = "https://d3e54v103j8qbb.cloudfront.net/img/image-placeholder.svg";
+      exports.EXAMPLE_IMG_URL = EXAMPLE_IMG_URL;
+      var OPERATOR_FNS = {
+        eq: function(a, b) {
+          return a == b;
+        },
+        ne: function(a, b) {
+          return a != b;
+        },
+        gt: function(a, b) {
+          return a > b;
+        },
+        lt: function(a, b) {
+          return a < b;
+        },
+        gte: function(a, b) {
+          return a >= b;
+        },
+        lte: function(a, b) {
+          return a <= b;
+        },
+        exists: function(a, b) {
+          function getATruthiness() {
+            if (a != null) {
+              if (Array.isArray(a)) {
+                return a.length > 0;
+              } else if (typeof a === "object") {
+                return a.url !== EXAMPLE_IMG_URL;
+              } else if (typeof a === "number") {
+                return !Number.isNaN(a);
+              } else {
+                return true;
+              }
+            } else {
+              return false;
+            }
+          }
+          function getBTruthiness() {
+            return b === "yes";
+          }
+          const aIsTruthy = getATruthiness();
+          const bIsTruthy = getBTruthiness();
+          return aIsTruthy === bIsTruthy;
+        },
+        idin: function(a, b) {
+          return containsResolver(a, b);
+        },
+        idnin: function(a, b) {
+          return !containsResolver(a, b);
+        },
+        type: false
+        // ensure the `type` property will never resolve to a function
+      };
+      var containsResolver = (a, b) => {
+        if (Array.isArray(a) && typeof b === "string") {
+          return a.includes(b);
+        }
+        if (Array.isArray(a) && Array.isArray(b)) {
+          return b.some((id) => a.includes(id));
+        }
+        if (typeof a === "string" && Array.isArray(b)) {
+          return b.includes(a);
+        }
+        return false;
+      };
+      function test(itemData, conditionData, timezone) {
+        const conditionFields = (0, _FilterUtils.normalizeConditionFields)(conditionData.fields);
+        for (const conditionField of conditionFields) {
+          const result = testSingleCondition({
+            conditionField,
+            itemData,
+            timezone
+          });
+          if (!result) {
+            return false;
+          }
+        }
+        return true;
+      }
+      function testSingleCondition({
+        conditionField,
+        itemData,
+        timezone
+      }) {
+        const {
+          fieldPath,
+          operatorName,
+          value,
+          type
+        } = conditionField;
+        const opFn = OPERATOR_FNS[operatorName];
+        if (!opFn) {
+          console.warn(`Ignoring unsupported condition operator: ${operatorName}`);
+          return true;
+        }
+        const itemFieldValue = itemData.hasOwnProperty(fieldPath) ? itemData[fieldPath] : getItemFieldValue(itemData, fieldPath);
+        const itemFieldType = type ? convertFieldTypeToLegacyItemType(type) : _getLegacyItemType(fieldPath, itemFieldValue);
+        const resolvedFieldValue = castItemFieldValue(itemFieldValue, itemFieldType);
+        const resolvedConditionValue = castConditionValue(value, operatorName, itemFieldType, timezone);
+        return opFn(resolvedFieldValue, resolvedConditionValue);
+      }
+      function castItemValue({
+        operator,
+        value,
+        type,
+        timezone
+      }) {
+        if (value !== void 0) {
+          switch (type) {
+            case "Bool":
+              return function() {
+                if (typeof value === "boolean") {
+                  return value;
+                } else if (typeof value === "string") {
+                  return value.toLowerCase() === "true";
+                } else {
+                  return Boolean(value);
+                }
+              }();
+            case "Number":
+              return parseFloat(value);
+            case "Date":
+              return parseDate({
+                operator,
+                value,
+                timezone
+              });
+            default:
+              return value;
+          }
+        } else {
+          return value;
+        }
+      }
+      function castConditionValue(value, op, type, timezone) {
+        if (op === "exists") {
+          return value;
+        } else {
+          return castItemValue({
+            operator: op,
+            timezone,
+            type,
+            value
+          });
+        }
+      }
+      var OPERATOR_LTE_NAME = "lte";
+      var NOW_REGEX = /^now$/i;
+      var END_OF_TODAY_REGEX = /^(end of )?(today)$/i;
+      var DEPRECATED_END_OF_TOMORROW_YESTERDAY_REGEX = /^(end of )?(tomorrow|yesterday)$/i;
+      var DEPRECATED_RELATIVE_TIME_COMPLEX_REGEX = /^((?:\d+ (?:year|quarter|month|week|day|hour|minute|second)s? )+)(ago|from now)(?: (?:starting (?:now|(?:(end of )?(today|yesterday|tomorrow)))))?$/i;
+      var RELATIVE_TIME_COMPLEX_REGEX = /^((?:\d+ (?:year|quarter|month|week|day|hour|minute|second)s? )+)in the (future|past)$/i;
+      var FULL_TIME_LENGTH_INTERVAL_STRING_REGEX = /\d+ (?:year|quarter|month|week|day|hour|minute|second)s?/gi;
+      var isDeprecatedDatePattern = (str) => DEPRECATED_END_OF_TOMORROW_YESTERDAY_REGEX.test(str) || DEPRECATED_RELATIVE_TIME_COMPLEX_REGEX.test(str);
+      function handleDeprecatedParseDate({
+        value,
+        timezone,
