@@ -44291,3 +44291,458 @@
       function handleDeprecatedParseDate({
         value,
         timezone,
+        momentNowUtc
+      }) {
+        function getToday() {
+          return momentNowUtc.tz(timezone).startOf("day");
+        }
+        function getEndOfToday() {
+          return momentNowUtc.tz(timezone).endOf("day");
+        }
+        function getNow() {
+          return momentNowUtc.tz(timezone);
+        }
+        const simpleResults = value.match(DEPRECATED_END_OF_TOMORROW_YESTERDAY_REGEX);
+        if (simpleResults) {
+          const [, endOf, relativeDate] = simpleResults;
+          const getStart = endOf ? getEndOfToday : getToday;
+          if (relativeDate === "tomorrow") {
+            return getStart().add(1, "day").toDate();
+          }
+          if (relativeDate === "yesterday") {
+            return getStart().subtract(1, "day").toDate();
+          }
+        }
+        const complexResults = value.match(DEPRECATED_RELATIVE_TIME_COMPLEX_REGEX);
+        if (complexResults) {
+          const [, values, mode, endOf, relativeDate] = complexResults;
+          const getStart = endOf ? getEndOfToday : getToday;
+          let time;
+          switch (relativeDate) {
+            case "today":
+              time = getStart();
+              break;
+            case "tomorrow":
+              time = getStart().add(1, "day");
+              break;
+            case "yesterday":
+              time = getStart().subtract(1, "day");
+              break;
+            default:
+              time = getNow();
+              break;
+          }
+          const timeLengthIntervalItems = values.match(FULL_TIME_LENGTH_INTERVAL_STRING_REGEX);
+          if (!timeLengthIntervalItems) {
+            return null;
+          }
+          const method = mode === "from now" ? "add" : "subtract";
+          timeLengthIntervalItems.forEach((item) => {
+            const [length, interval] = item.split(" ");
+            time[method](parseInt(length, 10), interval);
+          });
+          return time.toDate();
+        }
+      }
+      function parseDate({
+        operator,
+        value,
+        timezone,
+        nowUtcString
+      }) {
+        timezone = timezone || "UTC";
+        const momentNowUtc = nowUtcString ? _momentTimezone.default.utc(nowUtcString) : _momentTimezone.default.utc();
+        function getToday() {
+          return momentNowUtc.tz(timezone).startOf("day");
+        }
+        function getEndOfToday() {
+          return momentNowUtc.tz(timezone).endOf("day");
+        }
+        function getNow() {
+          return momentNowUtc.tz(timezone);
+        }
+        const stringValue = String(value).toLowerCase();
+        if (NOW_REGEX.test(stringValue)) {
+          return getNow().toDate();
+        }
+        if (isDeprecatedDatePattern(stringValue)) {
+          return handleDeprecatedParseDate({
+            value: stringValue,
+            timezone,
+            momentNowUtc
+          });
+        }
+        const simpleResults = stringValue.match(END_OF_TODAY_REGEX);
+        if (simpleResults) {
+          const [, endOf] = simpleResults;
+          return endOf ? getEndOfToday().toDate() : getToday().toDate();
+        }
+        const complexResults = stringValue.match(RELATIVE_TIME_COMPLEX_REGEX);
+        if (complexResults) {
+          const [, fullTimeLengthIntervalString, tense] = complexResults;
+          const timeLengthIntervalItems = fullTimeLengthIntervalString.match(FULL_TIME_LENGTH_INTERVAL_STRING_REGEX);
+          if (!timeLengthIntervalItems) {
+            return null;
+          }
+          const getStart = operator && operator === OPERATOR_LTE_NAME ? getEndOfToday : getToday;
+          const TENSE_METHODS_MAP = {
+            future: "add",
+            past: "subtract"
+          };
+          const tenseMethod = TENSE_METHODS_MAP[tense];
+          const reducedDateTime = timeLengthIntervalItems.reduce((accumulatedMoment, item) => {
+            const [length, interval] = item.split(" ");
+            return accumulatedMoment[tenseMethod](parseInt(length, 10), interval);
+          }, getStart());
+          return reducedDateTime.toDate();
+        }
+        const isoMoment = _momentTimezone.default.utc(value, _momentTimezone.default.ISO_8601).tz(timezone);
+        if (!isoMoment || !isoMoment.isValid()) {
+          return null;
+        }
+        return isoMoment.toDate();
+      }
+      function castItemFieldValue(fieldValue, fieldType) {
+        switch (fieldType) {
+          case "CommercePrice": {
+            return fieldValue !== null && typeof fieldValue === "object" && typeof fieldValue.value === "number" ? fieldValue.value / 100 : NaN;
+          }
+          case "ItemRef": {
+            return fieldValue !== null && typeof fieldValue === "object" ? fieldValue._id : fieldValue;
+          }
+          case "ItemRefSet": {
+            return Array.isArray(fieldValue) ? fieldValue.map(function(itemRef) {
+              return itemRef._id;
+            }) : [];
+          }
+          case "Option": {
+            return fieldValue !== null && typeof fieldValue === "object" ? fieldValue.id : fieldValue;
+          }
+          case "Number": {
+            return fieldValue === null ? NaN : fieldValue;
+          }
+          default: {
+            return fieldValue;
+          }
+        }
+      }
+      function getItemFieldValue(itemData, fieldPath) {
+        const itemRefSlug = (0, _ParamFieldPathUtils.getItemRefSlug)(fieldPath);
+        const valueFieldSlug = (0, _ParamFieldPathUtils.getValueFieldSlug)(fieldPath);
+        return (0, _ParamFieldPathUtils.isFieldOfItemRef)(fieldPath) ? itemData[itemRefSlug] && itemData[itemRefSlug][valueFieldSlug] : itemData[valueFieldSlug];
+      }
+      function convertFieldTypeToLegacyItemType(fieldType) {
+        switch (fieldType) {
+          case "Bool":
+          case "CommercePrice":
+          case "Date":
+          case "ImageRef":
+          case "ItemRef":
+          case "ItemRefSet":
+          case "Number":
+          case "Option":
+          case "Set": {
+            return fieldType;
+          }
+          case "FileRef":
+          case "Video": {
+            return "ImageRef";
+          }
+          case "Email":
+          case "Phone":
+          case "PlainText":
+          case "RichText":
+          case "Link": {
+            return "String";
+          }
+          default: {
+            return "String";
+          }
+        }
+      }
+      function _getLegacyItemType(name, value) {
+        if (name === "_id") {
+          return "Id";
+        } else {
+          switch (typeof value) {
+            case "number":
+              return "Number";
+            case "boolean":
+              return "Bool";
+            case "object":
+              return function() {
+                if (value) {
+                  if (value instanceof Date) {
+                    return "Date";
+                  } else if ("_id" in value && "_cid" in value) {
+                    return "ItemRef";
+                  } else if (Array.isArray(value)) {
+                    return "ItemRefSet";
+                  } else if ("url" in value) {
+                    return "ImageRef";
+                  } else if ("value" in value && "unit" in value) {
+                    return "CommercePrice";
+                  } else {
+                    return "Option";
+                  }
+                } else {
+                  return "Option";
+                }
+              }();
+            default:
+              return "String";
+          }
+        }
+      }
+    }
+  });
+
+  // node_modules/lodash/_baseInverter.js
+  var require_baseInverter = __commonJS({
+    "node_modules/lodash/_baseInverter.js"(exports, module) {
+      var baseForOwn = require_baseForOwn();
+      function baseInverter(object, setter, iteratee, accumulator) {
+        baseForOwn(object, function(value, key, object2) {
+          setter(accumulator, iteratee(value), key, object2);
+        });
+        return accumulator;
+      }
+      module.exports = baseInverter;
+    }
+  });
+
+  // node_modules/lodash/_createInverter.js
+  var require_createInverter = __commonJS({
+    "node_modules/lodash/_createInverter.js"(exports, module) {
+      var baseInverter = require_baseInverter();
+      function createInverter(setter, toIteratee) {
+        return function(object, iteratee) {
+          return baseInverter(object, setter, toIteratee(iteratee), {});
+        };
+      }
+      module.exports = createInverter;
+    }
+  });
+
+  // node_modules/lodash/invert.js
+  var require_invert = __commonJS({
+    "node_modules/lodash/invert.js"(exports, module) {
+      var constant = require_constant();
+      var createInverter = require_createInverter();
+      var identity = require_identity();
+      var objectProto = Object.prototype;
+      var nativeObjectToString = objectProto.toString;
+      var invert = createInverter(function(result, value, key) {
+        if (value != null && typeof value.toString != "function") {
+          value = nativeObjectToString.call(value);
+        }
+        result[value] = key;
+      }, constant(identity));
+      module.exports = invert;
+    }
+  });
+
+  // packages/systems/dynamo/utils/SchemaEncoder/SchemaEncoder.js
+  var require_SchemaEncoder = __commonJS({
+    "packages/systems/dynamo/utils/SchemaEncoder/SchemaEncoder.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports._crapCode = _crapCode;
+      exports.restoreSlug = exports.fieldSlug = exports.collSlug = exports._test = void 0;
+      var _invert = _interopRequireDefault(require_invert());
+      var hex_lookup = {
+        "0": "b",
+        "1": "c",
+        "2": "d",
+        "3": "f",
+        "4": "g",
+        "5": "h",
+        "6": "j",
+        "7": "k",
+        "8": "l",
+        "9": "m",
+        a: "n",
+        b: "p",
+        c: "q",
+        d: "r",
+        e: "s",
+        f: "t"
+      };
+      var reverse_hex_lookup = (0, _invert.default)(hex_lookup);
+      function _crapCode(str) {
+        str = String(str);
+        const right = [];
+        const left = str.replace(/[^a-z0-9]/gi, (substr, idx) => {
+          const hex = substr.charCodeAt(0).toString(16);
+          const letters = hex.replace(/./g, (ch) => hex_lookup[ch]);
+          right.push(String(idx) + letters);
+          return "_";
+        });
+        return left + "_" + right.join("");
+      }
+      var collSlug = (coll) => "c_" + _crapCode(coll.slug);
+      exports.collSlug = collSlug;
+      var fieldSlug = (field) => "f_" + _crapCode(field.slug);
+      exports.fieldSlug = fieldSlug;
+      var _test = {
+        _crapCode
+      };
+      exports._test = _test;
+      var restoreSlug = (slugWithPrefixAndCrapCode) => {
+        const results = slugWithPrefixAndCrapCode.match(/^[fc]_([_A-Za-z0-9]+)_([0-9bcdfghjklmnpqrst]*)$/);
+        if (!results || results.length < 3) {
+          return slugWithPrefixAndCrapCode;
+        }
+        const left = results[1];
+        const right = results[2];
+        if (!right) {
+          return left;
+        }
+        const decrapified = left.split("");
+        const re = /(\d+)([bcdfghjklmnpqrst]+)/g;
+        let matches = re.exec(right);
+        while (matches !== null && matches.length > 2) {
+          const idx = Number(matches[1]);
+          const letters = matches[2];
+          const hex = letters.replace(/./g, (ch) => reverse_hex_lookup[ch]);
+          const char = String.fromCharCode(parseInt(hex, 16));
+          decrapified[idx] = char;
+          matches = re.exec(right);
+        }
+        return decrapified.join("");
+      };
+      exports.restoreSlug = restoreSlug;
+    }
+  });
+
+  // packages/systems/dynamo/utils/SchemaEncoder/index.js
+  var require_SchemaEncoder2 = __commonJS({
+    "packages/systems/dynamo/utils/SchemaEncoder/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _SchemaEncoder = require_SchemaEncoder();
+      Object.keys(_SchemaEncoder).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (key in exports && exports[key] === _SchemaEncoder[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _SchemaEncoder[key];
+          }
+        });
+      });
+    }
+  });
+
+  // packages/systems/dynamo/utils/SlugUtils/SlugUtils.js
+  var require_SlugUtils = __commonJS({
+    "packages/systems/dynamo/utils/SlugUtils/SlugUtils.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.isDynamoGraphQLFieldSlug = exports.fieldSlug = exports.collectionSlug = void 0;
+      Object.defineProperty(exports, "restoreSlug", {
+        enumerable: true,
+        get: function() {
+          return _SchemaEncoder.restoreSlug;
+        }
+      });
+      var _SchemaEncoder = require_SchemaEncoder2();
+      var fieldSlug = (slug) => (0, _SchemaEncoder.fieldSlug)({
+        slug
+      });
+      exports.fieldSlug = fieldSlug;
+      var DYNAMO_GQL_FIELD_SLUG = "f_";
+      var isDynamoGraphQLFieldSlug = (str) => str.startsWith(DYNAMO_GQL_FIELD_SLUG);
+      exports.isDynamoGraphQLFieldSlug = isDynamoGraphQLFieldSlug;
+      var collectionSlug = (slug) => (0, _SchemaEncoder.collSlug)({
+        slug
+      });
+      exports.collectionSlug = collectionSlug;
+    }
+  });
+
+  // packages/systems/dynamo/utils/SlugUtils/index.js
+  var require_SlugUtils2 = __commonJS({
+    "packages/systems/dynamo/utils/SlugUtils/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _SlugUtils = require_SlugUtils();
+      Object.keys(_SlugUtils).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (key in exports && exports[key] === _SlugUtils[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _SlugUtils[key];
+          }
+        });
+      });
+    }
+  });
+
+  // node_modules/reselect/lib/index.js
+  var require_lib10 = __commonJS({
+    "node_modules/reselect/lib/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.defaultMemoize = defaultMemoize;
+      exports.createSelectorCreator = createSelectorCreator;
+      exports.createSelector = createSelector;
+      exports.createStructuredSelector = createStructuredSelector;
+      function _toConsumableArray(arr) {
+        if (Array.isArray(arr)) {
+          for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++)
+            arr2[i] = arr[i];
+          return arr2;
+        } else {
+          return Array.from(arr);
+        }
+      }
+      function defaultEqualityCheck(a, b) {
+        return a === b;
+      }
+      function defaultMemoize(func) {
+        var equalityCheck = arguments.length <= 1 || arguments[1] === void 0 ? defaultEqualityCheck : arguments[1];
+        var lastArgs = null;
+        var lastResult = null;
+        return function() {
+          for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+          if (lastArgs !== null && args.every(function(value, index) {
+            return equalityCheck(value, lastArgs[index]);
+          })) {
+            return lastResult;
+          }
+          lastArgs = args;
+          lastResult = func.apply(void 0, args);
+          return lastResult;
+        };
+      }
+      function getDependencies(funcs) {
+        var dependencies = Array.isArray(funcs[0]) ? funcs[0] : funcs;
+        if (!dependencies.every(function(dep) {
+          return typeof dep === "function";
+        })) {
+          var dependencyTypes = dependencies.map(function(dep) {
+            return typeof dep;
+          }).join(", ");
+          throw new Error("Selector creators expect all input-selectors to be functions, " + ("instead received the following types: [" + dependencyTypes + "]"));
+        }
+        return dependencies;
+      }
