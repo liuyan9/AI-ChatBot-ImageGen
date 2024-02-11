@@ -46042,3 +46042,471 @@
       var baseIteratee = require_baseIteratee();
       var isArray = require_isArray();
       function createAggregator(setter, initializer) {
+        return function(collection, iteratee) {
+          var func = isArray(collection) ? arrayAggregator : baseAggregator, accumulator = initializer ? initializer() : {};
+          return func(collection, setter, baseIteratee(iteratee, 2), accumulator);
+        };
+      }
+      module.exports = createAggregator;
+    }
+  });
+
+  // node_modules/lodash/keyBy.js
+  var require_keyBy = __commonJS({
+    "node_modules/lodash/keyBy.js"(exports, module) {
+      var baseAssignValue = require_baseAssignValue();
+      var createAggregator = require_createAggregator();
+      var keyBy = createAggregator(function(result, value, key) {
+        baseAssignValue(result, key, value);
+      });
+      module.exports = keyBy;
+    }
+  });
+
+  // node_modules/lodash/isNumber.js
+  var require_isNumber = __commonJS({
+    "node_modules/lodash/isNumber.js"(exports, module) {
+      var baseGetTag = require_baseGetTag2();
+      var isObjectLike = require_isObjectLike2();
+      var numberTag = "[object Number]";
+      function isNumber(value) {
+        return typeof value == "number" || isObjectLike(value) && baseGetTag(value) == numberTag;
+      }
+      module.exports = isNumber;
+    }
+  });
+
+  // packages/systems/core/utils/CurrencyUtils/CurrencyUtils.js
+  var require_CurrencyUtils = __commonJS({
+    "packages/systems/core/utils/CurrencyUtils/CurrencyUtils.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports._invalid = _invalid;
+      exports.convertPaypalAmountToWFPrice = convertPaypalAmountToWFPrice;
+      exports.convertWFPriceToPaypalAmount = convertWFPriceToPaypalAmount;
+      exports.convertWFPriceToPaypalAmountWithBreakdown = convertWFPriceToPaypalAmountWithBreakdown;
+      exports.currencyInfoByCodePaypal = exports.currencyInfoByCode = void 0;
+      exports.equalPrice = equalPrice;
+      exports.formatPrice = formatPrice;
+      exports.getCurrencyInfo = getCurrencyInfo;
+      exports.getCurrencyInfoPaypal = getCurrencyInfoPaypal;
+      exports.intToUnsafeFloat = exports.getCurrencySymbol = void 0;
+      exports.parsePrice = parsePrice;
+      exports.renderPrice = renderPrice;
+      exports.scalePrice = scalePrice;
+      exports.subtractPrice = subtractPrice;
+      exports.sumPrice = sumPrice;
+      exports.unsafeFloatToInt = void 0;
+      exports.validatePrice = validatePrice;
+      exports.zeroUnitPaypal = zeroUnitPaypal;
+      exports.zeroUnitWF = zeroUnitWF;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _keyBy = _interopRequireDefault(require_keyBy());
+      var _memoize = _interopRequireDefault(require_memoize());
+      var _isString = _interopRequireDefault(require_isString());
+      var _isNumber = _interopRequireDefault(require_isNumber());
+      var _constants = require_constants2();
+      var currencyInfoByCode = (0, _keyBy.default)(_constants.stripeCurrencyList, "code");
+      exports.currencyInfoByCode = currencyInfoByCode;
+      var currencyInfoByCodePaypal = (0, _keyBy.default)(_constants.paypalCurrencyList, "code");
+      exports.currencyInfoByCodePaypal = currencyInfoByCodePaypal;
+      function getCurrencyInfo(code, platform = "stripe") {
+        if (isValidCurrency(code)) {
+          return platform === "stripe" ? (
+            // $FlowIgnore
+            currencyInfoByCode[code.toUpperCase()]
+          ) : (
+            // $FlowIgnore
+            currencyInfoByCodePaypal[code.toUpperCase()]
+          );
+        }
+        return {
+          code: "???",
+          digits: 2,
+          minCharge: 0,
+          name: `Unknown currency`
+        };
+      }
+      function getCurrencyInfoPaypal(code) {
+        return getCurrencyInfo(code, "paypal");
+      }
+      var isValidCurrency = (currencyCode) => typeof currencyCode === "string" && currencyInfoByCode.hasOwnProperty(currencyCode.toUpperCase());
+      var NullNumberFormat = class {
+        format(_value) {
+          return "NaN";
+        }
+      };
+      var getNumberFormat = (0, _memoize.default)(
+        (unit, currencyDisplay = "symbol") => (
+          // HACK: for some reason, GraphQL is returning a currency of '???' for null
+          // prices; we're temporarily glossing over this fact, and will address the
+          // backend at a later time..
+          unit != null && isValidCurrency(unit) ? new Intl.NumberFormat("en-US", {
+            currency: unit,
+            style: "currency",
+            currencyDisplay
+          }) : new NullNumberFormat()
+        ),
+        /* cache key function **/
+        (unit, currencyDisplay = "symbol") => {
+          return [String(unit), currencyDisplay].join("::");
+        }
+      );
+      var getCurrencySymbol = (unit) => {
+        const symbol = String(getNumberFormat(unit).format(0)).match(/^([^0-9\s]*)/);
+        return symbol ? symbol[0] : unit;
+      };
+      exports.getCurrencySymbol = getCurrencySymbol;
+      var unsafeFloatToInt = (floatValue, currency, round = Math.round) => {
+        const currencyInfo = typeof currency === "object" ? currency : getCurrencyInfo(currency);
+        return round(floatValue * Math.pow(10, currencyInfo.digits));
+      };
+      exports.unsafeFloatToInt = unsafeFloatToInt;
+      var intToUnsafeFloat = (intValue, currency) => {
+        const currencyInfo = typeof currency === "object" ? currency : getCurrencyInfo(currency);
+        return intValue / Math.pow(10, currencyInfo.digits);
+      };
+      exports.intToUnsafeFloat = intToUnsafeFloat;
+      function renderPrice(price, opts = {}) {
+        const {
+          isoFormat = false,
+          noCurrency = false
+        } = opts;
+        price = validatePrice(price) ? price : _invalid();
+        const normal_value = Number(price.value);
+        const currencyInfo = getCurrencyInfo(price.unit);
+        const float_value = intToUnsafeFloat(normal_value, currencyInfo);
+        if (Number.isNaN(float_value)) {
+          return "NaN";
+        }
+        if (noCurrency) {
+          return String(float_value);
+        }
+        const fmt = getNumberFormat(price.unit, isoFormat ? "code" : "symbol");
+        return fmt.format(float_value);
+      }
+      function formatPrice(price) {
+        price = validatePrice(price) ? price : _invalid();
+        const string = renderPrice(price);
+        return {
+          unit: price.unit,
+          value: price.value,
+          string
+        };
+      }
+      function validatePrice(a) {
+        if (!a || typeof a !== "object") {
+          return false;
+        }
+        if (!(0, _isNumber.default)(a.value)) {
+          return false;
+        }
+        if (!(0, _isString.default)(a.unit)) {
+          return false;
+        }
+        if (!isValidCurrency(a.unit)) {
+          return false;
+        }
+        return true;
+      }
+      function sumPrice(a, b) {
+        if (!validatePrice(a) || !validatePrice(b)) {
+          return _invalid();
+        }
+        if (a.unit !== b.unit) {
+          return _invalid();
+        }
+        return {
+          value: a.value + b.value,
+          unit: a.unit
+        };
+      }
+      function subtractPrice(a, b) {
+        if (!validatePrice(a) || !validatePrice(b)) {
+          return _invalid();
+        }
+        if (a.unit !== b.unit) {
+          return _invalid();
+        }
+        return {
+          value: a.value - b.value,
+          unit: a.unit
+        };
+      }
+      function scalePrice(a, scalar) {
+        if (!validatePrice(a) || !(0, _isNumber.default)(scalar)) {
+          return _invalid();
+        }
+        const value = Math.round(a.value * scalar);
+        const unit = a.unit;
+        return {
+          value,
+          unit
+        };
+      }
+      function equalPrice(a, b) {
+        return Boolean(a && b && a.value === b.value && a.unit === b.unit);
+      }
+      function parsePrice(priceString, unit, fallback) {
+        if (typeof priceString !== "string") {
+          throw new Error("parsePrice must be called with a string");
+        }
+        if (!isValidCurrency(unit)) {
+          throw new Error(`parsePrice called with invalid currency ${unit}`);
+        }
+        if (!priceString) {
+          return fallback;
+        }
+        const rawNumber = Number(priceString);
+        if (Number.isNaN(rawNumber)) {
+          return fallback;
+        }
+        return {
+          value: unsafeFloatToInt(rawNumber, unit),
+          unit
+        };
+      }
+      function _invalid() {
+        return {
+          value: NaN,
+          unit: "???"
+        };
+      }
+      function zeroUnitWF(unit) {
+        return {
+          unit,
+          value: 0
+        };
+      }
+      function zeroUnitPaypal(unit) {
+        return convertWFPriceToPaypalAmount(zeroUnitWF(unit));
+      }
+      function convertWFPriceToPaypalAmountWithBreakdown(orderPrices) {
+        const {
+          total,
+          subtotal,
+          shipping,
+          tax,
+          discount,
+          discountShipping
+        } = orderPrices;
+        const convertOrZero = (price, scalar) => price ? convertWFPriceToPaypalAmount(price, scalar) : zeroUnitPaypal(total.unit);
+        return (0, _extends2.default)({}, convertWFPriceToPaypalAmount(total), {
+          breakdown: {
+            item_total: convertOrZero(subtotal),
+            shipping: convertOrZero(shipping),
+            tax_total: convertOrZero(tax),
+            discount: convertOrZero(discount, -1),
+            shipping_discount: convertOrZero(discountShipping, -1)
+          }
+        });
+      }
+      function convertWFPriceToPaypalAmount(a, scalar) {
+        const unitInfo = getCurrencyInfoPaypal(a.unit);
+        const wfValue = scalar ? scalePrice(a, scalar).value : a.value;
+        const value = intToUnsafeFloat(wfValue, unitInfo).toFixed(unitInfo.digits);
+        return {
+          currency_code: a.unit,
+          value
+        };
+      }
+      function convertPaypalAmountToWFPrice(a) {
+        const unitInfo = getCurrencyInfoPaypal(a.currency_code);
+        const value = unsafeFloatToInt(parseFloat(a.value), unitInfo);
+        return {
+          unit: a.currency_code,
+          value
+        };
+      }
+    }
+  });
+
+  // node_modules/lodash/isInteger.js
+  var require_isInteger = __commonJS({
+    "node_modules/lodash/isInteger.js"(exports, module) {
+      var toInteger = require_toInteger();
+      function isInteger(value) {
+        return typeof value == "number" && value == toInteger(value);
+      }
+      module.exports = isInteger;
+    }
+  });
+
+  // node_modules/accounting/accounting.js
+  var require_accounting = __commonJS({
+    "node_modules/accounting/accounting.js"(exports, module) {
+      (function(root, undefined2) {
+        var lib = {};
+        lib.version = "0.4.1";
+        lib.settings = {
+          currency: {
+            symbol: "$",
+            // default currency symbol is '$'
+            format: "%s%v",
+            // controls output: %s = symbol, %v = value (can be object, see docs)
+            decimal: ".",
+            // decimal point separator
+            thousand: ",",
+            // thousands separator
+            precision: 2,
+            // decimal places
+            grouping: 3
+            // digit grouping (not implemented yet)
+          },
+          number: {
+            precision: 0,
+            // default precision on numbers is 0
+            grouping: 3,
+            // digit grouping (not implemented yet)
+            thousand: ",",
+            decimal: "."
+          }
+        };
+        var nativeMap = Array.prototype.map, nativeIsArray = Array.isArray, toString = Object.prototype.toString;
+        function isString(obj) {
+          return !!(obj === "" || obj && obj.charCodeAt && obj.substr);
+        }
+        function isArray(obj) {
+          return nativeIsArray ? nativeIsArray(obj) : toString.call(obj) === "[object Array]";
+        }
+        function isObject(obj) {
+          return obj && toString.call(obj) === "[object Object]";
+        }
+        function defaults(object, defs) {
+          var key;
+          object = object || {};
+          defs = defs || {};
+          for (key in defs) {
+            if (defs.hasOwnProperty(key)) {
+              if (object[key] == null)
+                object[key] = defs[key];
+            }
+          }
+          return object;
+        }
+        function map(obj, iterator, context) {
+          var results = [], i, j;
+          if (!obj)
+            return results;
+          if (nativeMap && obj.map === nativeMap)
+            return obj.map(iterator, context);
+          for (i = 0, j = obj.length; i < j; i++) {
+            results[i] = iterator.call(context, obj[i], i, obj);
+          }
+          return results;
+        }
+        function checkPrecision(val, base) {
+          val = Math.round(Math.abs(val));
+          return isNaN(val) ? base : val;
+        }
+        function checkCurrencyFormat(format) {
+          var defaults2 = lib.settings.currency.format;
+          if (typeof format === "function")
+            format = format();
+          if (isString(format) && format.match("%v")) {
+            return {
+              pos: format,
+              neg: format.replace("-", "").replace("%v", "-%v"),
+              zero: format
+            };
+          } else if (!format || !format.pos || !format.pos.match("%v")) {
+            return !isString(defaults2) ? defaults2 : lib.settings.currency.format = {
+              pos: defaults2,
+              neg: defaults2.replace("%v", "-%v"),
+              zero: defaults2
+            };
+          }
+          return format;
+        }
+        var unformat = lib.unformat = lib.parse = function(value, decimal) {
+          if (isArray(value)) {
+            return map(value, function(val) {
+              return unformat(val, decimal);
+            });
+          }
+          value = value || 0;
+          if (typeof value === "number")
+            return value;
+          decimal = decimal || lib.settings.number.decimal;
+          var regex = new RegExp("[^0-9-" + decimal + "]", ["g"]), unformatted = parseFloat(
+            ("" + value).replace(/\((.*)\)/, "-$1").replace(regex, "").replace(decimal, ".")
+            // make sure decimal point is standard
+          );
+          return !isNaN(unformatted) ? unformatted : 0;
+        };
+        var toFixed = lib.toFixed = function(value, precision) {
+          precision = checkPrecision(precision, lib.settings.number.precision);
+          var power = Math.pow(10, precision);
+          return (Math.round(lib.unformat(value) * power) / power).toFixed(precision);
+        };
+        var formatNumber = lib.formatNumber = lib.format = function(number, precision, thousand, decimal) {
+          if (isArray(number)) {
+            return map(number, function(val) {
+              return formatNumber(val, precision, thousand, decimal);
+            });
+          }
+          number = unformat(number);
+          var opts = defaults(
+            isObject(precision) ? precision : {
+              precision,
+              thousand,
+              decimal
+            },
+            lib.settings.number
+          ), usePrecision = checkPrecision(opts.precision), negative = number < 0 ? "-" : "", base = parseInt(toFixed(Math.abs(number || 0), usePrecision), 10) + "", mod = base.length > 3 ? base.length % 3 : 0;
+          return negative + (mod ? base.substr(0, mod) + opts.thousand : "") + base.substr(mod).replace(/(\d{3})(?=\d)/g, "$1" + opts.thousand) + (usePrecision ? opts.decimal + toFixed(Math.abs(number), usePrecision).split(".")[1] : "");
+        };
+        var formatMoney = lib.formatMoney = function(number, symbol, precision, thousand, decimal, format) {
+          if (isArray(number)) {
+            return map(number, function(val) {
+              return formatMoney(val, symbol, precision, thousand, decimal, format);
+            });
+          }
+          number = unformat(number);
+          var opts = defaults(
+            isObject(symbol) ? symbol : {
+              symbol,
+              precision,
+              thousand,
+              decimal,
+              format
+            },
+            lib.settings.currency
+          ), formats = checkCurrencyFormat(opts.format), useFormat = number > 0 ? formats.pos : number < 0 ? formats.neg : formats.zero;
+          return useFormat.replace("%s", opts.symbol).replace("%v", formatNumber(Math.abs(number), checkPrecision(opts.precision), opts.thousand, opts.decimal));
+        };
+        lib.formatColumn = function(list, symbol, precision, thousand, decimal, format) {
+          if (!list)
+            return [];
+          var opts = defaults(
+            isObject(symbol) ? symbol : {
+              symbol,
+              precision,
+              thousand,
+              decimal,
+              format
+            },
+            lib.settings.currency
+          ), formats = checkCurrencyFormat(opts.format), padAfterSymbol = formats.pos.indexOf("%s") < formats.pos.indexOf("%v") ? true : false, maxLength = 0, formatted = map(list, function(val, i) {
+            if (isArray(val)) {
+              return lib.formatColumn(val, opts);
+            } else {
+              val = unformat(val);
+              var useFormat = val > 0 ? formats.pos : val < 0 ? formats.neg : formats.zero, fVal = useFormat.replace("%s", opts.symbol).replace("%v", formatNumber(Math.abs(val), checkPrecision(opts.precision), opts.thousand, opts.decimal));
+              if (fVal.length > maxLength)
+                maxLength = fVal.length;
+              return fVal;
+            }
+          });
+          return map(formatted, function(val, i) {
+            if (isString(val) && val.length < maxLength) {
+              return padAfterSymbol ? val.replace(opts.symbol, opts.symbol + new Array(maxLength - val.length + 1).join(" ")) : new Array(maxLength - val.length + 1).join(" ") + val;
+            }
+            return val;
+          });
+        };
+        if (typeof exports !== "undefined") {
+          if (typeof module !== "undefined" && module.exports) {
