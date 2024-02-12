@@ -46510,3 +46510,439 @@
         };
         if (typeof exports !== "undefined") {
           if (typeof module !== "undefined" && module.exports) {
+            exports = module.exports = lib;
+          }
+          exports.accounting = lib;
+        } else if (typeof define === "function" && define.amd) {
+          define([], function() {
+            return lib;
+          });
+        } else {
+          lib.noConflict = function(oldAccounting) {
+            return function() {
+              root.accounting = oldAccounting;
+              lib.noConflict = undefined2;
+              return lib;
+            };
+          }(root.accounting);
+          root["accounting"] = lib;
+        }
+      })(exports);
+    }
+  });
+
+  // node_modules/lodash/_unescapeHtmlChar.js
+  var require_unescapeHtmlChar = __commonJS({
+    "node_modules/lodash/_unescapeHtmlChar.js"(exports, module) {
+      var basePropertyOf = require_basePropertyOf();
+      var htmlUnescapes = {
+        "&amp;": "&",
+        "&lt;": "<",
+        "&gt;": ">",
+        "&quot;": '"',
+        "&#39;": "'"
+      };
+      var unescapeHtmlChar = basePropertyOf(htmlUnescapes);
+      module.exports = unescapeHtmlChar;
+    }
+  });
+
+  // node_modules/lodash/unescape.js
+  var require_unescape = __commonJS({
+    "node_modules/lodash/unescape.js"(exports, module) {
+      var toString = require_toString();
+      var unescapeHtmlChar = require_unescapeHtmlChar();
+      var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g;
+      var reHasEscapedHtml = RegExp(reEscapedHtml.source);
+      function unescape2(string) {
+        string = toString(string);
+        return string && reHasEscapedHtml.test(string) ? string.replace(reEscapedHtml, unescapeHtmlChar) : string;
+      }
+      module.exports = unescape2;
+    }
+  });
+
+  // packages/systems/core/utils/EmbedUtils/shared/index.js
+  var require_shared3 = __commonJS({
+    "packages/systems/core/utils/EmbedUtils/shared/index.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.extractToken = extractToken;
+      exports.getWfTokenPattern = exports.getExternalTokenPattern = exports.getCatchAllTokenPattern = void 0;
+      exports.parseTokenJson = parseTokenJson;
+      exports.stripLegacyShorthandSuffix = stripLegacyShorthandSuffix;
+      var _unescape = _interopRequireDefault(require_unescape());
+      var getWfTokenPattern = function() {
+        return /{{\s*wf\s*({.*?})\s*}}/g;
+      };
+      exports.getWfTokenPattern = getWfTokenPattern;
+      var getCatchAllTokenPattern = function() {
+        return /{{\s*(.*?)\s*}}/g;
+      };
+      exports.getCatchAllTokenPattern = getCatchAllTokenPattern;
+      var getExternalTokenPattern = function() {
+        return /{\\{(\s*.*?\s*)}}/g;
+      };
+      exports.getExternalTokenPattern = getExternalTokenPattern;
+      function parseTokenJson(string) {
+        if (string.match(getWfTokenPattern())) {
+          let token;
+          try {
+            token = JSON.parse((0, _unescape.default)(extractToken(string).replace(/\\}/g, "}")));
+          } catch (err) {
+            return null;
+          }
+          if (!token || !token.path || !token.type) {
+            return null;
+          } else {
+            return token;
+          }
+        } else {
+          return null;
+        }
+      }
+      function extractToken(string, {
+        shortHand
+      } = {}) {
+        return shortHand ? string.replace(getCatchAllTokenPattern(), (match, subMatch) => {
+          return stripLegacyShorthandSuffix(subMatch);
+        }) : string.replace(getWfTokenPattern(), "$1");
+      }
+      function stripLegacyShorthandSuffix(tokenPath) {
+        return tokenPath.split(":").map((part) => part.split(".")[0]).join(":");
+      }
+    }
+  });
+
+  // packages/systems/core/utils/EmbedUtils/simpleReplaceTokens/index.js
+  var require_simpleReplaceTokens = __commonJS({
+    "packages/systems/core/utils/EmbedUtils/simpleReplaceTokens/index.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.simpleReplaceTokens = simpleReplaceTokens;
+      var _isFunction = _interopRequireDefault(require_isFunction());
+      var _get = _interopRequireDefault(require_get());
+      var _shared = require_shared3();
+      function simpleReplaceTokens(replaceable, item) {
+        return replaceable.replace((0, _shared.getWfTokenPattern)(), function(match) {
+          const token = (0, _shared.parseTokenJson)(match) || {};
+          const path = token.path.split(".");
+          return (0, _isFunction.default)(item.getIn) ? item.getIn(path, "") : (0, _get.default)(item, path, "");
+        });
+      }
+    }
+  });
+
+  // packages/systems/core/utils/CurrencyUtils/renderPrice.js
+  var require_renderPrice = __commonJS({
+    "packages/systems/core/utils/CurrencyUtils/renderPrice.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.formatPriceFromSettings = formatPriceFromSettings;
+      exports.getCurrencySettingsFromCommerceSettings = getCurrencySettingsFromCommerceSettings;
+      exports.renderAmountFromSettings = renderAmountFromSettings;
+      exports.renderPriceFromSettings = renderPriceFromSettings;
+      var _get = _interopRequireDefault(require_get());
+      var _isInteger = _interopRequireDefault(require_isInteger());
+      var _accounting = require_accounting();
+      var _simpleReplaceTokens = require_simpleReplaceTokens();
+      var _CurrencyUtils = require_CurrencyUtils();
+      function formatPriceFromSettings(price, currencySettings) {
+        price = (0, _CurrencyUtils.validatePrice)(price) ? price : (0, _CurrencyUtils._invalid)();
+        const string = renderPriceFromSettings(price, currencySettings);
+        return {
+          unit: price.unit,
+          value: price.value,
+          string
+        };
+      }
+      function getCurrencySettingsFromCommerceSettings(commerceSettings) {
+        const getTheStuff = typeof commerceSettings.getIn === "function" ? (
+          // $FlowFixMe getIn is being manually checked for
+          (keyPath, defaultValue) => commerceSettings.getIn(keyPath, defaultValue)
+        ) : (keyPath, defaultValue) => (0, _get.default)(commerceSettings, keyPath, defaultValue);
+        return {
+          hideDecimalForWholeNumbers: getTheStuff(["defaultCurrencyFormat", "hideDecimalForWholeNumbers"], false),
+          fractionDigits: getTheStuff(["defaultCurrencyFormat", "fractionDigits"], 2),
+          template: getTheStuff(["defaultCurrencyFormat", "template"], ""),
+          decimal: getTheStuff(["defaultCurrencyFormat", "decimal"], "."),
+          group: getTheStuff(["defaultCurrencyFormat", "group"], ","),
+          symbol: getTheStuff(["defaultCurrencyFormat", "symbol"], "$"),
+          currencyCode: getTheStuff(["defaultCurrency"], "USD")
+        };
+      }
+      var _nonBreakingSpace = String.fromCharCode(160);
+      var _replaceAllSpaceWithNBSP = (str) => str.replace(/\s/g, _nonBreakingSpace);
+      function renderAmountFromSettings(amount, amountSettings = {}) {
+        if (typeof amount === "undefined") {
+          return "";
+        }
+        if (typeof amount === "string") {
+          if (amount === "\u221E") {
+            return amount;
+          }
+          throw new Error(`amount has type string: got ${amount}, expected \u221E`);
+        }
+        const jsValue = amount / parseFloat(`1${"0".repeat(amountSettings.fractionDigits || 0)}`);
+        const precision = (0, _isInteger.default)(jsValue) && amountSettings.hideDecimalForWholeNumbers ? 0 : amountSettings.fractionDigits;
+        return (0, _accounting.formatMoney)(jsValue, {
+          symbol: "",
+          decimal: amountSettings.decimal,
+          precision,
+          thousand: amountSettings.group
+        });
+      }
+      function renderPriceFromSettings(price, currencySettings = {}, renderOpts = {}) {
+        const {
+          template,
+          currencyCode
+        } = currencySettings;
+        if (!template || price.unit !== currencyCode) {
+          return (0, _CurrencyUtils.renderPrice)(price);
+        }
+        return (price.value < 0 ? "\u2212" : "") + // negative sign to appear before currency symbol e.g., -$ 5.00 USD
+        (0, _simpleReplaceTokens.simpleReplaceTokens)((renderOpts.breakingWhitespace ? currencySettings.template : _replaceAllSpaceWithNBSP(currencySettings.template)) || "", {
+          amount: renderAmountFromSettings(Math.abs(price.value), currencySettings),
+          symbol: currencySettings.symbol,
+          currencyCode: currencySettings.currencyCode
+        });
+      }
+    }
+  });
+
+  // packages/systems/core/utils/CurrencyUtils/index.js
+  var require_CurrencyUtils2 = __commonJS({
+    "packages/systems/core/utils/CurrencyUtils/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _CurrencyUtils = require_CurrencyUtils();
+      Object.keys(_CurrencyUtils).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (key in exports && exports[key] === _CurrencyUtils[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _CurrencyUtils[key];
+          }
+        });
+      });
+      var _renderPrice = require_renderPrice();
+      Object.keys(_renderPrice).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (key in exports && exports[key] === _renderPrice[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _renderPrice[key];
+          }
+        });
+      });
+    }
+  });
+
+  // node_modules/lodash/_escapeHtmlChar.js
+  var require_escapeHtmlChar = __commonJS({
+    "node_modules/lodash/_escapeHtmlChar.js"(exports, module) {
+      var basePropertyOf = require_basePropertyOf();
+      var htmlEscapes = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      };
+      var escapeHtmlChar = basePropertyOf(htmlEscapes);
+      module.exports = escapeHtmlChar;
+    }
+  });
+
+  // node_modules/lodash/escape.js
+  var require_escape = __commonJS({
+    "node_modules/lodash/escape.js"(exports, module) {
+      var escapeHtmlChar = require_escapeHtmlChar();
+      var toString = require_toString();
+      var reUnescapedHtml = /[&<>"']/g;
+      var reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+      function escape2(string) {
+        string = toString(string);
+        return string && reHasUnescapedHtml.test(string) ? string.replace(reUnescapedHtml, escapeHtmlChar) : string;
+      }
+      module.exports = escape2;
+    }
+  });
+
+  // packages/systems/dynamo/utils/DynamoFormattingUtils/index.js
+  var require_DynamoFormattingUtils = __commonJS({
+    "packages/systems/dynamo/utils/DynamoFormattingUtils/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.formatEmail = formatEmail;
+      exports.formatNumber = formatNumber;
+      exports.formatPhone = formatPhone;
+      function formatNumber(n, formatType) {
+        if (typeof n === "number") {
+          const precision = formatType === "" || formatType === "none" ? NaN : Number(formatType);
+          if (!isNaN(precision)) {
+            return n.toFixed(precision);
+          } else {
+            return String(n);
+          }
+        } else {
+          return "";
+        }
+      }
+      function formatEmail(email, subject, property) {
+        const prefix = property === "href" ? "mailto:" : "";
+        if (email && subject) {
+          return prefix + email + "?subject=" + subject;
+        } else if (email) {
+          return prefix + email;
+        } else {
+          return null;
+        }
+      }
+      function formatPhone(phone, property) {
+        if (property === "href") {
+          let tel = phone ? phone.replace(/\s/g, "") : "";
+          if (/\d/.test(tel)) {
+            const keypadMap = [[/a|b|c/gi, 2], [/d|e|f/gi, 3], [/g|h|i/gi, 4], [/j|k|l/gi, 5], [/m|n|o/gi, 6], [/p|q|r|s/gi, 7], [/t|u|v/gi, 8], [/w|x|y|z/gi, 9]];
+            keypadMap.forEach(([key, value]) => {
+              tel = tel.replace(key, value.toString());
+            });
+          } else {
+            phone = "#";
+          }
+          phone = /\d/.test(tel) ? "tel:" + tel : "#";
+        }
+        return phone;
+      }
+    }
+  });
+
+  // packages/systems/dynamo/utils/Transformers/Transformers.js
+  var require_Transformers = __commonJS({
+    "packages/systems/dynamo/utils/Transformers/Transformers.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.transformers = void 0;
+      var _escape = _interopRequireDefault(require_escape());
+      var _momentTimezone = _interopRequireDefault(require_moment_timezone2());
+      var _CurrencyUtils = require_CurrencyUtils2();
+      var _DynamoFormattingUtils = require_DynamoFormattingUtils();
+      var isSimpleDateFormat = (value) => /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.test(value);
+      var date = (value, [format], {
+        timezone = "UTC"
+      }) => {
+        if (isSimpleDateFormat(value)) {
+          timezone = "UTC";
+        }
+        const momentDate = _momentTimezone.default.utc(value, _momentTimezone.default.ISO_8601);
+        if (momentDate.isValid()) {
+          return momentDate.tz(timezone).format(format);
+        } else {
+          return "";
+        }
+      };
+      var detailPage = (value, [collectionIdOrLegacySlug], {
+        collectionSlugMap
+      }) => {
+        const collectionSlug = collectionSlugMap[collectionIdOrLegacySlug] || collectionIdOrLegacySlug;
+        return value ? `/${collectionSlug}/${value}` : null;
+      };
+      var style = (value, [styleProp]) => {
+        if (styleProp === "background-image") {
+          return value ? `url("${value}")` : "none";
+        }
+        return value;
+      };
+      var numberPrecision = (value, [precision]) => {
+        return (0, _DynamoFormattingUtils.formatNumber)(value, precision);
+      };
+      var rich = (value, params, {
+        pageLinkHrefPrefix,
+        collectionSlugMap
+      }) => {
+        if (!value) {
+          return null;
+        }
+        if (typeof value !== "string") {
+          return value;
+        }
+        return value.replace(/<a\s+[^>]+/g, (linkString) => {
+          const isPageLink = /\sdata-rt-link-type="page"/.test(linkString);
+          const needsPrefix = pageLinkHrefPrefix && isPageLink;
+          const collectionIdMatch = isPageLink && /\sdata-rt-link-collectionid="([a-z0-9]{24})"/.exec(linkString);
+          if (needsPrefix || collectionIdMatch) {
+            return linkString.replace(/(\shref=")([^"]+)/, (match, begin, href) => {
+              const end = collectionIdMatch ? replaceDetailPageHrefCollectionSlug(href, collectionIdMatch[1], collectionSlugMap) : href;
+              const prefix = pageLinkHrefPrefix ? (0, _escape.default)(pageLinkHrefPrefix) : "";
+              return `${begin}${prefix}${end}`;
+            });
+          } else {
+            return linkString;
+          }
+        });
+      };
+      var replaceDetailPageHrefCollectionSlug = (href, collectionId, collectionSlugMap) => {
+        const [emptyString, originalCollectionSlug, ...rest] = href.split("/");
+        const collectionSlug = collectionSlugMap[collectionId] || originalCollectionSlug;
+        return [emptyString, collectionSlug, ...rest].join("/");
+      };
+      var get = (obj, key) => {
+        if (obj != null && typeof obj.get === "function") {
+          return obj.get(key);
+        }
+        return obj[key];
+      };
+      var price = (obj, params, context) => {
+        if (!obj)
+          return null;
+        return (0, _CurrencyUtils.renderPriceFromSettings)({
+          unit: get(obj, "unit"),
+          value: get(obj, "value")
+        }, context.currencySettings);
+      };
+      var transformerIndex = {
+        date,
+        detailPage,
+        style,
+        numberPrecision,
+        rich,
+        price
+      };
+      var transformers = (value, filter, context) => {
+        const {
+          type: key,
+          params
+        } = filter;
+        const fn = transformerIndex[key];
+        return fn ? fn(value, params, context) : value;
+      };
+      exports.transformers = transformers;
+    }
+  });
+
+  // packages/systems/dynamo/utils/Transformers/index.js
+  var require_Transformers2 = __commonJS({
+    "packages/systems/dynamo/utils/Transformers/index.js"(exports) {
+      "use strict";
