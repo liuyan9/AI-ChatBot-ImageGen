@@ -47819,3 +47819,460 @@
       };
       exports.createNewStore = createNewStore;
     }
+  });
+
+  // shared/render/plugins/Commerce/modules/components/PillGroup/index.js
+  var require_PillGroup = __commonJS({
+    "shared/render/plugins/Commerce/modules/components/PillGroup/index.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.PillGroups = void 0;
+      var _defineProperty2 = _interopRequireDefault(require_defineProperty2());
+      var _constants = require_constants2();
+      var KEY_CODES = Object.freeze({
+        RETURN: 13,
+        SPACE: 32,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40
+      });
+      var PillGroups = class {
+        static hasPillGroups(form) {
+          return form.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP}"]`).length > 0;
+        }
+        constructor(form, onSelect) {
+          this.form = form;
+          this.pillGroups = {};
+          this.onSelect = onSelect;
+        }
+        init() {
+          const groupNodes = this.form.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP}"]`);
+          for (const group of groupNodes) {
+            const pillGroup = new PillGroup(group, this.onSelect, this);
+            pillGroup.init();
+            this.pillGroups[pillGroup.optionSetId] = pillGroup;
+          }
+        }
+        setSelectedPillsForSkuValues(skuValues) {
+          for (const optionSetId of Object.keys(skuValues)) {
+            const optionId = skuValues[optionSetId];
+            const pillGroup = this.pillGroups[optionSetId];
+            if (pillGroup) {
+              const pill = pillGroup.findPillById(String(optionId));
+              pillGroup.updatePillsWithNewSelected(pill);
+            }
+          }
+        }
+      };
+      exports.PillGroups = PillGroups;
+      var PillGroup = class {
+        constructor(node, onSelect, groups) {
+          this.node = node;
+          this.optionSetId = String(node.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID));
+          this.onSelect = onSelect;
+          this.pills = [];
+          this.groups = groups;
+        }
+        get firstEnabledPill() {
+          return this.pills.find((pill) => pill.disabled === false);
+        }
+        // hacky fake option set compat
+        get value() {
+          const possiblePill = this.pills.find((pill) => pill.checked === true);
+          return possiblePill ? possiblePill.value : "";
+        }
+        // hacky fake option set compat
+        get options() {
+          return this.pills;
+        }
+        // hacky fake option set compat
+        set selectedIndex(index) {
+          const pill = this.pills[index] || null;
+          this.emitSelected(pill);
+        }
+        // hacky fake option set compat
+        // we only want to support the one DOM attribute, which we have on this group, just not
+        // directly exposed, as we don't directly expose the DOM element for the group
+        getAttribute(attr) {
+          if (attr === _constants.DATA_ATTR_COMMERCE_OPTION_SET_ID) {
+            return this.optionSetId;
+          } else {
+            throw new Error(`PillGroup: Attempted to fetch unsupported attribute ${attr}`);
+          }
+        }
+        init() {
+          const pills = this.node.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL}"]`);
+          this.pills = Array.from(pills).map((pillNode) => {
+            const pill = new Pill(pillNode, this);
+            pill.init();
+            return pill;
+          });
+          if (this.firstEnabledPill) {
+            this.firstEnabledPill.tabIndex = 0;
+          }
+          this.node._wfPillGroup = this;
+        }
+        findPillById(optionId) {
+          return this.pills.find((pill) => pill.optionId === optionId);
+        }
+        updatePillsWithNewSelected(selectedPill) {
+          for (const pill of this.pills) {
+            pill.tabIndex = -1;
+            pill.checked = false;
+          }
+          if (selectedPill instanceof Pill) {
+            selectedPill.tabIndex = 0;
+            selectedPill.checked = true;
+          } else {
+            if (this.firstEnabledPill) {
+              this.firstEnabledPill.tabIndex = 0;
+            }
+          }
+        }
+        emitSelected(selectedPill) {
+          this.onSelect({
+            optionId: selectedPill.optionId,
+            optionSetId: this.optionSetId,
+            groups: Object.values(this.groups.pillGroups)
+          });
+        }
+        traverseAndEmitSelected(currentPill, direction) {
+          const currentIndex = this.pills.indexOf(currentPill);
+          let found = false;
+          let idx = currentIndex;
+          let nextIndex;
+          while (!found) {
+            if (direction === "previous") {
+              nextIndex = idx - 1;
+              if (nextIndex < 0) {
+                nextIndex = this.pills.length - 1;
+              }
+            } else if (direction === "next") {
+              nextIndex = idx + 1;
+              if (nextIndex === this.pills.length) {
+                nextIndex = 0;
+              }
+            } else {
+              throw new Error(`Unknown pill traversal direction "${direction}", use "previous" or "next"`);
+            }
+            if (nextIndex === currentIndex) {
+              break;
+            }
+            const pill = this.pills[nextIndex];
+            if (!pill.disabled) {
+              this.emitSelected(pill);
+              pill.focus();
+              found = true;
+            } else {
+              idx = nextIndex;
+            }
+          }
+        }
+      };
+      var Pill = class {
+        constructor(node, group) {
+          (0, _defineProperty2.default)(this, "handleKeyDown", (ev) => {
+            let eventHandled = false;
+            if (ev.altKey || ev.metaKey) {
+              return;
+            }
+            switch (ev.keyCode) {
+              case KEY_CODES.RETURN:
+              case KEY_CODES.SPACE:
+                this.handleClick();
+                eventHandled = true;
+                break;
+              case KEY_CODES.UP:
+              case KEY_CODES.LEFT:
+                this.group.traverseAndEmitSelected(this, "previous");
+                eventHandled = true;
+                break;
+              case KEY_CODES.DOWN:
+              case KEY_CODES.RIGHT:
+                this.group.traverseAndEmitSelected(this, "next");
+                eventHandled = true;
+                break;
+              default:
+                break;
+            }
+            if (eventHandled) {
+              ev.stopPropagation();
+              ev.preventDefault();
+            }
+          });
+          (0, _defineProperty2.default)(this, "handleClick", () => {
+            if (this.disabled || this.checked) {
+              return;
+            }
+            this.focus();
+            this.group.emitSelected(this);
+          });
+          this.node = node;
+          this.optionId = String(this.node.getAttribute("data-option-id"));
+          this.group = group;
+        }
+        init() {
+          this.tabIndex = -1;
+          this.checked = false;
+          this.node.addEventListener("keydown", this.handleKeyDown);
+          this.node.addEventListener("click", this.handleClick);
+        }
+        get tabIndex() {
+          return this.node.tabIndex;
+        }
+        set tabIndex(index) {
+          this.node.tabIndex = index;
+        }
+        get value() {
+          return this.optionId;
+        }
+        get checked() {
+          return this.node.getAttribute("aria-checked") === "true";
+        }
+        set checked(checked) {
+          this.node.setAttribute("aria-checked", String(checked));
+          if (checked) {
+            this.node.classList.add("w--ecommerce-pill-selected");
+          } else {
+            this.node.classList.remove("w--ecommerce-pill-selected");
+          }
+        }
+        get disabled() {
+          return this.node.getAttribute("aria-disabled") === "true";
+        }
+        set disabled(disabled) {
+          this.node.setAttribute("aria-disabled", String(disabled));
+          if (disabled) {
+            this.node.classList.add("w--ecommerce-pill-disabled");
+            this.checked = false;
+            this.tabIndex = -1;
+          } else {
+            this.node.classList.remove("w--ecommerce-pill-disabled");
+          }
+        }
+        get enabled() {
+          return !this.disabled;
+        }
+        set enabled(enabled) {
+          this.disabled = !enabled;
+        }
+        focus() {
+          this.node.focus();
+        }
+      };
+    }
+  });
+
+  // node_modules/promise-polyfill/src/finally.js
+  function finally_default(callback) {
+    var constructor = this.constructor;
+    return this.then(
+      function(value) {
+        return constructor.resolve(callback()).then(function() {
+          return value;
+        });
+      },
+      function(reason) {
+        return constructor.resolve(callback()).then(function() {
+          return constructor.reject(reason);
+        });
+      }
+    );
+  }
+  var init_finally = __esm({
+    "node_modules/promise-polyfill/src/finally.js"() {
+    }
+  });
+
+  // node_modules/promise-polyfill/src/index.js
+  function noop() {
+  }
+  function bind(fn, thisArg) {
+    return function() {
+      fn.apply(thisArg, arguments);
+    };
+  }
+  function Promise2(fn) {
+    if (!(this instanceof Promise2))
+      throw new TypeError("Promises must be constructed via new");
+    if (typeof fn !== "function")
+      throw new TypeError("not a function");
+    this._state = 0;
+    this._handled = false;
+    this._value = void 0;
+    this._deferreds = [];
+    doResolve(fn, this);
+  }
+  function handle(self2, deferred) {
+    while (self2._state === 3) {
+      self2 = self2._value;
+    }
+    if (self2._state === 0) {
+      self2._deferreds.push(deferred);
+      return;
+    }
+    self2._handled = true;
+    Promise2._immediateFn(function() {
+      var cb = self2._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+      if (cb === null) {
+        (self2._state === 1 ? resolve : reject)(deferred.promise, self2._value);
+        return;
+      }
+      var ret;
+      try {
+        ret = cb(self2._value);
+      } catch (e) {
+        reject(deferred.promise, e);
+        return;
+      }
+      resolve(deferred.promise, ret);
+    });
+  }
+  function resolve(self2, newValue) {
+    try {
+      if (newValue === self2)
+        throw new TypeError("A promise cannot be resolved with itself.");
+      if (newValue && (typeof newValue === "object" || typeof newValue === "function")) {
+        var then = newValue.then;
+        if (newValue instanceof Promise2) {
+          self2._state = 3;
+          self2._value = newValue;
+          finale(self2);
+          return;
+        } else if (typeof then === "function") {
+          doResolve(bind(then, newValue), self2);
+          return;
+        }
+      }
+      self2._state = 1;
+      self2._value = newValue;
+      finale(self2);
+    } catch (e) {
+      reject(self2, e);
+    }
+  }
+  function reject(self2, newValue) {
+    self2._state = 2;
+    self2._value = newValue;
+    finale(self2);
+  }
+  function finale(self2) {
+    if (self2._state === 2 && self2._deferreds.length === 0) {
+      Promise2._immediateFn(function() {
+        if (!self2._handled) {
+          Promise2._unhandledRejectionFn(self2._value);
+        }
+      });
+    }
+    for (var i = 0, len = self2._deferreds.length; i < len; i++) {
+      handle(self2, self2._deferreds[i]);
+    }
+    self2._deferreds = null;
+  }
+  function Handler(onFulfilled, onRejected, promise) {
+    this.onFulfilled = typeof onFulfilled === "function" ? onFulfilled : null;
+    this.onRejected = typeof onRejected === "function" ? onRejected : null;
+    this.promise = promise;
+  }
+  function doResolve(fn, self2) {
+    var done = false;
+    try {
+      fn(
+        function(value) {
+          if (done)
+            return;
+          done = true;
+          resolve(self2, value);
+        },
+        function(reason) {
+          if (done)
+            return;
+          done = true;
+          reject(self2, reason);
+        }
+      );
+    } catch (ex) {
+      if (done)
+        return;
+      done = true;
+      reject(self2, ex);
+    }
+  }
+  var setTimeoutFunc, src_default;
+  var init_src = __esm({
+    "node_modules/promise-polyfill/src/index.js"() {
+      init_finally();
+      setTimeoutFunc = setTimeout;
+      Promise2.prototype["catch"] = function(onRejected) {
+        return this.then(null, onRejected);
+      };
+      Promise2.prototype.then = function(onFulfilled, onRejected) {
+        var prom = new this.constructor(noop);
+        handle(this, new Handler(onFulfilled, onRejected, prom));
+        return prom;
+      };
+      Promise2.prototype["finally"] = finally_default;
+      Promise2.all = function(arr) {
+        return new Promise2(function(resolve2, reject2) {
+          if (!arr || typeof arr.length === "undefined")
+            throw new TypeError("Promise.all accepts an array");
+          var args = Array.prototype.slice.call(arr);
+          if (args.length === 0)
+            return resolve2([]);
+          var remaining = args.length;
+          function res(i2, val) {
+            try {
+              if (val && (typeof val === "object" || typeof val === "function")) {
+                var then = val.then;
+                if (typeof then === "function") {
+                  then.call(
+                    val,
+                    function(val2) {
+                      res(i2, val2);
+                    },
+                    reject2
+                  );
+                  return;
+                }
+              }
+              args[i2] = val;
+              if (--remaining === 0) {
+                resolve2(args);
+              }
+            } catch (ex) {
+              reject2(ex);
+            }
+          }
+          for (var i = 0; i < args.length; i++) {
+            res(i, args[i]);
+          }
+        });
+      };
+      Promise2.resolve = function(value) {
+        if (value && typeof value === "object" && value.constructor === Promise2) {
+          return value;
+        }
+        return new Promise2(function(resolve2) {
+          resolve2(value);
+        });
+      };
+      Promise2.reject = function(value) {
+        return new Promise2(function(resolve2, reject2) {
+          reject2(value);
+        });
+      };
+      Promise2.race = function(values) {
+        return new Promise2(function(resolve2, reject2) {
+          for (var i = 0, len = values.length; i < len; i++) {
+            values[i].then(resolve2, reject2);
+          }
+        });
+      };
+      Promise2._immediateFn = typeof setImmediate === "function" && function(fn) {
+        setImmediate(fn);
+      } || function(fn) {
+        setTimeoutFunc(fn, 0);
