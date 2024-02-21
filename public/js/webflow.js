@@ -47393,3 +47393,429 @@
       var applyBindingsMutation = ({
         bindingProperty,
         type,
+        filter,
+        path,
+        timezone,
+        pageLinkHrefPrefix,
+        collectionSlugMap = {},
+        data,
+        node,
+        emailLinkSubject = ""
+      }) => {
+        if (!isBindingPropToFieldTypeAllowed(bindingProperty, type)) {
+          return;
+        }
+        const prefix = "data.";
+        let suffix = "";
+        if (type === "ImageRef" && bindingProperty === "src") {
+          suffix = ".url";
+        }
+        let rawValue;
+        if (type === "CommercePropValues") {
+          rawValue = getCommercePropValue(data, `${prefix}${path}`);
+        } else {
+          rawValue = getIn(data, `${prefix}${path}${suffix}`);
+        }
+        const transformedValue = (0, _Transformers.transformers)(rawValue, filter, {
+          timezone,
+          pageLinkHrefPrefix,
+          collectionSlugMap,
+          currencySettings: window.__WEBFLOW_CURRENCY_SETTINGS
+        });
+        const detailPageHref = filter.type === "detailPage" ? transformedValue : null;
+        const propertyMutator = getPropertyMutator(bindingProperty, emailLinkSubject, detailPageHref);
+        if (typeof propertyMutator === "function") {
+          propertyMutator(node, type, transformedValue);
+        }
+      };
+      var applyBindings = (bindings, data, node) => {
+        if (bindings == null) {
+          return;
+        }
+        bindings.forEach((binding) => {
+          Object.keys(binding).forEach((bindingProperty) => {
+            const bindingValue = binding[bindingProperty];
+            const {
+              type,
+              filter,
+              dataPath: path,
+              timezone,
+              pageLinkHrefPrefix,
+              collectionSlugMap,
+              emailLinkSubject
+            } = bindingValue;
+            applyBindingsMutation({
+              bindingProperty,
+              type,
+              filter,
+              path,
+              timezone,
+              pageLinkHrefPrefix,
+              collectionSlugMap,
+              data,
+              node,
+              emailLinkSubject
+            });
+          });
+        });
+      };
+      var applyConditionalVisibility = (conditionData, data, node) => {
+        if (!conditionData) {
+          return;
+        }
+        const {
+          dataPath,
+          meta
+        } = conditionData;
+        const prefixedDataPath = `data.${dataPath}`;
+        const item = meta && meta.type === "CommercePropValues" ? {
+          name: getIn(data, `${prefixedDataPath}.name`),
+          value: getCommercePropValue(data, prefixedDataPath)
+        } : getIn(data, prefixedDataPath);
+        (0, _RenderingUtils.applyConditionToNode)(node, item, conditionData, true);
+      };
+      var applySkuBoundConditionalVisibility = ({
+        conditionData,
+        newSkuItem,
+        node
+      }) => {
+        const {
+          condition
+        } = conditionData;
+        const skuConditionData = (0, _transform.default)(condition.fields, (data, val, field) => {
+          const skuField = field.split("default-sku:");
+          if (skuField.length > 1) {
+            data[skuField[1]] = val;
+            return data;
+          }
+        });
+        const inventoryQuantity = newSkuItem.inventory.type === "infinite" ? null : newSkuItem.inventory.quantity;
+        const itemWithFlattenedInventory = (0, _extends2.default)({}, newSkuItem, {
+          ecSkuInventoryQuantity: inventoryQuantity
+        });
+        (0, _RenderingUtils.applyConditionToNode)(node, itemWithFlattenedInventory, (0, _extends2.default)({}, conditionData, {
+          condition: {
+            fields: skuConditionData
+          }
+        }), true);
+      };
+      exports.applySkuBoundConditionalVisibility = applySkuBoundConditionalVisibility;
+      var createStyleMutator = (property) => (node, type, value) => {
+        if (!(node instanceof HTMLElement && typeof value === "string")) {
+          return;
+        }
+        if (type === "ImageRef") {
+          node.style.setProperty(property, `url(${value})`);
+        }
+        node.style.setProperty(property, value);
+      };
+      var createAttributeMutator = (attribute) => (node, type, value) => {
+        const sanitizedString = value != null ? String(value) : "";
+        node.setAttribute(attribute, sanitizedString);
+        if (attribute === "src" && sanitizedString) {
+          (0, _RenderingUtils.removeWDynBindEmptyClass)(node);
+        }
+      };
+      var valueMutator = (node, type, value) => {
+        if (node.hasRendered) {
+          return;
+        }
+        let sanitizedString;
+        if (node.tagName === "SELECT") {
+          sanitizedString = value != null ? String(value) : node.value || "";
+        } else {
+          sanitizedString = value != null ? String(value) : "";
+        }
+        node.setAttribute("value", sanitizedString);
+        if (node.tagName === "INPUT" && String(node.type).toLowerCase() === "text") {
+          node.hasRendered = true;
+        }
+        node.value = sanitizedString;
+      };
+      var checkedMutator = (node, type, value) => {
+        node.checked = Boolean(value);
+      };
+      var aspectRatio = ({
+        height,
+        width
+      }) => {
+        return height && width ? height / width : 0;
+      };
+      var mutators = {
+        innerHTML: (node, type, value) => {
+          const originalValue = value;
+          if (type === "Video") {
+            value = value != null && value.metadata != null && typeof value.metadata.html === "string" ? value.metadata.html : null;
+          }
+          const valueString = value != null ? String(value) : "";
+          if (allowedFieldTypes.innerHTML[type] === "innerHTML") {
+            node.innerHTML = valueString;
+          } else if (allowedFieldTypes.innerHTML[type] === "innerText") {
+            node.innerHTML = (0, _escape.default)(valueString);
+          }
+          if (type === "Video" && originalValue && originalValue.metadata && node instanceof HTMLElement) {
+            node.style.setProperty("padding-top", `${aspectRatio(originalValue.metadata) * 100}%`);
+          }
+          if (node.innerHTML) {
+            (0, _RenderingUtils.removeWDynBindEmptyClass)(node);
+          }
+        },
+        "style.color": createStyleMutator("color"),
+        "style.background-color": createStyleMutator("background-color"),
+        "style.border-color": createStyleMutator("border-color"),
+        "style.background-image": createStyleMutator("background-image"),
+        src: createAttributeMutator("src"),
+        alt: createAttributeMutator("alt"),
+        id: createAttributeMutator("id"),
+        for: createAttributeMutator("for"),
+        value: valueMutator,
+        checked: checkedMutator,
+        "data-commerce-sku-id": createAttributeMutator("data-commerce-sku-id")
+      };
+      var hrefMutator = (emailLinkSubject, detailPageHref) => (node, type, value) => {
+        if (detailPageHref) {
+          node.setAttribute("href", String(detailPageHref) || "#");
+        }
+        if (value) {
+          const href = String(value);
+          switch (type) {
+            case "Phone": {
+              node.setAttribute("href", (0, _DynamoFormattingUtils.formatPhone)(href, "href"));
+              break;
+            }
+            case "Email": {
+              let subject;
+              try {
+                subject = encodeURIComponent(emailLinkSubject);
+              } catch (e) {
+                subject = "";
+              }
+              const formattedEmail = (0, _DynamoFormattingUtils.formatEmail)(href, subject, "href");
+              node.setAttribute("href", formattedEmail || "#");
+              break;
+            }
+            default: {
+              node.setAttribute("href", href);
+              break;
+            }
+          }
+        } else {
+          node.setAttribute("href", "#");
+        }
+      };
+      var getPropertyMutator = (bindingProperty, emailLinkSubject, detailPageHref) => {
+        if (bindingProperty === "href" || detailPageHref) {
+          return hrefMutator(emailLinkSubject, detailPageHref);
+        }
+        if (typeof mutators[bindingProperty] === "function") {
+          return mutators[bindingProperty];
+        }
+        return null;
+      };
+      var getCommercePropValue = (data, path) => {
+        const option = getIn(data, path);
+        if (option) {
+          const pathToOptionAsArray = path.split(".");
+          const pathToCommercePropValues = pathToOptionAsArray.slice(0, pathToOptionAsArray.indexOf("product")).concat(["sku", "f_sku_values_3dr"]).join(".");
+          const skuValues = getIn(data, pathToCommercePropValues);
+          if (Array.isArray(skuValues)) {
+            return (0, _Commerce.getProductOptionValueName)(option, (0, _Commerce.simplifySkuValues)(skuValues));
+          }
+        }
+        return "";
+      };
+      var getTemplateScript = (node) => {
+        const templateId = node.getAttribute(_constants.WF_TEMPLATE_ID_DATA_KEY);
+        const templateScript = templateId && node.parentElement && node.parentElement.querySelector(`#${templateId}`);
+        return templateScript;
+      };
+      var createDomFragment = (html) => {
+        const div = document.createElement("div");
+        div.innerHTML = html;
+        return div.children[0];
+      };
+      var getTemplateString = (node, index) => {
+        const templateScript = getTemplateScript(node);
+        const rawTemplateContent = templateScript && templateScript.textContent;
+        const instanceRegEx = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}_instance-)\d+/gi;
+        const decodedTemplate = rawTemplateContent && decodeURIComponent(rawTemplateContent).replace(instanceRegEx, `$1${index}`);
+        if (Boolean(decodedTemplate) && node.hasAttribute(_constants.WF_COLLECTION_DATA_KEY)) {
+          const collectionPath = node.getAttribute(_constants.WF_COLLECTION_DATA_KEY);
+          if (collectionPath && typeof collectionPath === "string") {
+            const searchTerm = encodeURIComponent(`${(0, _escape.default)(collectionPath)}[]`).replace(/\./g, "\\.");
+            const templateSearchTerm = encodeURIComponent(`${(0, _escape.default)(collectionPath)}${encodeURIComponent("[]")}`).replace(/\./g, "\\.");
+            const collectionPathRegExp = new RegExp(`${searchTerm}|${templateSearchTerm}`, "g");
+            return decodedTemplate && decodedTemplate.replace(collectionPathRegExp, `${collectionPath}.${index}`);
+          }
+        }
+        return decodedTemplate;
+      };
+      var getTemplateCollection = (node, data) => {
+        const collectionPath = node.hasAttribute(_constants.WF_COLLECTION_DATA_KEY) && node.getAttribute(_constants.WF_COLLECTION_DATA_KEY);
+        return collectionPath ? getIn(data, `data.${collectionPath}`) : [];
+      };
+      var checkForAndApplyTemplateCollection = (node, data) => {
+        if (node && node.hasAttribute(_constants.WF_TEMPLATE_ID_DATA_KEY)) {
+          const collection = getTemplateCollection(node, data);
+          node.innerHTML = "";
+          if (collection != null && collection.length > 0) {
+            for (let index = 0; index < collection.length; index++) {
+              const templateString = getTemplateString(node, index);
+              const template = templateString && createDomFragment(templateString);
+              if (template instanceof Element) {
+                if (typeof node.append === "function") {
+                  node.append(renderTree(template, data));
+                } else if (typeof node.appendChild === "function") {
+                  node.appendChild(renderTree(template, data));
+                } else {
+                  throw new Error("Could not append child to node");
+                }
+              }
+            }
+          }
+        }
+      };
+      var checkForAndApplyBindings = (node, data) => {
+        if (node && node.hasAttribute(_constants.WF_BINDING_DATA_KEY)) {
+          const bindingData = (0, _commerceUtils.safeParseJson)(node.getAttribute(_constants.WF_BINDING_DATA_KEY));
+          applyBindings(bindingData, data, node);
+        }
+      };
+      var checkForAndApplyConditionalVisibility = (node, data) => {
+        if (node && node.hasAttribute(_constants.WF_CONDITION_DATA_KEY)) {
+          const conditionData = (0, _commerceUtils.safeParseJson)(node.getAttribute(_constants.WF_CONDITION_DATA_KEY));
+          applyConditionalVisibility(conditionData, data, node);
+        }
+      };
+      var renderTree = (tree, data) => {
+        data = flattenOrderData(data);
+        return (0, _RenderingUtils.walkDOM)(tree, (node) => {
+          checkForAndApplyTemplateCollection(node, data);
+          checkForAndApplyBindings(node, data);
+          checkForAndApplyConditionalVisibility(node, data);
+        });
+      };
+      exports.renderTree = renderTree;
+      var shippingDataReplacementPaths = {
+        cardProvider: ["customerInfo", "stripePayment", "card", "provider"],
+        cardLastFour: ["customerInfo", "stripePayment", "card", "last4"],
+        cardExpiresMonth: ["customerInfo", "stripePayment", "card", "expires", "month"],
+        cardExpiresYear: ["customerInfo", "stripePayment", "card", "expires", "year"],
+        customerEmail: ["customerInfo", "identity", "email"],
+        shippingAddressAddressee: ["customerInfo", "shippingAddress", "addressee"],
+        shippingAddressLine1: ["customerInfo", "shippingAddress", "line1"],
+        shippingAddressLine2: ["customerInfo", "shippingAddress", "line2"],
+        shippingAddressCity: ["customerInfo", "shippingAddress", "city"],
+        shippingAddressState: ["customerInfo", "shippingAddress", "state"],
+        shippingAddressCountry: ["customerInfo", "shippingAddress", "country"],
+        shippingAddressPostalCode: ["customerInfo", "shippingAddress", "postalCode"],
+        billingAddressAddressee: ["customerInfo", "billingAddress", "addressee"],
+        billingAddressLine1: ["customerInfo", "billingAddress", "line1"],
+        billingAddressLine2: ["customerInfo", "billingAddress", "line2"],
+        billingAddressCity: ["customerInfo", "billingAddress", "city"],
+        billingAddressPostalCode: ["customerInfo", "billingAddress", "postalCode"],
+        billingAddressState: ["customerInfo", "billingAddress", "state"],
+        billingAddressCountry: ["customerInfo", "billingAddress", "country"],
+        requiresShipping: ["statusFlags", "requiresShipping"],
+        hasDownloads: ["statusFlags", "hasDownloads"]
+      };
+      var flattenCustomData = (customData) => customData.reduce((flattenedData, data) => {
+        if (data.textArea) {
+          flattenedData.additionalTextArea = data.textArea;
+        } else if (data.textInput) {
+          flattenedData.additionalTextInput = data.textInput;
+        } else if (data.checkbox !== null) {
+          flattenedData.additionalCheckbox = data.checkbox;
+        }
+        return flattenedData;
+      }, {});
+      var flattenOrderData = (data) => {
+        const orderExists = data && data.data && data.data.database && data.data.database.commerceOrder !== null;
+        if (!orderExists) {
+          return data;
+        }
+        const {
+          commerceOrder
+        } = data.data.database;
+        const paymentProcessor = commerceOrder.paymentProcessor;
+        const availableShippingMethods = commerceOrder.availableShippingMethods || [];
+        const selectedShippingMethod = availableShippingMethods.find((shippingMethod) => shippingMethod.selected === true);
+        const flattenedCustomData = commerceOrder.customData ? flattenCustomData(commerceOrder.customData) : {};
+        const flattenedOrderData = (0, _extends2.default)({}, commerceOrder, {
+          shippingMethodName: selectedShippingMethod && selectedShippingMethod.name,
+          shippingMethodDescription: selectedShippingMethod && selectedShippingMethod.description
+        }, flattenedCustomData);
+        const clonedData = (0, _cloneDeep.default)(data);
+        clonedData.data.database.commerceOrder = Object.keys(shippingDataReplacementPaths).reduce((updatedData, flattenPath) => {
+          if (flattenPath === "cardProvider" && paymentProcessor === "paypal") {
+            updatedData = (0, _extends2.default)({}, updatedData, {
+              cardProvider: "PayPal"
+            });
+            return updatedData;
+          }
+          const replacementFrom = shippingDataReplacementPaths[flattenPath];
+          const replacementData = replacementFrom.reduce((acc, key) => acc && acc[key], updatedData);
+          updatedData[flattenPath] = replacementData;
+          return updatedData;
+        }, flattenedOrderData);
+        return clonedData;
+      };
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/addToCartStore.js
+  var require_addToCartStore = __commonJS({
+    "shared/render/plugins/Commerce/modules/addToCartStore.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.createNewStore = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var initialState = {
+        selectedSku: "",
+        skuValues: {},
+        requiresUserSession: false
+      };
+      var createNewStore = () => {
+        const store = {};
+        const watchers = {};
+        const fetchFromStore = (instanceId, key) => {
+          return store[instanceId] ? store[instanceId][key] : void 0;
+        };
+        const updateStore = (instanceId, newValues) => {
+          if (!store[instanceId]) {
+            store[instanceId] = (0, _extends2.default)({}, initialState);
+          }
+          for (const key of Object.keys(newValues)) {
+            if (!store[instanceId].hasOwnProperty(key)) {
+              continue;
+            }
+            const previousValue = store[instanceId][key];
+            store[instanceId][key] = newValues[key];
+            if (watchers[instanceId] && watchers[instanceId][key]) {
+              for (const watcher of watchers[instanceId][key]) {
+                watcher(newValues[key], previousValue);
+              }
+            }
+          }
+        };
+        const addStoreWatcher = (instanceId, key, cb) => {
+          if (!watchers[instanceId]) {
+            watchers[instanceId] = {};
+          }
+          if (watchers[instanceId][key]) {
+            watchers[instanceId][key].push(cb);
+          } else {
+            watchers[instanceId][key] = [cb];
+          }
+        };
+        return {
+          fetchFromStore,
+          updateStore,
+          addStoreWatcher
+        };
+      };
+      exports.createNewStore = createNewStore;
+    }
