@@ -49182,3 +49182,451 @@
             authPassword: password
           }
         });
+      }
+    }
+  });
+
+  // packages/systems/users/utils/universalUtils/index.js
+  var require_universalUtils = __commonJS({
+    "packages/systems/users/utils/universalUtils/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.setUserFileKey = exports.setTempUserFileKey = exports.removeTempUserFileKey = exports.parseWfUsysVariant = exports.getUserFileKey = exports.getTempUserFileKey = exports.appendUserInputClasses = void 0;
+      exports.uploadFileToS3 = uploadFileToS3;
+      var _constants = require_constants3();
+      var appendUserInputClasses = (node, classes) => {
+        const updatedClasses = classes.push("w-input");
+        if (node.getIn(["data", "attr", "disabled"])) {
+          return updatedClasses.push("w-input-disabled");
+        }
+        return updatedClasses;
+      };
+      exports.appendUserInputClasses = appendUserInputClasses;
+      var parseWfUsysVariant = (wfUsysVariant) => {
+        if (!wfUsysVariant)
+          return [];
+        let results = [];
+        for (const wfUsysVariantKey of wfUsysVariant.split(",")) {
+          if (_constants.USER_ACCESS_META_OPTIONS.includes(wfUsysVariantKey) && !results.includes(wfUsysVariantKey)) {
+            results.push(wfUsysVariantKey);
+          } else {
+            console.error(`UnexpectedWfUsysVariant: Renderer received unexpected wf-usys-variant`);
+            results = [];
+            break;
+          }
+        }
+        return results;
+      };
+      exports.parseWfUsysVariant = parseWfUsysVariant;
+      function uploadFileToS3(url, fields, file) {
+        return new Promise((resolve2, reject2) => {
+          const formData = new FormData();
+          Object.entries(fields).forEach(([key, value]) => {
+            formData.append(key, value);
+          });
+          formData.append("file", file);
+          fetch(url, {
+            method: "POST",
+            body: formData
+          }).then((response) => {
+            if (response.ok) {
+              resolve2();
+            } else {
+              return response.text();
+            }
+          }).then((text) => {
+            reject2(text);
+          });
+        });
+      }
+      var getUserFileKey = (element) => {
+        return element.getAttribute(_constants.USYS_DATA_ATTRS.fileUploadKey);
+      };
+      exports.getUserFileKey = getUserFileKey;
+      var setUserFileKey = (element, value) => {
+        element.setAttribute(_constants.USYS_DATA_ATTRS.fileUploadKey, value);
+      };
+      exports.setUserFileKey = setUserFileKey;
+      var getTempUserFileKey = (element) => {
+        return element.getAttribute(_constants.USYS_DATA_ATTRS.unsavedFileUploadKey);
+      };
+      exports.getTempUserFileKey = getTempUserFileKey;
+      var setTempUserFileKey = (element, value) => {
+        element.setAttribute(_constants.USYS_DATA_ATTRS.unsavedFileUploadKey, value);
+      };
+      exports.setTempUserFileKey = setTempUserFileKey;
+      var removeTempUserFileKey = (element) => {
+        element.removeAttribute(_constants.USYS_DATA_ATTRS.unsavedFileUploadKey);
+      };
+      exports.removeTempUserFileKey = removeTempUserFileKey;
+    }
+  });
+
+  // packages/systems/users/siteBundles/fields.js
+  var require_fields = __commonJS({
+    "packages/systems/users/siteBundles/fields.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.getCustomFields = exports.getCommonFields = exports.commonFields = void 0;
+      exports.getFieldValueById = getFieldValueById;
+      exports.getFieldsAsTypeKeys = getFieldsAsTypeKeys;
+      exports.getFieldsForFetch = void 0;
+      var _constants = require_constants3();
+      var _universalUtils = require_universalUtils();
+      var getTextInput = (element) => element instanceof HTMLInputElement ? element.value : "";
+      var typeGetter = {
+        PlainText: getTextInput,
+        Email: getTextInput,
+        Bool: (element) => element instanceof HTMLInputElement ? element.checked : false,
+        Number: getTextInput,
+        Option: (element) => element instanceof HTMLSelectElement ? element.value : "",
+        Link: getTextInput,
+        FileRef: (element) => {
+          const fileKey = (0, _universalUtils.getUserFileKey)(element);
+          const tempFileKey = (0, _universalUtils.getTempUserFileKey)(element);
+          if (tempFileKey) {
+            return {
+              key: tempFileKey
+            };
+          }
+          if (fileKey === "DELETE") {
+            return null;
+          }
+          if (fileKey) {
+            return {
+              _id: fileKey
+            };
+          }
+        }
+      };
+      var customFieldTypes = ["PlainText", "Bool", "Email", "Number", "Option", "Link", "FileRef"];
+      var commonFields = [{
+        type: "Email",
+        slug: "email",
+        selector: (container) => container.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.email}"]`)
+      }, {
+        type: "PlainText",
+        slug: "name",
+        selector: (container) => container.querySelector(`input[${_constants.USYS_DATA_ATTRS.field}="${_constants.RESERVED_USER_FIELDS.name}"]`) || container.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.name}"]`)
+      }, {
+        type: "PlainText",
+        slug: "password",
+        selector: (container) => container.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.password}"]`)
+      }, {
+        type: "Bool",
+        slug: "accept-privacy",
+        selector: (container) => container.querySelector(`input[${_constants.USYS_DATA_ATTRS.field}="${_constants.RESERVED_USER_FIELDS.acceptPrivacy}"]`) || container.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.acceptPrivacy}"]`)
+      }, {
+        type: "Bool",
+        slug: "accept-communications",
+        selector: (container) => container.querySelector(`input[${_constants.USYS_DATA_ATTRS.field}="${_constants.RESERVED_USER_FIELDS.acceptCommunications}"]`)
+      }];
+      exports.commonFields = commonFields;
+      var toCamelCase = (str) => {
+        const pascalCase = str.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join("");
+        return pascalCase.charAt(0).toLowerCase() + pascalCase.slice(1);
+      };
+      var getCommonFields = (form, requestedFields) => {
+        const payload = [];
+        commonFields.forEach((field) => {
+          if (requestedFields && !requestedFields.includes(field.slug))
+            return;
+          const ele = field.selector(form);
+          if (!ele || !typeGetter[field.type])
+            return;
+          payload.push({
+            key: toCamelCase(field.slug),
+            type: toCamelCase(field.type),
+            id: field.slug,
+            value: typeGetter[field.type](ele, field.id)
+          });
+        });
+        return payload;
+      };
+      exports.getCommonFields = getCommonFields;
+      var getCustomFields = (form, includeValue = true) => {
+        const payload = [];
+        customFieldTypes.forEach((fieldType) => {
+          const camelFieldType = toCamelCase(fieldType);
+          const inputEles = form.querySelectorAll(`input[${_constants.USYS_DATA_ATTRS.fieldType}="${fieldType}"], select[${_constants.USYS_DATA_ATTRS.fieldType}="${fieldType}"]`);
+          if (inputEles.length === 0 || !typeGetter[fieldType])
+            return;
+          inputEles.forEach((ele) => {
+            const id = ele.getAttribute(_constants.USYS_DATA_ATTRS.field);
+            if (!id)
+              return;
+            const elementData = {
+              key: `f_${id}`,
+              type: camelFieldType,
+              id
+            };
+            if (includeValue) {
+              const value = typeGetter[fieldType](ele, id);
+              if (value === "") {
+                elementData.value = null;
+              } else {
+                elementData.value = value;
+              }
+            }
+            payload.push(elementData);
+          });
+        });
+        return payload;
+      };
+      exports.getCustomFields = getCustomFields;
+      var getFieldsForFetch = (forms) => {
+        const custom = [];
+        const nested = [];
+        const alreadyFound = (customField) => {
+          return custom.find((item) => item.id === customField.id);
+        };
+        forms.forEach((form) => {
+          nested.push([...getCommonFields(form), ...getCustomFields(form, false)]);
+        });
+        nested.forEach((getCustomFieldRes) => {
+          getCustomFieldRes.forEach((customField) => {
+            if (!alreadyFound(customField)) {
+              custom.push(customField);
+            }
+          });
+        });
+        return custom;
+      };
+      exports.getFieldsForFetch = getFieldsForFetch;
+      function getFieldValueById(id, fieldsArray) {
+        const match = fieldsArray.find((field) => field.id === id);
+        if (!match)
+          return null;
+        return match.value;
+      }
+      function getFieldsAsTypeKeys(fieldsArray) {
+        const memo = {};
+        fieldsArray.forEach((field) => {
+          const {
+            key,
+            type,
+            value
+          } = field;
+          if (!memo[type])
+            memo[type] = [];
+          memo[type].push({
+            id: key.replace("f_", ""),
+            value
+          });
+        });
+        return memo;
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/signup.js
+  var require_signup = __commonJS({
+    "packages/systems/users/siteBundles/signup.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.asyncSignUpUser = asyncSignUpUser;
+      exports.handleSignUpForms = handleSignUpForms;
+      var _utils = require_utils3();
+      var _constants = require_constants3();
+      var _mutations = require_mutations();
+      var _fields = require_fields();
+      var signupFormQuerySelector = `form[${_constants.USYS_DATA_ATTRS.formType}="${_constants.USYS_FORM_TYPES.signup}"]`;
+      var verificationMessage = document.querySelector(`.${_constants.USYS_DOM_CLASS_NAMES.formVerfication}`);
+      function getSignupForms() {
+        const signupForms = document.querySelectorAll(signupFormQuerySelector);
+        return Array.prototype.slice.call(signupForms).filter((signupForm) => signupForm instanceof HTMLFormElement);
+      }
+      function handleUserInvite(email) {
+        const form = document.querySelector(signupFormQuerySelector);
+        if (!(form instanceof HTMLFormElement)) {
+          return;
+        }
+        const emailInput = form.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.email}"]`);
+        if (!(emailInput instanceof HTMLInputElement)) {
+          return;
+        }
+        emailInput.disabled = true;
+        emailInput.classList.add("w-input-disabled");
+        emailInput.value = email;
+      }
+      function handleEmailVerifcation(token, errorState) {
+        const form = document.querySelector(signupFormQuerySelector);
+        (0, _utils.hideElement)(form);
+        asyncVerifyEmailToken(token).then(() => {
+          var _redirectAnchor$getAt;
+          const successMessage = document.querySelector(`.${_constants.USYS_DOM_CLASS_NAMES.formSuccess}`);
+          const redirectAnchor = document.querySelector(`[${_constants.USYS_DATA_ATTRS.redirectUrl}] a`);
+          const redirectPath = (0, _utils.getRedirectPath)();
+          if (redirectPath && redirectAnchor) {
+            redirectAnchor.setAttribute("href", encodeURIComponent(redirectPath));
+          }
+          (0, _utils.showElement)(successMessage);
+          (0, _utils.handleRedirect)((_redirectAnchor$getAt = redirectAnchor === null || redirectAnchor === void 0 ? void 0 : redirectAnchor.getAttribute("href")) !== null && _redirectAnchor$getAt !== void 0 ? _redirectAnchor$getAt : "/", true);
+        }).catch((error) => {
+          (0, _utils.showElement)(verificationMessage);
+          (0, _utils.userFormError)(form, errorState, "SIGNUP")(error);
+        });
+      }
+      function handleSignUpForms() {
+        const params = new URLSearchParams(window.location.search);
+        const inviteToken = params.get("inviteToken") || "";
+        const verifyToken = params.get("verifyToken") || "";
+        const errorState = document.querySelector(`[${_constants.USYS_DATA_ATTRS.formError}]`);
+        getSignupForms().forEach((signupForm) => {
+          if (inviteToken) {
+            const email = params.get("email") || "";
+            handleUserInvite(email);
+          }
+          if (verifyToken) {
+            handleEmailVerifcation(verifyToken, errorState);
+          }
+          signupForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            if (!(form instanceof HTMLFormElement)) {
+              return;
+            }
+            const submit = form.querySelector('input[type="submit"]');
+            const submitText = (0, _utils.disableSubmit)(submit);
+            const commonFields = (0, _fields.getCommonFields)(form);
+            const customFields = (0, _fields.getCustomFields)(form);
+            (0, _utils.hideElement)(errorState);
+            asyncSignUpUser((0, _fields.getFieldValueById)("email", commonFields) || "", (0, _fields.getFieldValueById)("name", commonFields) || "", (0, _fields.getFieldValueById)("password", commonFields) || "", (0, _fields.getFieldValueById)("accept-privacy", commonFields) || false, (0, _fields.getFieldValueById)("accept-communications", commonFields) || false, customFields, inviteToken).then(() => {
+              if (inviteToken) {
+                window.location = "/log-in";
+              } else {
+                (0, _utils.hideElement)(form);
+                (0, _utils.showAndFocusElement)(verificationMessage);
+              }
+            }).catch((0, _utils.userFormError)(form, errorState, "SIGNUP")).finally(() => {
+              (0, _utils.resetSubmit)(submit, submitText);
+            });
+          });
+        });
+      }
+      function asyncSignUpUser(email, name = "", password, acceptPrivacy, acceptCommunications, customFields, inviteToken) {
+        const variables = {
+          email,
+          name,
+          acceptPrivacy,
+          acceptCommunications,
+          authPassword: password,
+          data: (0, _fields.getFieldsAsTypeKeys)(customFields),
+          inviteToken: inviteToken || void 0,
+          redirectPath: (0, _utils.getRedirectPath)()
+        };
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.signupMutation,
+          variables
+        });
+      }
+      function asyncVerifyEmailToken(verifyToken) {
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.verifyEmailMutation,
+          variables: {
+            verifyToken,
+            redirectPath: (0, _utils.getRedirectPath)()
+          }
+        });
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/logout.js
+  var require_logout = __commonJS({
+    "packages/systems/users/siteBundles/logout.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.asyncLogOutUser = asyncLogOutUser;
+      exports.handleLogInLogOutButton = handleLogInLogOutButton;
+      var _utils = require_utils3();
+      var _constants = require_constants3();
+      var _mutations = require_mutations();
+      var logoutButtonQuerySelector = `[${_constants.USYS_DATA_ATTRS.logout}]`;
+      function getLogoutButtons() {
+        const logoutButtons = document.querySelectorAll(logoutButtonQuerySelector);
+        return Array.prototype.slice.call(logoutButtons).filter((logoutButton) => logoutButton instanceof HTMLButtonElement);
+      }
+      function handleGoToLoginClick() {
+        if (window.Webflow.env("preview")) {
+          return;
+        }
+        window.location = "/log-in";
+      }
+      function handleLogOutButtonClick(event) {
+        event.preventDefault();
+        asyncLogOutUser().then(() => {
+          window.Webflow.location("/");
+        });
+      }
+      function handleLogInLogOutButton() {
+        getLogoutButtons().forEach((logoutButton) => {
+          if (document.cookie.split(";").some((cookie) => cookie.indexOf(_constants.LOGGEDIN_COOKIE_NAME) > -1)) {
+            logoutButton.innerHTML = logoutButton.getAttribute(_constants.USYS_DATA_ATTRS.logout) || "Log out";
+            logoutButton.removeEventListener("click", handleGoToLoginClick);
+            logoutButton.addEventListener("click", handleLogOutButtonClick);
+          } else if (!window.Webflow.env("design")) {
+            logoutButton.innerHTML = logoutButton.getAttribute(_constants.USYS_DATA_ATTRS.login) || "Log in";
+            logoutButton.removeEventListener("click", handleLogOutButtonClick);
+            logoutButton.addEventListener("click", handleGoToLoginClick);
+          }
+        });
+      }
+      function asyncLogOutUser() {
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.logoutMutation
+        });
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/resetPassword.js
+  var require_resetPassword = __commonJS({
+    "packages/systems/users/siteBundles/resetPassword.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.asyncRequestResetPassword = asyncRequestResetPassword;
+      exports.handleResetPasswordForms = handleResetPasswordForms;
+      var _utils = require_utils3();
+      var _constants = require_constants3();
+      var _mutations = require_mutations();
+      var resetPasswordFormQuerySelector = `form[${_constants.USYS_DATA_ATTRS.formType}="${_constants.USYS_FORM_TYPES.resetPassword}"]`;
+      var errorState = document.querySelector(`[${_constants.USYS_DATA_ATTRS.formError}]`);
+      var defaultErrorCopy = _constants.resetPasswordErrorStates[_constants.RESET_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR].copy;
+      var errorMsgNode = document.querySelector(`.${_constants.ERROR_MSG_CLASS}`);
+      var getResetPasswordErrorCode = (error) => {
+        let errorCode;
+        switch (error) {
+          default:
+            errorCode = _constants.RESET_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR;
+        }
+        return errorCode;
+      };
+      function getResetPasswordForms() {
+        const resetPasswordForms = document.querySelectorAll(resetPasswordFormQuerySelector);
+        return Array.prototype.slice.call(resetPasswordForms).filter((resetPasswordForm) => resetPasswordForm instanceof HTMLFormElement);
+      }
+      function handleResetPasswordForms() {
+        getResetPasswordForms().forEach((resetPasswordForm) => {
+          resetPasswordForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const successMessage = document.querySelector(`.${_constants.USYS_DOM_CLASS_NAMES.formSuccess}`);
+            if (!(form instanceof HTMLFormElement)) {
+              return;
+            }
+            (0, _utils.hideElement)(errorState);
+            const emailInput = form.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.email}"]`);
+            if (!(emailInput instanceof HTMLInputElement)) {
+              return;
+            }
