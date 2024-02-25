@@ -48701,3 +48701,484 @@
             var headers;
             if (classof(body) === URL_SEARCH_PARAMS) {
               headers = init.headers ? new Headers(init.headers) : new Headers();
+              if (!headersHas(headers, "content-type")) {
+                headersSet(headers, "content-type", "application/x-www-form-urlencoded;charset=UTF-8");
+              }
+              return create(init, {
+                body: createPropertyDescriptor(0, $toString(body)),
+                headers: createPropertyDescriptor(0, headers)
+              });
+            }
+          }
+          return init;
+        };
+        if (isCallable(n$Fetch)) {
+          $2({ global: true, enumerable: true, forced: true }, {
+            fetch: function fetch2(input) {
+              return n$Fetch(input, arguments.length > 1 ? wrapRequestOptions(arguments[1]) : {});
+            }
+          });
+        }
+        if (isCallable(N$Request)) {
+          RequestConstructor = function Request(input) {
+            anInstance(this, RequestPrototype);
+            return new N$Request(input, arguments.length > 1 ? wrapRequestOptions(arguments[1]) : {});
+          };
+          RequestPrototype.constructor = RequestConstructor;
+          RequestConstructor.prototype = RequestPrototype;
+          $2({ global: true, forced: true }, {
+            Request: RequestConstructor
+          });
+        }
+      }
+      var headersHas;
+      var headersSet;
+      var wrapRequestOptions;
+      var RequestConstructor;
+      module.exports = {
+        URLSearchParams: URLSearchParamsConstructor,
+        getState: getInternalParamsState
+      };
+    }
+  });
+
+  // node_modules/core-js/web/url-search-params.js
+  var require_url_search_params = __commonJS({
+    "node_modules/core-js/web/url-search-params.js"(exports, module) {
+      require_web_url_search_params();
+      var path = require_path();
+      module.exports = path.URLSearchParams;
+    }
+  });
+
+  // packages/systems/users/siteBundles/utils.js
+  var require_utils3 = __commonJS({
+    "packages/systems/users/siteBundles/utils.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.addHiddenClass = addHiddenClass;
+      exports.disableSubmit = disableSubmit;
+      exports.getDomParser = getDomParser;
+      exports.getErrorAttrName = void 0;
+      exports.getRedirectPath = getRedirectPath;
+      exports.handleErrorNode = exports.getSignupErrorCode = void 0;
+      exports.handleRedirect = handleRedirect;
+      exports.hideElement = hideElement;
+      exports.redirectWithUsrdir = redirectWithUsrdir;
+      exports.removeHiddenClass = removeHiddenClass;
+      exports.resetSubmit = resetSubmit;
+      exports.showAndFocusElement = showAndFocusElement;
+      exports.showElement = showElement;
+      exports.userSystemsRequestClient = exports.userFormError = void 0;
+      var _apolloClient = require_apolloClient();
+      var _constants = require_constants3();
+      var GQL_QUERY_PATH = "/.wf_graphql/usys/apollo";
+      var userSystemsRequestClient = (0, _apolloClient.createApolloClient)({
+        path: GQL_QUERY_PATH,
+        useCsrf: true,
+        maxAttempts: 5
+      });
+      exports.userSystemsRequestClient = userSystemsRequestClient;
+      function addHiddenClass(el) {
+        if (el) {
+          el.classList.add("w-hidden");
+        }
+      }
+      function removeHiddenClass(el) {
+        if (el) {
+          el.classList.remove("w-hidden");
+        }
+      }
+      function showElement(el) {
+        if (el) {
+          el.style.display = "block";
+        }
+      }
+      function showAndFocusElement(el) {
+        if (el) {
+          el.style.display = "block";
+          el.focus();
+        }
+      }
+      function hideElement(el) {
+        if (el) {
+          el.style.display = "none";
+        }
+      }
+      function getDomParser() {
+        const domParser = new window.DOMParser();
+        return {
+          /**
+           * Returns an html node for an encoded string
+           * @param {string} str - Encoded string to parse
+           */
+          getHtmlFromString(str) {
+            const decodedString = decodeURIComponent(str);
+            const parsedHtml = domParser.parseFromString(decodedString, "text/html");
+            if (!parsedHtml || !parsedHtml.body || !parsedHtml.body.firstChild)
+              return null;
+            return parsedHtml.body.firstChild;
+          }
+        };
+      }
+      var getErrorAttrName = (errorAttr, errorCode) => {
+        const formattedErrorCode = errorCode.replace("_", "-").toLowerCase();
+        return `${errorAttr}-${formattedErrorCode}-error`;
+      };
+      exports.getErrorAttrName = getErrorAttrName;
+      var handleErrorNode = (errorMsgNode, errorStateNode, errorCode, errorAttrPrefix, defaultErrorCopy2) => {
+        const errorAttr = getErrorAttrName(errorAttrPrefix, errorCode);
+        const errorCopy = errorMsgNode && errorMsgNode.getAttribute(errorAttr);
+        errorMsgNode.setAttribute("aria-live", "assertive");
+        errorMsgNode.textContent = errorCopy ? errorCopy : defaultErrorCopy2;
+        showElement(errorStateNode);
+      };
+      exports.handleErrorNode = handleErrorNode;
+      function disableSubmit(submit) {
+        if (!(submit instanceof HTMLInputElement))
+          return "";
+        submit.setAttribute("disabled", "true");
+        const value = submit.getAttribute("value");
+        const waitText = submit.getAttribute("data-wait");
+        if (waitText)
+          submit.setAttribute("value", waitText);
+        return value !== null && value !== void 0 ? value : "";
+      }
+      function resetSubmit(submit, text) {
+        if (!(submit instanceof HTMLInputElement))
+          return;
+        submit.removeAttribute("disabled");
+        submit.setAttribute("value", text);
+      }
+      function getRedirectPath() {
+        const queryString = window.location.search;
+        const redirectParam = queryString.match(/[?|&]usredir=([^&]+)/g);
+        if (!redirectParam)
+          return void 0;
+        const encodedPath = redirectParam[0].substring("?usredir=".length);
+        return decodeURIComponent(encodedPath);
+      }
+      function redirectWithUsrdir(location) {
+        const redirectParam = getRedirectPath();
+        let encodedPath;
+        if (redirectParam) {
+          encodedPath = redirectParam[0].substring("?usredir=".length);
+        } else {
+          encodedPath = encodeURIComponent(window.location.pathname);
+        }
+        window.location = location + `?usredir=${encodedPath}`;
+      }
+      function handleRedirect(defaultRedirectPath, includeDelay = false) {
+        const redirectPath = getRedirectPath();
+        if (redirectPath) {
+          return includeDelay ? setTimeout(() => window.Webflow.location(redirectPath), 3e3) : window.Webflow.location(redirectPath);
+        }
+        if (!defaultRedirectPath)
+          return;
+        return includeDelay ? setTimeout(() => window.Webflow.location(defaultRedirectPath), 3e3) : window.Webflow.location(defaultRedirectPath);
+      }
+      var wrapperSelectors = [".w-file-upload-error"];
+      var setErrorMsg = (wrapper, fieldElements, name) => {
+        for (let i = 0; i < fieldElements.length; ++i) {
+          const errorText = fieldElements[i].getAttribute(name);
+          if (errorText) {
+            fieldElements[i].innerHTML = errorText;
+            removeHiddenClass(wrapper);
+            return true;
+          }
+        }
+      };
+      var handleValidationErrors = (form, failedValidations) => {
+        const wrappers = [];
+        wrapperSelectors.forEach((wrapperSelector) => {
+          const _wrappers = form.querySelectorAll(wrapperSelector);
+          for (let i = 0; i < _wrappers.length; ++i) {
+            wrappers.push(_wrappers[i]);
+          }
+        });
+        wrappers.forEach((wrapper) => {
+          for (let i = 0; i < failedValidations.length; ++i) {
+            const failedValidation = failedValidations[i];
+            const name = failedValidation.name;
+            const fieldId = failedValidation.fieldId;
+            const fieldElements = wrapper.querySelectorAll("[" + _constants.USYS_DATA_ATTRS.field + '="' + fieldId + '"]');
+            if (fieldElements && setErrorMsg(wrapper, fieldElements, name)) {
+              break;
+            }
+          }
+        });
+      };
+      var defaultErrorCopy = _constants.signUpErrorStates[_constants.SIGNUP_UI_ERROR_CODES.GENERAL_ERROR].copy;
+      var userFormError = (form, errorState, formType) => (error) => {
+        var _error$graphQLErrors, _error$graphQLErrors$, _error$graphQLErrors$2, _error$graphQLErrors2, _error$graphQLErrors3;
+        if (errorState === null || form === null)
+          return;
+        const errorMsgNode = errorState.querySelector(`.${_constants.ERROR_MSG_CLASS}`);
+        const failedValidations = (_error$graphQLErrors = error.graphQLErrors) === null || _error$graphQLErrors === void 0 ? void 0 : (_error$graphQLErrors$ = _error$graphQLErrors[0]) === null || _error$graphQLErrors$ === void 0 ? void 0 : _error$graphQLErrors$.failedValidations;
+        if (failedValidations) {
+          handleValidationErrors(form, failedValidations);
+        }
+        const elementErrorCode = (_error$graphQLErrors$2 = error === null || error === void 0 ? void 0 : (_error$graphQLErrors2 = error.graphQLErrors) === null || _error$graphQLErrors2 === void 0 ? void 0 : (_error$graphQLErrors3 = _error$graphQLErrors2[0]) === null || _error$graphQLErrors3 === void 0 ? void 0 : _error$graphQLErrors3.code) !== null && _error$graphQLErrors$2 !== void 0 ? _error$graphQLErrors$2 : "";
+        const errorCode = getSignupErrorCode(elementErrorCode);
+        handleErrorNode(errorMsgNode, errorState, errorCode, _constants.ERROR_ATTRIBUTE_PREFIX[formType], defaultErrorCopy);
+      };
+      exports.userFormError = userFormError;
+      var getSignupErrorCode = (error) => {
+        let errorCode;
+        switch (error) {
+          case "UsysInvalidUserData":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.VALIDATION_FAILED;
+            break;
+          case "UsysUnauthorizedEmail":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.NOT_ALLOWED;
+            break;
+          case "UsysMustUseInvitation":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.USE_INVITE_EMAIL;
+            break;
+          case "UsysDuplicateEmail":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.EMAIL_ALREADY_EXIST;
+            break;
+          case "UsysInvalidEmail":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.INVALID_EMAIL;
+            break;
+          case "UsysInvalidPassword":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.INVALID_PASSWORD;
+            break;
+          case "UsysInvalidToken":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.NOT_VERIFIED;
+            break;
+          case "UsysExpiredToken":
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.EXPIRED_TOKEN;
+            break;
+          default:
+            errorCode = _constants.SIGNUP_UI_ERROR_CODES.GENERAL_ERROR;
+        }
+        return errorCode;
+      };
+      exports.getSignupErrorCode = getSignupErrorCode;
+    }
+  });
+
+  // packages/systems/users/siteBundles/mutations.js
+  var require_mutations = __commonJS({
+    "packages/systems/users/siteBundles/mutations.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.buildUpdateUsysUserDataMutation = buildUpdateUsysUserDataMutation;
+      exports.verifyEmailMutation = exports.updatePasswordMutation = exports.signupMutation = exports.resetPasswordMutation = exports.logoutMutation = exports.loginMutation = exports.getUploadURLMutation = exports.cancelSubscriptionMutation = void 0;
+      var _graphqlTag = _interopRequireDefault(require_graphql_tag_umd());
+      var loginMutation = (0, _graphqlTag.default)`
+  mutation UserLoginRequest($email: String!, $authPassword: String!) {
+    usysCreateSession(email: $email, authPassword: $authPassword) {
+      user {
+        id
+        email
+        createdOn
+        emailVerified
+      }
+    }
+  }
+`;
+      exports.loginMutation = loginMutation;
+      function buildUpdateUsysUserDataMutation(dataFields) {
+        return (0, _graphqlTag.default)`
+    mutation UpdateUsysUserData(
+      $data: usys_update_user_data!
+    ) {
+      usysUpdateUserData(
+        data: $data
+    ) {
+      data {
+      ${dataFields.map((field) => {
+          const base = `${field.key}: ${field.type}(id: "${field.id}")`;
+          if (field.type === "option") {
+            return base + "{\n slug \n}";
+          }
+          if (field.type === "fileRef") {
+            return base + "{\n id \n}";
+          }
+          return base;
+        }).join("\n")}
+        }
+      }
+    }
+  `;
+      }
+      var signupMutation = (0, _graphqlTag.default)`
+  mutation UserSignupRequest(
+    $email: String!
+    $name: String!
+    $acceptPrivacy: Boolean
+    $acceptCommunications: Boolean
+    $authPassword: String!
+    $inviteToken: String
+    $redirectPath: String
+    $data: usys_update_user_data
+  ) {
+    usysCreateUser(
+      email: $email
+      name: $name
+      acceptPrivacy: $acceptPrivacy
+      acceptCommunications: $acceptCommunications
+      authPassword: $authPassword
+      inviteToken: $inviteToken
+      redirectPath: $redirectPath
+      data: $data
+    ) {
+      user {
+        id
+        email
+        name
+        createdOn
+        emailVerified
+      }
+    }
+  }
+`;
+      exports.signupMutation = signupMutation;
+      var logoutMutation = (0, _graphqlTag.default)`
+  mutation UserLogoutRequest {
+    usysDestroySession {
+      ok
+    }
+  }
+`;
+      exports.logoutMutation = logoutMutation;
+      var resetPasswordMutation = (0, _graphqlTag.default)`
+  mutation UserResetPasswordRequest($email: String!) {
+    usysResetPassword(email: $email) {
+      ok
+    }
+  }
+`;
+      exports.resetPasswordMutation = resetPasswordMutation;
+      var updatePasswordMutation = (0, _graphqlTag.default)`
+  mutation UserUpdatePasswordRequest($authPassword: String!, $token: String!) {
+    usysUpdatePassword(authPassword: $authPassword, token: $token) {
+      ok
+    }
+  }
+`;
+      exports.updatePasswordMutation = updatePasswordMutation;
+      var verifyEmailMutation = (0, _graphqlTag.default)`
+  mutation UserVerifyEmail($verifyToken: String!, $redirectPath: String) {
+    usysVerifyEmail(verifyToken: $verifyToken, redirectPath: $redirectPath) {
+      ok
+    }
+  }
+`;
+      exports.verifyEmailMutation = verifyEmailMutation;
+      var cancelSubscriptionMutation = (0, _graphqlTag.default)`
+  mutation CancelSiteUserSubscription($subscriptionId: String!) {
+    ecommerceCancelSubscriptionForSiteUser(subscriptionId: $subscriptionId) {
+      ok
+    }
+  }
+`;
+      exports.cancelSubscriptionMutation = cancelSubscriptionMutation;
+      var getUploadURLMutation = (0, _graphqlTag.default)`
+  mutation getUploadURL($fieldId: String!, $filename: String!) {
+    usysGetUploadURL(fieldId: $fieldId, filename: $filename) {
+      presignedPOST {
+        url
+        fields {
+          key
+          value
+        }
+      }
+      key
+    }
+  }
+`;
+      exports.getUploadURLMutation = getUploadURLMutation;
+    }
+  });
+
+  // packages/systems/users/siteBundles/login.js
+  var require_login = __commonJS({
+    "packages/systems/users/siteBundles/login.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.asyncLogInUser = asyncLogInUser;
+      exports.handleLogInForms = handleLogInForms;
+      exports.handleLoginRedirects = handleLoginRedirects;
+      var _utils = require_utils3();
+      var _constants = require_constants3();
+      var _mutations = require_mutations();
+      function getLoginLinks() {
+        return Array.prototype.slice.call(document.links).filter((link) => link.getAttribute("href") === "/log-in");
+      }
+      function handleLoginRedirects() {
+        getLoginLinks().forEach((link) => {
+          const queryString = window.location.search;
+          const redirectParam = queryString.match(/\?usredir=([^&]+)/g);
+          if (redirectParam) {
+            link.href = link.href.concat(redirectParam[0]);
+          }
+        });
+      }
+      var loginFormQuerySelector = `form[${_constants.USYS_DATA_ATTRS.formType}="${_constants.USYS_FORM_TYPES.login}"]`;
+      var errorState = document.querySelector(`[${_constants.USYS_DATA_ATTRS.formError}]`);
+      var defaultErrorCopy = _constants.logInErrorStates[_constants.LOGIN_UI_ERROR_CODES.GENERAL_ERROR].copy;
+      var errorMsgNode = document.querySelector(`.${_constants.ERROR_MSG_CLASS}`);
+      var getLogInErrorCode = (error) => {
+        let errorCode;
+        switch (error) {
+          case "UsysInvalidCredentials":
+            errorCode = _constants.LOGIN_UI_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD;
+            break;
+          default:
+            errorCode = _constants.LOGIN_UI_ERROR_CODES.GENERAL_ERROR;
+        }
+        return errorCode;
+      };
+      function getLoginForms() {
+        const loginForms = document.querySelectorAll(loginFormQuerySelector);
+        return Array.prototype.slice.call(loginForms).filter((loginForm) => loginForm instanceof HTMLFormElement);
+      }
+      function handleLogInForms() {
+        getLoginForms().forEach((loginForm) => {
+          loginForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            if (!(form instanceof HTMLFormElement)) {
+              return;
+            }
+            const submit = form.querySelector('input[type="submit"]');
+            const submitText = (0, _utils.disableSubmit)(submit);
+            (0, _utils.hideElement)(errorState);
+            const emailInput = form.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.email}"]`);
+            const passwordInput = form.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.password}"]`);
+            if (!(emailInput instanceof HTMLInputElement) || !(passwordInput instanceof HTMLInputElement)) {
+              return;
+            }
+            const onSuccessRedirectUrl = form.getAttribute(_constants.USYS_DATA_ATTRS.redirectUrl);
+            asyncLogInUser(emailInput.value, passwordInput.value).then(() => {
+              (0, _utils.handleRedirect)(onSuccessRedirectUrl);
+            }).catch((error) => {
+              (0, _utils.resetSubmit)(submit, submitText);
+              if (errorState) {
+                var _error$graphQLErrors$, _error$graphQLErrors, _error$graphQLErrors$2;
+                const elementErrorCode = (_error$graphQLErrors$ = error === null || error === void 0 ? void 0 : (_error$graphQLErrors = error.graphQLErrors) === null || _error$graphQLErrors === void 0 ? void 0 : (_error$graphQLErrors$2 = _error$graphQLErrors[0]) === null || _error$graphQLErrors$2 === void 0 ? void 0 : _error$graphQLErrors$2.code) !== null && _error$graphQLErrors$ !== void 0 ? _error$graphQLErrors$ : "";
+                const errorCode = getLogInErrorCode(elementErrorCode);
+                (0, _utils.handleErrorNode)(errorMsgNode, errorState, errorCode, _constants.ERROR_ATTRIBUTE_PREFIX.LOGIN, defaultErrorCopy);
+              }
+            });
+          });
+        });
+      }
+      function asyncLogInUser(email, password) {
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.loginMutation,
+          variables: {
+            email,
+            authPassword: password
+          }
+        });
