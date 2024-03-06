@@ -49630,3 +49630,482 @@
             if (!(emailInput instanceof HTMLInputElement)) {
               return;
             }
+            asyncRequestResetPassword(emailInput.value).then(() => {
+              (0, _utils.hideElement)(form);
+              (0, _utils.showAndFocusElement)(successMessage);
+            }).catch((error) => {
+              if (errorState) {
+                var _error$graphQLErrors$, _error$graphQLErrors, _error$graphQLErrors$2;
+                const elementErrorCode = (_error$graphQLErrors$ = error === null || error === void 0 ? void 0 : (_error$graphQLErrors = error.graphQLErrors) === null || _error$graphQLErrors === void 0 ? void 0 : (_error$graphQLErrors$2 = _error$graphQLErrors[0]) === null || _error$graphQLErrors$2 === void 0 ? void 0 : _error$graphQLErrors$2.code) !== null && _error$graphQLErrors$ !== void 0 ? _error$graphQLErrors$ : "";
+                const errorCode = getResetPasswordErrorCode(elementErrorCode);
+                (0, _utils.handleErrorNode)(errorMsgNode, errorState, errorCode, _constants.ERROR_ATTRIBUTE_PREFIX.RESET_PASSWORD, defaultErrorCopy);
+              }
+            });
+          });
+        });
+      }
+      function asyncRequestResetPassword(email) {
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.resetPasswordMutation,
+          variables: {
+            email
+          }
+        });
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/updatePassword.js
+  var require_updatePassword = __commonJS({
+    "packages/systems/users/siteBundles/updatePassword.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.asyncRequestUpdatePassword = asyncRequestUpdatePassword;
+      exports.handleUpdatePasswordForms = handleUpdatePasswordForms;
+      var _utils = require_utils3();
+      var _constants = require_constants3();
+      var _mutations = require_mutations();
+      var updatePasswordFormQuerySelector = `form[${_constants.USYS_DATA_ATTRS.formType}="${_constants.USYS_FORM_TYPES.updatePassword}"]`;
+      var errorState = document.querySelector(`[${_constants.USYS_DATA_ATTRS.formError}]`);
+      var defaultErrorCopy = _constants.updatePasswordErrorStates[_constants.UPDATE_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR].copy;
+      var errorMsgNode = document.querySelector(`.${_constants.ERROR_MSG_CLASS}`);
+      var getUpdatePasswordErrorCode = (error) => {
+        let errorCode;
+        switch (error) {
+          case "UsysInvalidPassword":
+            errorCode = _constants.UPDATE_PASSWORD_UI_ERROR_CODES.WEAK_PASSWORD;
+            break;
+          default:
+            errorCode = _constants.UPDATE_PASSWORD_UI_ERROR_CODES.GENERAL_ERROR;
+        }
+        return errorCode;
+      };
+      function getUpdatePasswordForms() {
+        const updatePasswordForms = document.querySelectorAll(updatePasswordFormQuerySelector);
+        return Array.prototype.slice.call(updatePasswordForms).filter((updatePasswordForm) => updatePasswordForm instanceof HTMLFormElement);
+      }
+      function handleUpdatePasswordForms() {
+        getUpdatePasswordForms().forEach((updatePasswordForm) => {
+          updatePasswordForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const successMessage = document.querySelector(`.${_constants.USYS_DOM_CLASS_NAMES.formSuccess}`);
+            if (!(form instanceof HTMLFormElement)) {
+              return;
+            }
+            const errorElement = document.querySelector(`[${_constants.USYS_DATA_ATTRS.formError}]`);
+            (0, _utils.hideElement)(errorElement);
+            const passwordInput = form.querySelector(`input[${_constants.USYS_DATA_ATTRS.inputType}="${_constants.USYS_INPUT_TYPES.password}"]`);
+            if (!(passwordInput instanceof HTMLInputElement)) {
+              return;
+            }
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get("token") || "";
+            asyncRequestUpdatePassword(passwordInput.value, token).then(() => {
+              (0, _utils.hideElement)(form);
+              (0, _utils.showAndFocusElement)(successMessage);
+            }).catch((error) => {
+              if (errorState) {
+                var _error$graphQLErrors$, _error$graphQLErrors, _error$graphQLErrors$2;
+                const elementErrorCode = (_error$graphQLErrors$ = error === null || error === void 0 ? void 0 : (_error$graphQLErrors = error.graphQLErrors) === null || _error$graphQLErrors === void 0 ? void 0 : (_error$graphQLErrors$2 = _error$graphQLErrors[0]) === null || _error$graphQLErrors$2 === void 0 ? void 0 : _error$graphQLErrors$2.code) !== null && _error$graphQLErrors$ !== void 0 ? _error$graphQLErrors$ : "";
+                const errorCode = getUpdatePasswordErrorCode(elementErrorCode);
+                (0, _utils.handleErrorNode)(errorMsgNode, errorState, errorCode, _constants.ERROR_ATTRIBUTE_PREFIX.UPDATE_PASSWORD, defaultErrorCopy);
+              }
+            });
+          });
+        });
+      }
+      function asyncRequestUpdatePassword(authPassword, token) {
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.updatePasswordMutation,
+          variables: {
+            authPassword,
+            token
+          }
+        });
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/queries.js
+  var require_queries = __commonJS({
+    "packages/systems/users/siteBundles/queries.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.buildGetLoggedInUserQuery = buildGetLoggedInUserQuery;
+      exports.getUserSubscriptions = exports.getFieldValidations = void 0;
+      var _graphqlTag = _interopRequireDefault(require_graphql_tag_umd());
+      var getUserSubscriptions = (0, _graphqlTag.default)`
+  query FetchSubscriptions {
+    database {
+      userSubscriptions {
+        _id
+        productName
+        variantPrice {
+          string
+          unit
+          value
+        }
+        variantImage {
+          url
+          alt
+        }
+        status
+        lastInvoiced
+        periodEnd
+        subCreatedOn
+        canceledOn
+        billingAddressAddressee
+        billingAddressLine1
+        billingAddressLine2
+        billingAddressCity
+        billingAddressState
+        billingAddressPostalCode
+        billingAddressCountry
+        cardLast4
+        cardExpiresMonth
+        cardExpiresYear
+      }
+    }
+  }
+`;
+      exports.getUserSubscriptions = getUserSubscriptions;
+      function buildGetLoggedInUserQuery(dataFields = []) {
+        return (0, _graphqlTag.default)`
+    query FetchUser {
+        site {
+          siteUser {
+            createdOn
+            ${dataFields.length > 0 ? `
+            data {
+              ${dataFields.map((field) => {
+          const base = `${field.key}: ${field.type}(id: "${field.id}")`;
+          if (field.type === "option") {
+            return base + "{\n slug \n}";
+          }
+          if (field.type === "fileRef") {
+            return base + "{\n url \n \n id \n}";
+          }
+          return base;
+        }).join("\n")}
+            }` : ""}
+        }
+      }
+    }
+  `;
+      }
+      var getFieldValidations = (0, _graphqlTag.default)`
+  query GetFieldValidations {
+    site {
+      usysFieldSchema {
+        id
+        required
+        validations {
+          minLength
+          maxLength
+          min
+          max
+          step
+          extensions
+          options {
+            slug
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+      exports.getFieldValidations = getFieldValidations;
+    }
+  });
+
+  // packages/systems/users/siteBundles/rendering.js
+  var require_rendering2 = __commonJS({
+    "packages/systems/users/siteBundles/rendering.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.applyBindingsAndConditionalVisibility = applyBindingsAndConditionalVisibility;
+      exports.applyUserAccountData = applyUserAccountData;
+      var _escape = _interopRequireDefault(require_escape());
+      var _get = _interopRequireDefault(require_get());
+      var _Transformers = require_Transformers2();
+      var _RenderingUtils = require_RenderingUtils2();
+      var _constants = require_constants4();
+      var _constants2 = require_constants2();
+      var _constants3 = require_constants3();
+      var _universalUtils = require_universalUtils();
+      var _utils = require_utils3();
+      var getPropertyMutator = (bindingProperty) => {
+        if (typeof mutators[bindingProperty] === "function") {
+          return mutators[bindingProperty];
+        }
+        return null;
+      };
+      var mutators = {
+        innerHTML: (node, type, value) => {
+          const valueString = value != null ? String(value) : "";
+          if (_constants.SHARED_ALLOWED_FIELD_TYPES.innerHTML[type] === "innerHTML") {
+            node.innerHTML = valueString;
+          } else if (_constants.SHARED_ALLOWED_FIELD_TYPES.innerHTML[type] === "innerText") {
+            node.innerHTML = (0, _escape.default)(valueString);
+          }
+          if (node.innerHTML) {
+            node.classList.remove("w-dyn-bind-empty");
+          }
+        },
+        src: (node, type, value) => {
+          if (value && value.url) {
+            node.setAttribute("src", value.url);
+          }
+          node.classList.remove("w-dyn-bind-empty");
+        }
+      };
+      var bindDataToNode = (node, data, bindings) => {
+        bindings.forEach((binding) => {
+          Object.keys(binding).forEach((bindingProperty) => {
+            const bindingValue = binding[bindingProperty];
+            const {
+              dataPath,
+              filter,
+              timezone,
+              type
+            } = bindingValue;
+            const rawValue = (0, _get.default)(data, dataPath);
+            const transformedValue = (0, _Transformers.transformers)(rawValue, filter, {
+              timezone,
+              collectionSlugMap: {},
+              currencySettings: window.__WEBFLOW_CURRENCY_SETTINGS
+            });
+            const propertyMutator = getPropertyMutator(bindingProperty);
+            if (propertyMutator) {
+              propertyMutator(node, type, transformedValue);
+            }
+          });
+        });
+      };
+      function applyBindingsAndConditionalVisibility(node, data) {
+        if (node.hasAttribute(_constants2.WF_BINDING_DATA_KEY)) {
+          const bindingsStr = node.getAttribute(_constants2.WF_BINDING_DATA_KEY) || "";
+          const bindings = JSON.parse(decodeURIComponent(bindingsStr));
+          if (bindings) {
+            bindDataToNode(node, data, bindings);
+          }
+        }
+        if (node.hasAttribute(_constants2.WF_CONDITION_DATA_KEY)) {
+          const conditionsStr = node.getAttribute(_constants2.WF_CONDITION_DATA_KEY) || "";
+          const conditionData = JSON.parse(decodeURIComponent(conditionsStr));
+          if (conditionData) {
+            (0, _RenderingUtils.applyConditionToNode)(node, data, conditionData);
+          }
+        }
+      }
+      function getFirstAncestor(element, pred) {
+        if (element.parentNode === null) {
+          return null;
+        }
+        if (pred(element)) {
+          return element;
+        }
+        return getFirstAncestor(element.parentNode, pred);
+      }
+      function hasFormFileUploadWrapperClass(element) {
+        return element.classList.contains("w-file-upload");
+      }
+      function setFileUploadValue(node, fileId) {
+        if (!fileId)
+          return;
+        (0, _universalUtils.setUserFileKey)(node, fileId);
+        const formFileUploadWrapper = getFirstAncestor(node, hasFormFileUploadWrapperClass);
+        if (formFileUploadWrapper === null)
+          return;
+        const formFileDefault = formFileUploadWrapper.querySelector(".w-file-upload-default");
+        const formFileSuccess = formFileUploadWrapper.querySelector(".w-file-upload-success");
+        const formFileError = formFileUploadWrapper.querySelector(".w-file-upload-error");
+        const formFileUploading = formFileUploadWrapper.querySelector(".w-file-upload-uploading");
+        (0, _utils.addHiddenClass)(formFileDefault);
+        (0, _utils.addHiddenClass)(formFileError);
+        (0, _utils.addHiddenClass)(formFileUploading);
+        (0, _utils.removeHiddenClass)(formFileSuccess);
+      }
+      function applyUserAccountData(node, userData) {
+        if (node.hasAttribute(_constants3.USYS_DATA_ATTRS.field)) {
+          const field = node.getAttribute(_constants3.USYS_DATA_ATTRS.field) || "";
+          const fieldType = node.getAttribute(_constants3.USYS_DATA_ATTRS.fieldType) || "";
+          if (fieldType === "Option") {
+            node.value = (0, _get.default)(userData, [`f_${field}`, "slug"], "");
+            return;
+          }
+          if (fieldType === "FileRef") {
+            setFileUploadValue(node, (0, _get.default)(userData, [`f_${field}`, "id"], ""));
+            return;
+          }
+          const dataPath = field && field.includes(_constants3.RESERVED_USER_PREFIX) ? _constants3.KEY_FROM_RESERVED_USER_FIELD[field] : `f_${field}`;
+          const value = (0, _get.default)(userData, [dataPath], "");
+          if (node.type === "checkbox") {
+            node.checked = Boolean(value);
+            return;
+          }
+          node.value = value;
+        }
+        if (node.hasAttribute(_constants3.USYS_DATA_ATTRS.inputType)) {
+          const dataPath = node.getAttribute(_constants3.USYS_DATA_ATTRS.inputType) || "";
+          const value = (0, _get.default)(userData, [dataPath], "");
+          if (value) {
+            node.value = value;
+          }
+        }
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/account.js
+  var require_account = __commonJS({
+    "packages/systems/users/siteBundles/account.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.handleUserAccount = handleUserAccount;
+      exports.handleUserSubscriptionLists = handleUserSubscriptionLists;
+      var _constants = require_constants3();
+      var _constants2 = require_constants2();
+      var _RenderingUtils = require_RenderingUtils2();
+      var _utils = require_utils3();
+      var _queries = require_queries();
+      var _mutations = require_mutations();
+      var _rendering = require_rendering2();
+      var _fields = require_fields();
+      function asyncGetUserSubscriptions() {
+        return _utils.userSystemsRequestClient.query({
+          query: _queries.getUserSubscriptions
+        });
+      }
+      function asyncGetUser(dataFields) {
+        return _utils.userSystemsRequestClient.query({
+          query: (0, _queries.buildGetLoggedInUserQuery)(dataFields)
+        });
+      }
+      function asyncSubmitUserData(dataFields) {
+        const data = (0, _fields.getFieldsAsTypeKeys)(dataFields);
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: (0, _mutations.buildUpdateUsysUserDataMutation)(dataFields),
+          variables: {
+            data
+          }
+        });
+      }
+      var subscriptionListSelector = `[${_constants.USYS_DATA_ATTRS.userSubscriptions}]`;
+      var EmptyStateSelector = `[${_constants.USYS_DATA_ATTRS.userSubscriptionsEmptyState}]`;
+      var templateSelector = `script[type='${_constants2.WF_TEMPLATE_TYPE}']`;
+      function getUserSubscriptionLists() {
+        const subscriptionLists = document.querySelectorAll(subscriptionListSelector);
+        return Array.from(subscriptionLists);
+      }
+      var userAccountFormQuerySelector = `form[${_constants.USYS_DATA_ATTRS.formType}="${_constants.USYS_FORM_TYPES.account}"]`;
+      function getUserAccountForms() {
+        const accountForms = document.querySelectorAll(userAccountFormQuerySelector);
+        return Array.prototype.slice.call(accountForms).filter((accountForm) => accountForm instanceof HTMLFormElement);
+      }
+      function handleUserSubscriptionLists(domParser) {
+        if (window.Webflow.env("design") || window.Webflow.env("preview")) {
+          return;
+        }
+        const subscriptionLists = getUserSubscriptionLists();
+        if (subscriptionLists.length > 0) {
+          asyncGetUserSubscriptions().then((response) => {
+            var _response$data, _response$data$databa;
+            const userSubscriptions = response === null || response === void 0 ? void 0 : (_response$data = response.data) === null || _response$data === void 0 ? void 0 : (_response$data$databa = _response$data.database) === null || _response$data$databa === void 0 ? void 0 : _response$data$databa.userSubscriptions;
+            const noUserSubscriptions = userSubscriptions.length === 0;
+            if (noUserSubscriptions)
+              return renderEmptySubscriptionList(subscriptionLists);
+            renderUserSubscriptionLists(subscriptionLists, domParser, userSubscriptions);
+          }).catch((error) => {
+            const graphQLErrors = (error === null || error === void 0 ? void 0 : error.graphQLErrors) || [];
+            const errorsHandled = graphQLErrors.reduce((hasUnhandledError, graphQLError) => {
+              if ((graphQLError === null || graphQLError === void 0 ? void 0 : graphQLError.code) === "NoCommerceCustomerFound") {
+                renderEmptySubscriptionList(subscriptionLists);
+                return hasUnhandledError;
+              }
+              return false;
+            }, graphQLErrors.length > 0);
+            if (!errorsHandled)
+              throw error;
+          });
+        }
+      }
+      function renderEmptySubscriptionList(subscriptionListElements) {
+        subscriptionListElements.forEach((subscriptionListElement) => {
+          const EmptyStateElement = subscriptionListElement.querySelector(EmptyStateSelector);
+          (0, _utils.showElement)(EmptyStateElement);
+        });
+      }
+      function renderUserSubscriptionLists(subscriptionListElements, domParser, userSubscriptions = []) {
+        subscriptionListElements.forEach((subscriptionListElement) => {
+          const EmptyStateElement = subscriptionListElement.querySelector(EmptyStateSelector);
+          (0, _utils.hideElement)(EmptyStateElement);
+          const templateScript = subscriptionListElement.querySelector(templateSelector);
+          if (!templateScript) {
+            return;
+          }
+          const templateId = templateScript.getAttribute("id");
+          if (!templateId) {
+            return;
+          }
+          const listWrapperElement = document.querySelector(`[${_constants2.WF_TEMPLATE_ID_DATA_KEY}='${templateId}']`);
+          if (!(listWrapperElement instanceof Element)) {
+            return;
+          }
+          const templateElement = domParser.getHtmlFromString(templateScript.innerHTML);
+          if (!(templateElement instanceof Element)) {
+            return;
+          }
+          userSubscriptions.forEach((subscription) => {
+            const templateClone = templateElement.cloneNode(true);
+            listWrapperElement.appendChild(templateClone);
+            (0, _RenderingUtils.walkDOM)(templateClone, (node) => {
+              (0, _rendering.applyBindingsAndConditionalVisibility)(node, subscription);
+              if (node.hasAttribute(_constants.USYS_DATA_ATTRS.subscriptionCancel)) {
+                addCancelButtonEventListener(node, subscription._id);
+              }
+            });
+          });
+        });
+      }
+      function addCancelButtonEventListener(node, subscriptionId) {
+        node.addEventListener("click", function() {
+          _utils.userSystemsRequestClient.mutate({
+            mutation: _mutations.cancelSubscriptionMutation,
+            variables: {
+              subscriptionId
+            }
+          }).then(() => {
+            window.location.reload();
+          });
+        });
+      }
+      function handleUserAccount() {
+        const userAccount = document.querySelector(`[${_constants.USYS_DATA_ATTRS.userAccount}]`);
+        if (!userAccount || window.Webflow.env("design") || window.Webflow.env("preview")) {
+          return;
+        }
+        const successMessage = userAccount.querySelector("." + _constants.USYS_DOM_CLASS_NAMES.formSuccess);
+        const errorMessage = userAccount.querySelector("." + _constants.USYS_DOM_CLASS_NAMES.formError);
+        const userAccountForms = getUserAccountForms();
+        if (userAccountForms.length > 0) {
+          const fields = (0, _fields.getFieldsForFetch)(userAccountForms);
+          asyncGetUser(fields).then((response) => {
+            var _response$data2, _response$data2$site;
+            const siteUser = response === null || response === void 0 ? void 0 : (_response$data2 = response.data) === null || _response$data2 === void 0 ? void 0 : (_response$data2$site = _response$data2.site) === null || _response$data2$site === void 0 ? void 0 : _response$data2$site.siteUser;
+            if (!siteUser)
+              return;
+            const userData = siteUser.data;
+            userAccountForms.forEach((accountForm) => {
