@@ -50109,3 +50109,468 @@
               return;
             const userData = siteUser.data;
             userAccountForms.forEach((accountForm) => {
+              (0, _RenderingUtils.walkDOM)(userAccount, (node) => {
+                (0, _rendering.applyUserAccountData)(node, userData);
+              });
+              if (!(accountForm instanceof HTMLFormElement))
+                return;
+              const submit = accountForm.querySelector('input[type="submit"]');
+              accountForm.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const form = event.currentTarget;
+                if (!(form instanceof HTMLFormElement)) {
+                  return;
+                }
+                (0, _utils.hideElement)(successMessage);
+                (0, _utils.hideElement)(errorMessage);
+                const submitText = (0, _utils.disableSubmit)(submit);
+                const commonFields = (0, _fields.getCommonFields)(form, ["name", "accept-communications"]);
+                const customFields = (0, _fields.getCustomFields)(form);
+                asyncSubmitUserData([...commonFields, ...customFields]).then((res) => {
+                  const newUserData = res && res.data && res.data.usysUpdateUserData && res.data.usysUpdateUserData.data;
+                  if (newUserData) {
+                    addResetEventListener(accountForm, userAccount, newUserData);
+                  }
+                  successMessage && (0, _utils.showAndFocusElement)(successMessage);
+                }).catch((0, _utils.userFormError)(form, errorMessage, "ACCOUNT_UPDATE")).finally(() => {
+                  (0, _utils.resetSubmit)(submit, submitText);
+                });
+              });
+              accountForm.querySelectorAll("input").forEach((input) => input.addEventListener("input", () => {
+                (0, _utils.hideElement)(successMessage);
+                (0, _utils.hideElement)(errorMessage);
+              }));
+              addResetEventListener(accountForm, userAccount, userData);
+            });
+          });
+        }
+      }
+      var addResetEventListener = (accountForm, userAccount, userData) => {
+        accountForm.addEventListener("reset", (event) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          if (!(form instanceof HTMLFormElement))
+            return;
+          if (userData) {
+            (0, _RenderingUtils.walkDOM)(userAccount, (node) => {
+              (0, _rendering.applyUserAccountData)(node, userData);
+            });
+          }
+        });
+      };
+    }
+  });
+
+  // packages/systems/users/siteBundles/usysForm.js
+  var require_usysForm = __commonJS({
+    "packages/systems/users/siteBundles/usysForm.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.handleFields = handleFields;
+      var _utils = require_utils3();
+      var _queries = require_queries();
+      var _constants = require_constants3();
+      var _universalUtils = require_universalUtils();
+      var _mutations = require_mutations();
+      function asyncGetFieldValidations() {
+        return _utils.userSystemsRequestClient.query({
+          query: _queries.getFieldValidations
+        });
+      }
+      function signFile(file, {
+        fieldId
+      }) {
+        return _utils.userSystemsRequestClient.mutate({
+          mutation: _mutations.getUploadURLMutation,
+          variables: {
+            fieldId,
+            filename: file.name
+          }
+        });
+      }
+      function setRequired(input, userField) {
+        if (userField.required == null)
+          return;
+        input.required = userField.required;
+      }
+      var inputAttributeMap = {
+        minLength: "minlength",
+        maxLength: "maxlength",
+        min: "min",
+        max: "max",
+        step: "step",
+        extensions: "accept"
+      };
+      var formatValueMap = {
+        extensions: function accept(value) {
+          return value.join(",");
+        }
+      };
+      function convertToStr(value) {
+        return String(value);
+      }
+      function setValidations(input, userField) {
+        if (userField.validations == null)
+          return;
+        Object.keys(userField.validations).map((attr) => {
+          const val = userField.validations[attr];
+          if (attr === "options" && Array.isArray(val) && input instanceof HTMLSelectElement) {
+            val.forEach((option) => {
+              if (option.slug && option.name) {
+                const opt = document.createElement("option");
+                opt.value = option.slug;
+                opt.innerHTML = option.name;
+                input.appendChild(opt);
+              }
+            });
+          }
+          if (val !== null && inputAttributeMap[attr]) {
+            let formatValue;
+            if (formatValueMap[attr]) {
+              formatValue = formatValueMap[attr];
+            } else {
+              formatValue = convertToStr;
+            }
+            input.setAttribute(inputAttributeMap[attr], formatValue(val));
+          }
+          if (attr === "maxLength" && val === null) {
+            input.removeAttribute("maxlength");
+          }
+        });
+      }
+      function setUserFieldValidationAttr(input, userField) {
+        const fieldType = input.getAttribute(_constants.USYS_DATA_ATTRS.fieldType);
+        if (!_constants.NO_REQUIRED_ATTRIBUTE.includes(fieldType)) {
+          setRequired(input, userField);
+        }
+        setValidations(input, userField);
+      }
+      function matchInputToData(input, userFieldData) {
+        const fieldId = input.getAttribute(_constants.USYS_DATA_ATTRS.field);
+        if (!fieldId) {
+          return null;
+        }
+        for (let i = 0; i < userFieldData.length; i++) {
+          if (userFieldData[i].id === fieldId) {
+            return userFieldData[i];
+          }
+        }
+        return null;
+      }
+      function setFieldValidation(customFieldInputs) {
+        asyncGetFieldValidations().then((response) => {
+          const userFieldData = response.data.site.usysFieldSchema;
+          if (!userFieldData)
+            return;
+          for (let i = 0; i < customFieldInputs.length; i++) {
+            const input = customFieldInputs[i];
+            if (!input || !(input instanceof HTMLInputElement || input instanceof HTMLSelectElement) || input.getAttribute(_constants.USYS_DATA_ATTRS.fieldType) === "Bool") {
+              continue;
+            }
+            const userField = matchInputToData(input, userFieldData);
+            if (!userField)
+              continue;
+            setUserFieldValidationAttr(input, userField);
+          }
+        }).catch((err) => {
+          console.error(err);
+        });
+      }
+      function getMatchingSiblings(e, pred) {
+        const siblings = [];
+        if (e.target.parentNode === null) {
+          return siblings;
+        }
+        [].slice.call(e.target.parentNode.children).forEach((element) => {
+          if (pred(element)) {
+            siblings.push(element);
+          }
+        });
+        return siblings;
+      }
+      function isFormFileUploadWrapper(element) {
+        return element.classList.contains("w-file-upload");
+      }
+      function getFirstAncestor(element, pred) {
+        if (element.parentNode === null) {
+          return null;
+        }
+        if (pred(element)) {
+          return element;
+        }
+        return getFirstAncestor(element.parentNode, pred);
+      }
+      function handleFileRemoveLink(cancelRemoveLinkElement, inputElement, props) {
+        const {
+          deleteFile,
+          cancelFile
+        } = props;
+        cancelRemoveLinkElement.addEventListener("click", function(e) {
+          if (e.type === "keydown") {
+            if (e.which !== 13 && e.which !== 32) {
+              return;
+            }
+            e.preventDefault();
+          }
+          if ((0, _universalUtils.getUserFileKey)(inputElement)) {
+            deleteFile();
+            return;
+          }
+          cancelFile();
+        });
+      }
+      function handleFileUploadInput(element, props) {
+        const {
+          showUploading,
+          successUpload,
+          errorUpload,
+          changeFileNameText,
+          disableSubmitButton,
+          filesState
+        } = props;
+        const fieldId = element.getAttribute(_constants.USYS_DATA_ATTRS.field);
+        element.addEventListener("change", function(e) {
+          if (filesState.isUploading)
+            return;
+          const file = e.target && e.target.files && e.target.files[0];
+          if (!file) {
+            return;
+          }
+          showUploading();
+          changeFileNameText(file.name);
+          filesState.isUploading = true;
+          if (!filesState.isUploading) {
+            disableSubmitButton();
+          }
+          let key = "";
+          signFile(file, {
+            fieldId
+          }).then((res) => {
+            if (!res.data || !res.data.usysGetUploadURL || !res.data.usysGetUploadURL.presignedPOST) {
+              throw Error(res);
+            }
+            const presignedPOST = res.data.usysGetUploadURL.presignedPOST;
+            key = res.data.usysGetUploadURL.key;
+            const AWSFields = {};
+            presignedPOST.fields.forEach((field) => {
+              const _key = field.key;
+              const value = field.value;
+              AWSFields[_key] = value;
+            });
+            return (0, _universalUtils.uploadFileToS3)(presignedPOST.url, AWSFields, file);
+          }).then(() => {
+            successUpload(key);
+          }).catch((err) => {
+            let code = _constants.SERVER_DATA_VALIDATION_ERRORS.DefaultError;
+            if (typeof err === "string") {
+              const content = new window.DOMParser().parseFromString(err, "text/xml");
+              const codeElements = content.getElementsByTagName("Code");
+              if (codeElements) {
+                code = codeElements[0].innerHTML;
+              }
+            }
+            if (typeof err === "object" && err.hasOwnProperty("graphQLErrors")) {
+              if (err.graphQLErrors[0].code === "UsysForbiddenFileExtension") {
+                code = _constants.SERVER_DATA_VALIDATION_ERRORS.ExtensionsError;
+              }
+            }
+            errorUpload(code);
+          }).finally(() => {
+            filesState.isUploading = false;
+          });
+        });
+      }
+      var WF_SUBMIT_BUTTON_VALUE = "wf-submit-button-value";
+      var adaptAWSErrors = (code) => {
+        if (code === "EntityTooLarge")
+          return _constants.SERVER_DATA_VALIDATION_ERRORS.MinSizeError;
+        if (code === "EntityTooSmall")
+          return _constants.SERVER_DATA_VALIDATION_ERRORS.MaxSizeError;
+        return code;
+      };
+      function handleFileUploadInputs(customFieldInputs, props) {
+        const {
+          disableSubmitButton,
+          enableSubmitButton
+        } = props;
+        const filesState = {
+          isUploading: false
+        };
+        customFieldInputs.forEach((el) => {
+          if (el.getAttribute("type") === "file") {
+            let showUploading = function() {
+              (0, _utils.addHiddenClass)(formFileDefault);
+              (0, _utils.addHiddenClass)(formFileError);
+              (0, _utils.addHiddenClass)(formFileSuccess);
+              (0, _utils.removeHiddenClass)(formFileUploading);
+              formFileUploading.focus();
+              disableSubmitButton();
+            }, successUpload = function(fileUrl) {
+              (0, _utils.addHiddenClass)(formFileDefault);
+              (0, _utils.addHiddenClass)(formFileError);
+              (0, _utils.addHiddenClass)(formFileUploading);
+              (0, _utils.removeHiddenClass)(formFileSuccess);
+              formFileSuccess.focus();
+              enableSubmitButton();
+              (0, _universalUtils.setTempUserFileKey)(el, fileUrl);
+            }, errorUpload = function(code = _constants.SERVER_DATA_VALIDATION_ERRORS.DefaultError) {
+              const errorText = formFileErrorMsg.getAttribute(adaptAWSErrors(code).toLowerCase());
+              (0, _utils.addHiddenClass)(formFileSuccess);
+              (0, _utils.addHiddenClass)(formFileUploading);
+              (0, _utils.removeHiddenClass)(formFileDefault);
+              (0, _utils.removeHiddenClass)(formFileError);
+              if (errorText) {
+                formFileErrorMsg.innerHTML = errorText;
+              }
+              formFileError.focus();
+              enableSubmitButton();
+            }, showDefault = function() {
+              (0, _utils.addHiddenClass)(formFileSuccess);
+              (0, _utils.addHiddenClass)(formFileUploading);
+              (0, _utils.addHiddenClass)(formFileError);
+              (0, _utils.removeHiddenClass)(formFileDefault);
+              fileUploadLabel.focus();
+            }, changeFileNameText = function(filename) {
+              fileUploadFileName.innerHTML = filename;
+            }, cancelFile = function() {
+              changeFileNameText("");
+              (0, _universalUtils.removeTempUserFileKey)(el);
+              showDefault();
+            }, deleteFile = function() {
+              (0, _universalUtils.setUserFileKey)(el, "DELETE");
+              cancelFile();
+            };
+            const formFileUploadWrapper = getFirstAncestor(el, isFormFileUploadWrapper);
+            const formFileDefault = formFileUploadWrapper.querySelector(".w-file-upload-default");
+            const formFileSuccess = formFileUploadWrapper.querySelector(".w-file-upload-success");
+            const formFileError = formFileUploadWrapper.querySelector(".w-file-upload-error");
+            const formFileErrorMsg = formFileError.querySelector(".w-file-upload-error-msg");
+            const formFileUploading = formFileUploadWrapper.querySelector(".w-file-upload-uploading");
+            const fileUploadFileName = formFileUploadWrapper.querySelector(".w-file-upload-file-name");
+            const fileRemoveLink = formFileUploadWrapper.querySelector(".w-file-remove-link");
+            const fileUploadLabel = formFileUploadWrapper.querySelector(".w-file-upload-label");
+            handleFileRemoveLink(fileRemoveLink, el, {
+              deleteFile,
+              cancelFile
+            });
+            handleFileUploadInput(el, {
+              showUploading,
+              successUpload,
+              errorUpload,
+              changeFileNameText,
+              fileRemoveLink,
+              filesState
+            });
+          }
+        });
+      }
+      function handleFields() {
+        const userForms = document.querySelectorAll(`form[${_constants.USYS_DATA_ATTRS.formType}]`);
+        userForms.forEach((userForm) => {
+          const customFieldInputs = userForm.querySelectorAll(`input[${_constants.USYS_DATA_ATTRS.field}], select[${_constants.USYS_DATA_ATTRS.field}]`);
+          const submitButton = userForm.querySelector('input[type="submit"]');
+          submitButton.setAttribute(WF_SUBMIT_BUTTON_VALUE, submitButton.value);
+          function disableSubmitButton() {
+            if (submitButton) {
+              (0, _utils.disableSubmit)(submitButton);
+            }
+          }
+          function enableSubmitButton() {
+            if (submitButton) {
+              submitButton.removeAttribute("disabled");
+              submitButton.setAttribute("value", submitButton.getAttribute(WF_SUBMIT_BUTTON_VALUE) || "Submit");
+            }
+          }
+          if (customFieldInputs.length > 0) {
+            setFieldValidation(customFieldInputs);
+            handleFileUploadInputs(customFieldInputs, {
+              disableSubmitButton,
+              enableSubmitButton
+            });
+          }
+          const CHECKBOX_CLASS_NAME = "w-checkbox-input";
+          const CHECKED_CLASS = "w--redirected-checked";
+          const customCheckboxes = document.querySelectorAll(`form[${_constants.USYS_DATA_ATTRS.formType}] input[type="checkbox"]:not(` + CHECKBOX_CLASS_NAME + ")");
+          customCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener("change", function(e) {
+              getMatchingSiblings(e, (element) => {
+                return element.classList.contains(CHECKBOX_CLASS_NAME);
+              }).forEach((sibling) => {
+                sibling.classList.toggle(CHECKED_CLASS);
+              });
+            });
+          });
+        });
+      }
+    }
+  });
+
+  // packages/systems/users/siteBundles/index.js
+  var require_siteBundles = __commonJS({
+    "packages/systems/users/siteBundles/index.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      var _exportNames = {
+        usysSiteBundle: true,
+        usysFormBundle: true
+      };
+      exports.usysSiteBundle = exports.usysFormBundle = void 0;
+      init_polyfill();
+      require_polyfill2();
+      require_url_search_params();
+      require_array3();
+      var _login = require_login();
+      var _signup = require_signup();
+      var _logout = require_logout();
+      var _resetPassword = require_resetPassword();
+      var _updatePassword = require_updatePassword();
+      var _account = require_account();
+      var _utils = require_utils3();
+      Object.keys(_utils).forEach(function(key) {
+        if (key === "default" || key === "__esModule")
+          return;
+        if (Object.prototype.hasOwnProperty.call(_exportNames, key))
+          return;
+        if (key in exports && exports[key] === _utils[key])
+          return;
+        Object.defineProperty(exports, key, {
+          enumerable: true,
+          get: function() {
+            return _utils[key];
+          }
+        });
+      });
+      var _usysForm = require_usysForm();
+      var usysSiteBundle = () => {
+        function init() {
+          const domParser = (0, _utils.getDomParser)();
+          (0, _login.handleLogInForms)();
+          (0, _login.handleLoginRedirects)();
+          (0, _signup.handleSignUpForms)();
+          (0, _logout.handleLogInLogOutButton)();
+          (0, _resetPassword.handleResetPasswordForms)();
+          (0, _updatePassword.handleUpdatePasswordForms)();
+          (0, _account.handleUserAccount)();
+          (0, _account.handleUserSubscriptionLists)(domParser);
+        }
+        const ready = init;
+        const design = init;
+        const preview = init;
+        return {
+          init,
+          ready,
+          design,
+          preview
+        };
+      };
+      exports.usysSiteBundle = usysSiteBundle;
+      var usysFormBundle = function(env) {
+        function init() {
+          if (env("design"))
+            return;
+          (0, _usysForm.handleFields)();
+        }
