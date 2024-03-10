@@ -50574,3 +50574,422 @@
             return;
           (0, _usysForm.handleFields)();
         }
+        return {
+          init,
+          ready: init,
+          preview: init
+        };
+      };
+      exports.usysFormBundle = usysFormBundle;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/addToCartEvents.js
+  var require_addToCartEvents = __commonJS({
+    "shared/render/plugins/Commerce/modules/addToCartEvents.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.register = exports.default = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _graphqlTag = _interopRequireDefault(require_graphql_tag_umd());
+      var _constants = require_constants2();
+      var _constants2 = require_constants3();
+      var _constants3 = require_constants4();
+      var _constants4 = require_constants5();
+      var _utils = require_utils2();
+      var _get = _interopRequireDefault(require_get());
+      var _Commerce = require_Commerce();
+      var _eventHandlerProxyWithApolloClient = _interopRequireDefault(require_eventHandlerProxyWithApolloClient());
+      var _commerceUtils = require_commerceUtils();
+      var _RenderingUtils = require_RenderingUtils2();
+      var _CurrencyUtils = require_CurrencyUtils2();
+      var _debug = _interopRequireDefault(require_debug());
+      var _forEach = _interopRequireDefault(require_forEach());
+      var _find = _interopRequireDefault(require_find());
+      var _rendering = require_rendering();
+      var _addToCartStore = require_addToCartStore();
+      var _PillGroup = require_PillGroup();
+      var _siteBundles = require_siteBundles();
+      var {
+        fetchFromStore,
+        updateStore,
+        addStoreWatcher
+      } = (0, _addToCartStore.createNewStore)();
+      var getInstanceId = (form) => {
+        const instanceId = form.getAttribute(_constants.DATA_ATTR_COMMERCE_PRODUCT_ID);
+        if (instanceId) {
+          return instanceId;
+        } else {
+          throw new Error("Incorrect form instance provided, has no instance ID");
+        }
+      };
+      function trackAddToCartUsage(skuId, count, itemPrice) {
+        const {
+          decimalValue,
+          unit
+        } = itemPrice;
+        if (typeof fbq === "function") {
+          fbq("track", "AddToCart", {
+            value: count * decimalValue,
+            currency: unit,
+            content_ids: [skuId],
+            content_type: "product",
+            contents: [{
+              id: skuId,
+              quantity: count,
+              item_price: decimalValue
+            }]
+          });
+        }
+        if (typeof gtag === "function") {
+          gtag("event", "add_to_cart", {
+            items: [{
+              id: skuId,
+              quantity: count,
+              price: decimalValue
+            }]
+          });
+        }
+      }
+      var addToCartMutation = (0, _graphqlTag.default)`
+  mutation AddToCart($skuId: String!, $count: Int!, $buyNow: Boolean) {
+    ecommerceAddToCart(sku: $skuId, count: $count, buyNow: $buyNow) {
+      ok
+      itemId
+      itemCount
+      itemPrice {
+        unit
+        decimalValue
+      }
+    }
+  }
+`;
+      var collectionsQuery = `
+      collections {
+        c_sku_ {
+          items(filter: {f_product_: {eq: $productId}}) {
+            id
+            f_price_ {
+              value
+              unit
+            }
+            f_weight_
+            f_width_
+            f_length_
+            f_height_
+            f_sku_
+            f_main_image_4dr {
+              url
+            }
+            f_more_images_4dr {
+              url
+              alt
+              file {
+                origFileName
+              }
+            }
+            f_sku_values_3dr {
+              value {
+                id
+              }
+              property {
+                id
+              }
+            }
+            inventory {
+              type
+              quantity
+            }
+            f_compare_at_price_7dr10dr {
+              unit
+              value
+            }
+            f_ec_sku_billing_method_2dr6dr14dr
+          }
+        }
+        c_product_ {
+          items(filter: {id: {eq: $productId}}) {
+            f_default_sku_7dr {
+              id
+            }
+            f_ec_product_type_2dr10dr {
+              name
+            }
+          }
+        }
+      }`;
+      var getAllVariants = (0, _graphqlTag.default)`
+  query FetchAllVariants($productId: BasicId!) {
+    database {
+      id
+      ${collectionsQuery}
+    }
+  }
+`;
+      var getAllVariantsAndMemberships = (0, _graphqlTag.default)`
+  query FetchAllVariantsAndMemberships($productId: BasicId!) {
+    database {
+      id
+      ${collectionsQuery}
+      commerceMemberships(productIds: [$productId]) {
+        productId
+        orderId
+        active
+      }
+    }
+  }
+`;
+      var findCollectionItemWrapper = (node) => {
+        const dynamoItemSelector = `.${_constants4.CLASS_NAME_DYNAMIC_LIST_ITEM}:not(.${_constants4.CLASS_NAME_DYNAMIC_LIST_REPEATER_ITEM})`;
+        return $(node).closest(dynamoItemSelector)[0] || document.body;
+      };
+      var addToCartFormEventTargetMatcher = (event) => {
+        if (event != null && event.target instanceof HTMLElement && event.target.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM) {
+          return event.target;
+        }
+        return false;
+      };
+      var getErrorType = (error) => {
+        const defaultErrorType = "general";
+        if (error && error.graphQLErrors && error.graphQLErrors.length > 0) {
+          switch (error.graphQLErrors[0].code) {
+            case "OutOfInventory":
+              return "quantity";
+            case "MixedCartError":
+              return "mixed-cart";
+            default:
+              return defaultErrorType;
+          }
+        }
+        return defaultErrorType;
+      };
+      var handleAtcSubmit = (event, apolloClient) => {
+        event.preventDefault();
+        const eventTarget = event.currentTarget;
+        if (!(eventTarget instanceof HTMLFormElement && eventTarget.parentNode instanceof Element) || eventTarget.hasAttribute(_constants.ADD_TO_CART_LOADING)) {
+          return;
+        }
+        const {
+          parentNode
+        } = eventTarget;
+        const inputButton = eventTarget.querySelector('input[type="submit"]');
+        if (!(0, _commerceUtils.isProtocolHttps)()) {
+          window.alert("This site is currently unsecured so you cannot add products to your cart.");
+          return;
+        }
+        if (!(inputButton instanceof HTMLInputElement)) {
+          return;
+        }
+        const errorElement = parentNode.querySelector(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR}"]`);
+        if (errorElement instanceof Element) {
+          errorElement.style.display = "none";
+        }
+        eventTarget.setAttribute(_constants.ADD_TO_CART_LOADING, "");
+        const previousButtonValue = inputButton.value;
+        const loadingTextFromButton = inputButton.getAttribute(_constants.DATA_ATTR_LOADING_TEXT);
+        inputButton.value = loadingTextFromButton ? loadingTextFromButton : eventTarget.getAttribute(_constants.DATA_ATTR_LOADING_TEXT) || "";
+        inputButton.setAttribute("aria-busy", "true");
+        const skuId = fetchFromStore(getInstanceId(eventTarget), "selectedSku") || "";
+        const formData = (0, _commerceUtils.formToObject)(eventTarget);
+        const formCount = formData[_constants.NODE_NAME_COMMERCE_ADD_TO_CART_QUANTITY_INPUT];
+        const count = formCount ? parseInt(formCount, 10) : 1;
+        if (!skuId && errorElement instanceof Element) {
+          eventTarget.removeAttribute(_constants.ADD_TO_CART_LOADING);
+          inputButton.value = previousButtonValue;
+          inputButton.setAttribute("aria-busy", "false");
+          const errorMsg = errorElement.querySelector(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_ADD_TO_CART_ERROR}"]`);
+          if (!errorMsg) {
+            return;
+          }
+          const errorText = errorMsg.getAttribute((0, _constants.getATCErrorMessageForType)("select-all-options")) || "Please select an option in each set.";
+          errorMsg.textContent = errorText;
+          errorElement.style.removeProperty("display");
+          return;
+        }
+        const requiresUserSession = fetchFromStore(getInstanceId(eventTarget), "requiresUserSession");
+        const hasUserSession = document.cookie.split(";").some((cookie) => cookie.indexOf(_constants2.LOGGEDIN_COOKIE_NAME) > -1);
+        if (requiresUserSession && !hasUserSession) {
+          (0, _siteBundles.redirectWithUsrdir)(`/${_constants2.USYS_PAGE_SETTINGS.signup.slug}`);
+          return;
+        }
+        apolloClient.mutate({
+          mutation: addToCartMutation,
+          variables: {
+            skuId,
+            count,
+            buyNow: false
+          }
+        }).then(({
+          data
+        }) => {
+          (0, _commerceUtils.addLoadingCallback)(() => {
+            eventTarget.removeAttribute(_constants.ADD_TO_CART_LOADING);
+            inputButton.value = previousButtonValue;
+            inputButton.setAttribute("aria-busy", "false");
+            const cartElements = document.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_CART_WRAPPER}"][${_constants.DATA_ATTR_OPEN_PRODUCT}]`);
+            cartElements.forEach((cart) => {
+              const evt = new CustomEvent(_constants.CHANGE_CART_EVENT, {
+                bubbles: true,
+                detail: {
+                  open: true
+                }
+              });
+              cart.dispatchEvent(evt);
+            });
+          });
+          (0, _commerceUtils.triggerRender)(null);
+          const itemPrice = data.ecommerceAddToCart.itemPrice || {};
+          trackAddToCartUsage(skuId, count, itemPrice);
+        }).catch((error) => {
+          eventTarget.removeAttribute(_constants.ADD_TO_CART_LOADING);
+          inputButton.value = previousButtonValue;
+          inputButton.setAttribute("aria-busy", "false");
+          if (errorElement) {
+            errorElement.style.removeProperty("display");
+            const errorMsg = errorElement.querySelector(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_ADD_TO_CART_ERROR}"]`);
+            if (!errorMsg) {
+              return;
+            }
+            const errorMessage = (0, _constants.getATCErrorMessageForType)(getErrorType(error));
+            const errorText = errorMsg.getAttribute(errorMessage) || "";
+            errorMsg.textContent = errorText;
+          }
+          _debug.default.error(error);
+          (0, _commerceUtils.triggerRender)(null);
+        });
+      };
+      var addToCartOptionSelectEventTargetMatcher = (event) => {
+        if (event != null && event.target instanceof HTMLElement && event.target.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT) {
+          return event.target;
+        }
+        return false;
+      };
+      var queryAllWithoutOtherItemWrapperContents = (collectionItemWrapper, selector) => {
+        return Array.from(collectionItemWrapper.querySelectorAll(selector)).filter((node) => findCollectionItemWrapper(node) === collectionItemWrapper);
+      };
+      var queryAllReferenceRepeaters = (collectionItemWrapper) => {
+        return Array.from(collectionItemWrapper.querySelectorAll(`.${_constants4.CLASS_NAME_DYNAMIC_LIST_REPEATER_REF}`));
+      };
+      var removeClass = (element, className) => {
+        element && // eslint-disable-next-line no-undef
+        element.classList instanceof DOMTokenList && element.classList.remove(className);
+        if (element.classList.length === 0) {
+          element.removeAttribute("class");
+        }
+      };
+      var showElement = (element) => removeClass(element, "w-dyn-hide");
+      var hideElement = (element) => element && // eslint-disable-next-line no-undef
+      element.classList instanceof DOMTokenList && element.classList.add("w-dyn-hide");
+      var updateEmptyStateVisibility = (node, fn1, fn2) => {
+        const emptyStateNodes = Array.from(node.querySelectorAll(".w-dyn-empty"));
+        const emptyStateMoreImageFieldNodes = emptyStateNodes.filter((n) => {
+          const itemsList = n.parentElement.querySelector(".w-dyn-items");
+          return itemsList.dataset && itemsList.dataset.wfCollection && itemsList.dataset.wfCollection === "f_more_images_4dr";
+        });
+        return emptyStateMoreImageFieldNodes && emptyStateMoreImageFieldNodes.map((n) => {
+          fn1(n);
+          const itemsList = n.parentElement.querySelector(".w-dyn-items");
+          if (itemsList && itemsList.dataset && itemsList.dataset.wfCollection && itemsList.dataset.wfCollection === "f_more_images_4dr" && // eslint-disable-next-line no-undef
+          itemsList.classList instanceof DOMTokenList && itemsList.parentElement.classList.contains(_constants4.CLASS_NAME_DYNAMIC_LIST_REPEATER_REF)) {
+            return fn2(itemsList);
+          }
+        });
+      };
+      var showEmptyStateAndHideItemsList = (node) => {
+        updateEmptyStateVisibility(node, showElement, hideElement);
+      };
+      var hideEmptyStateAndShowItemsList = (node) => {
+        updateEmptyStateVisibility(node, hideElement, showElement);
+      };
+      var updateDropdownsOnPage = (instanceId) => (newSkuValues) => {
+        const dropdownsForProduct = Array.from(document.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST}"][${_constants.DATA_ATTR_COMMERCE_PRODUCT_ID}="${instanceId}"] [${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT}"]`));
+        for (const optionSetId of Object.keys(newSkuValues)) {
+          const optionSetValue = newSkuValues[optionSetId];
+          const matchingDropdownsForOptionSet = dropdownsForProduct.filter((d) => d.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID) === optionSetId);
+          for (const dropdown of matchingDropdownsForOptionSet) {
+            dropdown.value = String(optionSetValue);
+          }
+        }
+      };
+      var disableOptionsOnChange = ({
+        apolloClient,
+        productId,
+        optionSets,
+        optionSetId
+      }) => {
+        apolloClient.query({
+          query: getAllVariants,
+          variables: {
+            productId
+          }
+        }).then(({
+          data
+        }) => {
+          var _data$database$collec, _data$database, _data$database$collec2, _data$database$collec3;
+          const items = (_data$database$collec = data === null || data === void 0 ? void 0 : (_data$database = data.database) === null || _data$database === void 0 ? void 0 : (_data$database$collec2 = _data$database.collections) === null || _data$database$collec2 === void 0 ? void 0 : (_data$database$collec3 = _data$database$collec2.c_sku_) === null || _data$database$collec3 === void 0 ? void 0 : _data$database$collec3.items) !== null && _data$database$collec !== void 0 ? _data$database$collec : [];
+          const optionSetData = optionSets.reduce((parsedSelectorOptionSets, selectorOptionSet) => {
+            if (selectorOptionSet.value) {
+              parsedSelectorOptionSets.selectedOptionSets.push(selectorOptionSet);
+              if (selectorOptionSet.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID) === optionSetId) {
+                parsedSelectorOptionSets.recentlySelectedOptionSet = selectorOptionSet;
+              } else {
+                parsedSelectorOptionSets.previouslySelectedOptionSets.push(selectorOptionSet);
+              }
+            } else {
+              parsedSelectorOptionSets.unselectedOptionSets.push(selectorOptionSet);
+            }
+            return parsedSelectorOptionSets;
+          }, {
+            selectedOptionSets: [],
+            recentlySelectedOptionSet: void 0,
+            previouslySelectedOptionSets: [],
+            unselectedOptionSets: []
+          });
+          let {
+            selectedOptionSets,
+            unselectedOptionSets
+          } = optionSetData;
+          const {
+            recentlySelectedOptionSet,
+            previouslySelectedOptionSets
+          } = optionSetData;
+          if (recentlySelectedOptionSet && selectedOptionSets.length > 1) {
+            const recentlySelectedOptionSetValue = recentlySelectedOptionSet.value;
+            (0, _forEach.default)(previouslySelectedOptionSets, (previouslySelectedOptionSet) => {
+              const optionSetValueCombinationWithMostRecent = [recentlySelectedOptionSetValue, previouslySelectedOptionSet.value];
+              const someAvailableItem = items.some((item) => {
+                if (item.inventory.type === _constants.INVENTORY_TYPE_FINITE && item.inventory.quantity <= 0) {
+                  return false;
+                }
+                const itemMappedBySkuValues = item.f_sku_values_3dr.map((skuValues) => skuValues.value.id);
+                return optionSetValueCombinationWithMostRecent.every((value) => itemMappedBySkuValues.includes(value));
+              });
+              if (!someAvailableItem) {
+                previouslySelectedOptionSet.selectedIndex = 0;
+                selectedOptionSets = selectedOptionSets.filter((selectedOptionSet) => selectedOptionSet.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID) !== previouslySelectedOptionSet.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID));
+                unselectedOptionSets = unselectedOptionSets.concat(previouslySelectedOptionSet);
+              }
+            });
+          }
+          (0, _forEach.default)(selectedOptionSets, (optionSet) => {
+            const id = optionSet.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID);
+            (0, _forEach.default)(optionSet.options, (option) => {
+              if (!option.value) {
+                option.enabled = true;
+              } else {
+                disableVariantsWithNoStock(items, id, option);
+              }
+            });
+          });
+          (0, _forEach.default)(unselectedOptionSets, (optionSet) => {
+            const id = optionSet.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID);
+            disableVariantsWithNoStockForRemainingSelections(items, selectedOptionSets, optionSet, id);
+          });
+        });
+      };
+      var handleAtcOptionSelectChange = (event, apolloClient) => {
+        const eventTarget = event.currentTarget;
+        if (!(eventTarget instanceof HTMLSelectElement)) {
