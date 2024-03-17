@@ -51438,3 +51438,460 @@
         if (buyNowButton.classList.contains("w--ecommerce-buy-now-disabled")) {
           return;
         }
+        const addToCartWrapper = addToCartForm.parentElement;
+        if (!(addToCartWrapper instanceof Element)) {
+          return;
+        }
+        const addToCartErrorElement = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR, addToCartWrapper);
+        if (!(addToCartErrorElement instanceof Element)) {
+          return;
+        }
+        addToCartErrorElement.style.display = "none";
+        if (!(0, _commerceUtils.isProtocolHttps)()) {
+          window.alert("This site is currently unsecured so you cannot purchase this item.");
+          return;
+        }
+        if (!addToCartForm.reportValidity()) {
+          return;
+        }
+        const requiresUserSession = fetchFromStore(getInstanceId(addToCartForm), "requiresUserSession");
+        const hasUserSession = document.cookie.split(";").some((cookie) => cookie.indexOf(_constants2.LOGGEDIN_COOKIE_NAME) > -1);
+        if (requiresUserSession && !hasUserSession) {
+          (0, _siteBundles.redirectWithUsrdir)(`/${_constants2.USYS_PAGE_SETTINGS.signup.slug}`);
+          return;
+        }
+        const publishableKey = buyNowButton.getAttribute(_constants.DATA_ATTR_PUBLISHABLE_KEY);
+        if (!publishableKey) {
+          const errorMsg = addToCartErrorElement.querySelector(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_ADD_TO_CART_ERROR}"]`);
+          if (!errorMsg) {
+            return;
+          }
+          const errorText = errorMsg.getAttribute(_constants.CHECKOUT_DISABLED_ERROR_MESSAGE) || "Checkout is disabled.";
+          errorMsg.textContent = errorText;
+          addToCartErrorElement.style.removeProperty("display");
+          return;
+        }
+        const skuId = fetchFromStore(getInstanceId(addToCartForm), "selectedSku") || "";
+        const formData = (0, _commerceUtils.formToObject)(addToCartForm);
+        const formCount = formData[_constants.NODE_NAME_COMMERCE_ADD_TO_CART_QUANTITY_INPUT];
+        const count = formCount ? parseInt(formCount, 10) : 1;
+        if (!skuId) {
+          const errorMsg = addToCartErrorElement.querySelector(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_ADD_TO_CART_ERROR}"]`);
+          if (!errorMsg) {
+            return;
+          }
+          const errorText = errorMsg.getAttribute((0, _constants.getATCErrorMessageForType)("select-all-options")) || "Please select an option in each set.";
+          errorMsg.textContent = errorText;
+          addToCartErrorElement.style.removeProperty("display");
+          return;
+        }
+        apolloClient.mutate({
+          mutation: addToCartMutation,
+          variables: {
+            skuId,
+            count,
+            buyNow: true
+          }
+        }).then(({
+          data
+        }) => {
+          const itemPrice = data.ecommerceAddToCart.itemPrice || {};
+          trackAddToCartUsage(skuId, count, itemPrice);
+          window.location = buyNowButton.href;
+        }).catch((error) => {
+          if (addToCartErrorElement) {
+            addToCartErrorElement.style.removeProperty("display");
+            const errorMsg = addToCartErrorElement.querySelector(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_ADD_TO_CART_ERROR}"]`);
+            if (!errorMsg) {
+              return;
+            }
+            const errorType = error.graphQLErrors && error.graphQLErrors.length > 0 && error.graphQLErrors[0].code === "OutOfInventory" ? "quantity" : "buy-now";
+            const errorText = errorMsg.getAttribute((0, _constants.getATCErrorMessageForType)(errorType)) || "";
+            errorMsg.textContent = errorText;
+          }
+          _debug.default.error(error);
+          (0, _commerceUtils.triggerRender)(null);
+        });
+      };
+      var register = (handlerProxy) => {
+        handlerProxy.on("submit", addToCartFormEventTargetMatcher, handleAtcSubmit);
+        handlerProxy.on("change", addToCartOptionSelectEventTargetMatcher, handleAtcOptionSelectChange);
+        handlerProxy.on("click", isBuyNowButtonEvent, handleBuyNow);
+        handlerProxy.on(_constants.RENDER_TREE_EVENT, Boolean, handleAtcPageLoad);
+      };
+      exports.register = register;
+      var _default = {
+        register
+      };
+      exports.default = _default;
+    }
+  });
+
+  // node_modules/lodash/mergeWith.js
+  var require_mergeWith = __commonJS({
+    "node_modules/lodash/mergeWith.js"(exports, module) {
+      var baseMerge = require_baseMerge();
+      var createAssigner = require_createAssigner();
+      var mergeWith = createAssigner(function(object, source, srcIndex, customizer) {
+        baseMerge(object, source, srcIndex, customizer);
+      });
+      module.exports = mergeWith;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/checkoutMutations.js
+  var require_checkoutMutations = __commonJS({
+    "shared/render/plugins/Commerce/modules/checkoutMutations.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.updateOrderStripePaymentMethodMutation = exports.updateOrderShippingMethodMutation = exports.updateOrderIdentityMutation = exports.updateOrderAddressMutation = exports.updateObfuscatedOrderAddressMutation = exports.updateCustomData = exports.syncPayPalOrderInfo = exports.requestPayPalOrderMutation = exports.recalcOrderEstimationsMutation = exports.estimateOrderTaxesMutation = exports.attemptSubmitOrderMutation = exports.applyDiscountMutation = void 0;
+      var _graphqlTag = _interopRequireDefault(require_graphql_tag_umd());
+      var updateOrderIdentityMutation = (0, _graphqlTag.default)`
+  mutation CheckoutUpdateOrderIdentity($email: String) {
+    ecommerceUpdateIdentity(email: $email) {
+      ok
+    }
+  }
+`;
+      exports.updateOrderIdentityMutation = updateOrderIdentityMutation;
+      var updateOrderAddressMutation = (0, _graphqlTag.default)`
+  mutation CheckoutUpdateOrderAddress(
+    $type: String!
+    $name: String
+    $address_line1: String
+    $address_line2: String
+    $address_city: String
+    $address_state: String
+    $address_country: String
+    $address_zip: String
+  ) {
+    ecommerceUpdateAddress(
+      type: $type
+      addressee: $name
+      line1: $address_line1
+      line2: $address_line2
+      city: $address_city
+      state: $address_state
+      country: $address_country
+      postalCode: $address_zip
+    ) {
+      ok
+    }
+  }
+`;
+      exports.updateOrderAddressMutation = updateOrderAddressMutation;
+      var updateObfuscatedOrderAddressMutation = (0, _graphqlTag.default)`
+  mutation CheckoutUpdateObfuscatedOrderAddress(
+    $type: String!
+    $name: String
+    $address_line1: String
+    $address_line2: String
+    $address_city: String
+    $address_state: String
+    $address_country: String
+    $address_zip: String
+  ) {
+    ecommerceUpdateObfuscatedAddress(
+      type: $type
+      addressee: $name
+      line1: $address_line1
+      line2: $address_line2
+      city: $address_city
+      state: $address_state
+      country: $address_country
+      postalCode: $address_zip
+    ) {
+      ok
+    }
+  }
+`;
+      exports.updateObfuscatedOrderAddressMutation = updateObfuscatedOrderAddressMutation;
+      var updateOrderShippingMethodMutation = (0, _graphqlTag.default)`
+  mutation CheckoutUpdateShippingMethod($id: String) {
+    ecommerceUpdateShippingMethod(methodId: $id) {
+      ok
+    }
+  }
+`;
+      exports.updateOrderShippingMethodMutation = updateOrderShippingMethodMutation;
+      var updateOrderStripePaymentMethodMutation = (0, _graphqlTag.default)`
+  mutation CheckoutUpdateStripePaymentMethod($paymentMethod: String!) {
+    ecommerceStoreStripePaymentMethod(paymentMethod: $paymentMethod) {
+      ok
+    }
+  }
+`;
+      exports.updateOrderStripePaymentMethodMutation = updateOrderStripePaymentMethodMutation;
+      var updateCustomData = (0, _graphqlTag.default)`
+  mutation CheckoutUpdateCustomData(
+    $customData: [mutation_commerce_update_custom_data]!
+  ) {
+    ecommerceUpdateCustomData(customData: $customData) {
+      ok
+    }
+  }
+`;
+      exports.updateCustomData = updateCustomData;
+      var estimateOrderTaxesMutation = (0, _graphqlTag.default)`
+  mutation CheckoutEstimateOrderTaxes {
+    ecommerceEstimateTaxes {
+      ok
+    }
+  }
+`;
+      exports.estimateOrderTaxesMutation = estimateOrderTaxesMutation;
+      var recalcOrderEstimationsMutation = (0, _graphqlTag.default)`
+  mutation CheckoutRecalcOrderEstimations {
+    ecommerceRecalcEstimations {
+      ok
+    }
+  }
+`;
+      exports.recalcOrderEstimationsMutation = recalcOrderEstimationsMutation;
+      var requestPayPalOrderMutation = (0, _graphqlTag.default)`
+  mutation CheckoutRequestPayPalOrder {
+    ecommercePaypalOrderRequest {
+      orderId
+    }
+  }
+`;
+      exports.requestPayPalOrderMutation = requestPayPalOrderMutation;
+      var syncPayPalOrderInfo = (0, _graphqlTag.default)`
+  mutation CheckoutSyncPayPalInfo {
+    ecommerceSyncPaypalOrderInfoToWF {
+      ok
+    }
+  }
+`;
+      exports.syncPayPalOrderInfo = syncPayPalOrderInfo;
+      var attemptSubmitOrderMutation = (0, _graphqlTag.default)`
+  mutation CheckoutAttemptSubmitOrder(
+    $checkoutType: mutation_commerce_checkout_type
+    $paymentIntentId: String
+  ) {
+    ecommerceAttemptSubmitOrder(
+      checkoutType: $checkoutType
+      paymentIntentId: $paymentIntentId
+    ) {
+      orderId
+      token
+      ok
+      customerPaid {
+        decimalValue
+        unit
+      }
+      purchasedItems {
+        id
+        name
+        count
+        price {
+          decimalValue
+        }
+      }
+      status
+      clientSecret
+      nextAction
+    }
+  }
+`;
+      exports.attemptSubmitOrderMutation = attemptSubmitOrderMutation;
+      var applyDiscountMutation = (0, _graphqlTag.default)`
+  mutation CheckoutApplyDiscount($discountCode: String!) {
+    ecommerceApplyDiscount(discountCode: $discountCode) {
+      ok
+    }
+  }
+`;
+      exports.applyDiscountMutation = applyDiscountMutation;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/checkoutUtils.js
+  var require_checkoutUtils = __commonJS({
+    "shared/render/plugins/Commerce/modules/checkoutUtils.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.updateErrorMessage = exports.showErrorMessageForError = exports.renderCheckoutFormContainers = exports.redirectToOrderConfirmation = exports.orderRequiresAdditionalAction = exports.initializeStripeElements = exports.getOrderDataFromGraphQLResponse = exports.createUpdateObfuscatedOrderAddressMutation = exports.createStripePaymentMethodMutation = exports.createRecalcOrderEstimationsMutation = exports.createOrderShippingMethodMutation = exports.createOrderIdentityMutation = exports.createOrderAddressMutation = exports.createCustomDataMutation = exports.createAttemptSubmitOrderRequest = exports.beforeUnloadHandler = exports.applyDiscount = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _apolloClient = _interopRequireDefault(require_bundle_umd5());
+      var _graphqlTag = _interopRequireDefault(require_graphql_tag_umd());
+      var _commerceUtils = require_commerceUtils();
+      var _StyleMapObserver = _interopRequireDefault(require_StyleMapObserver());
+      var _stripeStore = require_stripeStore();
+      var _constants = require_constants2();
+      var _rendering = require_rendering();
+      var _webPaymentsEvents = require_webPaymentsEvents();
+      var _checkoutMutations = require_checkoutMutations();
+      var syncStylesToStripeElement = (stripeElement) => (appliedStyles) => {
+        stripeElement.update({
+          style: _StyleMapObserver.default.appliedStylesToStripeElementStyles(appliedStyles)
+        });
+      };
+      var initializeStripeElements = (store) => {
+        if (window.Webflow.env("design") || window.Webflow.env("preview") || !store.isInitialized()) {
+          return;
+        }
+        const checkoutFormContainers = (0, _commerceUtils.findAllElementsByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER);
+        const cartWrappers = (0, _commerceUtils.findAllElementsByNodeType)(_constants.NODE_TYPE_COMMERCE_CART_WRAPPER);
+        const allStripeElements = [...checkoutFormContainers, ...cartWrappers];
+        allStripeElements.forEach((element, index) => {
+          store.createElementsInstance(index);
+          element.setAttribute(_constants.STRIPE_ELEMENT_INSTANCE, String(index));
+        });
+        const stripeElements = document.querySelectorAll(`[${_constants.STRIPE_ELEMENT_TYPE}]`);
+        Array.from(stripeElements).forEach((element) => {
+          const type = element.getAttribute(_constants.STRIPE_ELEMENT_TYPE);
+          if (!type) {
+            throw new Error("Stripe element missing type string");
+          }
+          const checkoutFormContainer = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, element);
+          if (!checkoutFormContainer) {
+            return;
+          }
+          const index = parseInt(checkoutFormContainer.getAttribute(_constants.STRIPE_ELEMENT_INSTANCE), 10);
+          const el = store.createElement(type, index, {
+            style: (0, _commerceUtils.safeParseJson)(element.getAttribute(_constants.STRIPE_ELEMENT_STYLE) || "{}"),
+            classes: {
+              focus: "-wfp-focus"
+            }
+          });
+          el.mount(element);
+          const styleMapObserver = new _StyleMapObserver.default(element, {
+            onChange: syncStylesToStripeElement(el)
+          });
+        });
+      };
+      exports.initializeStripeElements = initializeStripeElements;
+      var errorCodeToCheckoutErrorType = (code, msg) => {
+        switch (code) {
+          case "OrderTotalRange":
+            if (msg && msg.match(/too small/i)) {
+              return "minimum";
+            } else {
+              return "info";
+            }
+          case "OrderExtrasChanged":
+            return "extras";
+          case "PriceChanged":
+            return "pricing";
+          case "StripeRejected":
+            return "billing";
+          case "NeedShippingAddress":
+          case "InvalidShippingAddress":
+          case "NeedShippingMethod":
+            return "shipping";
+          case "NeedPaymentMethod":
+          case "StripeFailure":
+            return "payment";
+          case "ItemNotFound":
+            return "product";
+          case "InvalidDiscount":
+          case "DiscountInvalid":
+          case "DiscountDoesNotExist": {
+            return "invalid-discount";
+          }
+          case "DiscountExpired": {
+            return "expired-discount";
+          }
+          case "DiscountUsageReached": {
+            return "usage-reached-discount";
+          }
+          case "DiscountRequirementsNotMet": {
+            return "requirements-not-met";
+          }
+          default:
+            return "info";
+        }
+      };
+      var getErrorType = (error) => {
+        if (error.graphQLErrors && error.graphQLErrors.length > 0) {
+          return errorCodeToCheckoutErrorType(error.graphQLErrors[0].code, error.graphQLErrors[0].message);
+        }
+        if (error.code) {
+          return errorCodeToCheckoutErrorType(error.code, error.message);
+        }
+        return "info";
+      };
+      var updateErrorMessage = (element, error) => {
+        const errorText = element.querySelector(_constants.CART_CHECKOUT_ERROR_MESSAGE_SELECTOR);
+        if (!errorText) {
+          return;
+        }
+        if (error.type && error.type === "validation_error") {
+          errorText.textContent = error.message;
+          return;
+        }
+        const errorType = getErrorType(error);
+        const errorData = _constants.CHECKOUT_ERRORS[errorType.toUpperCase().replace(/\W/g, "_")] || {};
+        const defaultErrorMessage = errorData.copy;
+        const errorMessage = errorText.getAttribute((0, _constants.getCheckoutErrorMessageForType)(errorType)) || defaultErrorMessage;
+        errorText.textContent = errorMessage;
+        if (errorData.requiresRefresh) {
+          errorText.setAttribute(_constants.NEEDS_REFRESH, "true");
+        } else {
+          errorText.removeAttribute(_constants.NEEDS_REFRESH);
+        }
+        if (errorType === "shipping") {
+          updateRequiredFields(error);
+        }
+      };
+      exports.updateErrorMessage = updateErrorMessage;
+      var elementNameByGraphQLError = {
+        MISSING_STATE: "address_state"
+      };
+      var updateRequiredFields = (error) => {
+        if (!error.graphQLErrors || error.graphQLErrors.length === 0) {
+          return;
+        }
+        const invalidShippingAddressError = error.graphQLErrors.find((gqlError) => gqlError.code === "InvalidShippingAddress");
+        if (!invalidShippingAddressError) {
+          return;
+        }
+        invalidShippingAddressError.problems.forEach((problem) => {
+          const {
+            type
+          } = problem;
+          const elementName = elementNameByGraphQLError[type];
+          if (!elementName) {
+            return;
+          }
+          const element = document.getElementsByName(elementName)[0];
+          if (!(element instanceof HTMLInputElement)) {
+            return;
+          }
+          element.required = true;
+          if (typeof element.reportValidity === "function") {
+            element.reportValidity();
+          }
+        });
+      };
+      var showErrorMessageForError = (err, scope) => {
+        const errorState = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE, scope);
+        if (errorState) {
+          errorState.style.removeProperty("display");
+          updateErrorMessage(errorState, err);
+        }
+      };
+      exports.showErrorMessageForError = showErrorMessageForError;
+      var beforeUnloadHandler = (e) => {
+        e.preventDefault();
+        e.returnValue = "";
+      };
+      exports.beforeUnloadHandler = beforeUnloadHandler;
+      var createOrderIdentityMutation = (apolloClient, email) => apolloClient.mutate({
+        mutation: _checkoutMutations.updateOrderIdentityMutation,
+        variables: {
+          email
+        }
+      });
+      exports.createOrderIdentityMutation = createOrderIdentityMutation;
+      var createOrderAddressMutation = (apolloClient, addressInfo) => apolloClient.mutate({
+        mutation: _checkoutMutations.updateOrderAddressMutation,
+        variables: addressInfo
+      });
