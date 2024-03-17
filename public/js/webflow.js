@@ -50993,3 +50993,448 @@
       var handleAtcOptionSelectChange = (event, apolloClient) => {
         const eventTarget = event.currentTarget;
         if (!(eventTarget instanceof HTMLSelectElement)) {
+          return;
+        }
+        const $2 = window.jQuery;
+        const optionSetId = eventTarget.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID);
+        const optionSetValue = eventTarget.value;
+        const optionListElement = $2(eventTarget).closest(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST}"]`)[0];
+        const addToCartForm = $2(eventTarget).closest(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM}"]`)[0];
+        if (!(optionListElement instanceof Element) || !optionSetId || !(addToCartForm instanceof HTMLFormElement)) {
+          return;
+        }
+        const instanceId = getInstanceId(addToCartForm);
+        const currentSkuValues = fetchFromStore(instanceId, "skuValues");
+        const newSkuValues = (0, _extends2.default)({}, currentSkuValues, {
+          [optionSetId]: optionSetValue
+        });
+        updateStore(instanceId, {
+          skuValues: newSkuValues
+        });
+        const productId = optionListElement && optionListElement.getAttribute(_constants.DATA_ATTR_COMMERCE_PRODUCT_ID);
+        const allVariantSelectorsInCartForm = (0, _commerceUtils.findAllElementsByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_SELECT, addToCartForm);
+        if (productId && allVariantSelectorsInCartForm.length > 0) {
+          disableOptionsOnChange({
+            apolloClient,
+            productId,
+            optionSets: allVariantSelectorsInCartForm,
+            optionSetId
+          });
+        }
+      };
+      var updateSkuBindings = (binding, node, newSkuItem) => {
+        if (["f_weight_", "f_width_", "f_length_", "f_height_", "f_sku_"].some((slug) => binding.from === slug)) {
+          node[binding.to === "innerHTML" ? "innerText" : binding.to] = newSkuItem[binding.from] || "";
+          updateTextNodeVisibility(node);
+        }
+        if (binding.from === "f_price_" && newSkuItem.f_price_) {
+          node[binding.to === "innerHTML" ? "innerText" : binding.to] = (0, _CurrencyUtils.renderPriceFromSettings)(newSkuItem.f_price_, window.__WEBFLOW_CURRENCY_SETTINGS);
+          updateTextNodeVisibility(node);
+        }
+        if (binding.from === "f_compare_at_price_7dr10dr") {
+          if (newSkuItem.f_compare_at_price_7dr10dr) {
+            node[binding.to === "innerHTML" ? "innerText" : binding.to] = (0, _CurrencyUtils.renderPriceFromSettings)(newSkuItem.f_compare_at_price_7dr10dr, window.__WEBFLOW_CURRENCY_SETTINGS);
+          } else {
+            node[binding.to === "innerHTML" ? "innerText" : binding.to] = "";
+          }
+          updateTextNodeVisibility(node);
+        }
+        if (binding.from === "f_main_image_4dr" || binding.from === "f_main_image_4dr.url") {
+          const mainImage = (0, _get.default)(newSkuItem, binding.from.replace(/\.url$/, ""));
+          if (binding.to === "style.background-image") {
+            node.style.backgroundImage = mainImage && mainImage.url ? `url("${mainImage.url}")` : "none";
+          } else if (binding.to === "media") {
+            if (node.classList.contains("w-lightbox")) {
+              updateLightboxJson(node, mainImage);
+            }
+          } else if (binding.to === "src") {
+            if (mainImage && mainImage.url) {
+              node.src = mainImage.url;
+              (0, _RenderingUtils.removeWDynBindEmptyClass)(node);
+              if (node.hasAttribute("srcset")) {
+                node.removeAttribute("srcset");
+              }
+            } else {
+              node.removeAttribute("src");
+              node.classList.add(_constants3.CLASS_NAME_W_DYN_BIND_EMPTY);
+            }
+          }
+        }
+        if (binding.from.startsWith("f_more_images_4dr.")) {
+          const image = (0, _get.default)(newSkuItem, binding.from.replace(/\.url$/, ""));
+          if (binding.to === "style.background-image") {
+            node.style.backgroundImage = image ? `url("${image.url}")` : "none";
+          } else if (binding.to === "media") {
+            if (node.classList.contains("w-lightbox")) {
+              updateLightboxJson(node, image);
+            }
+          } else if (binding.to === "src") {
+            if (image && image.url) {
+              node.src = image.url;
+              node.alt = image.alt || "";
+              (0, _RenderingUtils.removeWDynBindEmptyClass)(node);
+              if (node.hasAttribute("srcset")) {
+                node.removeAttribute("srcset");
+                node.removeAttribute("sizes");
+              }
+            } else {
+              node.removeAttribute("src");
+              node.removeAttribute("srcset");
+              node.removeAttribute("sizes");
+              node.removeAttribute("alt");
+              node.classList.add(_constants3.CLASS_NAME_W_DYN_BIND_EMPTY);
+            }
+          }
+        }
+        if (binding.from === "ecSkuInventoryQuantity") {
+          const inventoryQuantity = (0, _get.default)(newSkuItem, "inventory.type") === "infinite" ? null : (0, _get.default)(newSkuItem, "inventory.quantity");
+          node[binding.to === "innerHTML" ? "innerText" : binding.to] = inventoryQuantity;
+          updateTextNodeVisibility(node);
+        }
+      };
+      var updatePageWithNewSkuValuesData = (instanceId, apolloClient) => (newSkuValues) => {
+        const $2 = window.jQuery;
+        apolloClient.query({
+          query: getAllVariants,
+          variables: {
+            productId: instanceId
+          }
+        }).then(({
+          data
+        }) => {
+          var _data$database$collec4, _data$database2, _data$database2$colle, _data$database2$colle2, _data$database$collec5, _data$database3, _data$database3$colle, _data$database3$colle2;
+          const items = (_data$database$collec4 = data === null || data === void 0 ? void 0 : (_data$database2 = data.database) === null || _data$database2 === void 0 ? void 0 : (_data$database2$colle = _data$database2.collections) === null || _data$database2$colle === void 0 ? void 0 : (_data$database2$colle2 = _data$database2$colle.c_sku_) === null || _data$database2$colle2 === void 0 ? void 0 : _data$database2$colle2.items) !== null && _data$database$collec4 !== void 0 ? _data$database$collec4 : [];
+          const products = (_data$database$collec5 = data === null || data === void 0 ? void 0 : (_data$database3 = data.database) === null || _data$database3 === void 0 ? void 0 : (_data$database3$colle = _data$database3.collections) === null || _data$database3$colle === void 0 ? void 0 : (_data$database3$colle2 = _data$database3$colle.c_product_) === null || _data$database3$colle2 === void 0 ? void 0 : _data$database3$colle2.items) !== null && _data$database$collec5 !== void 0 ? _data$database$collec5 : [];
+          const productType = products[0] ? products[0].f_ec_product_type_2dr10dr.name : "Advanced";
+          const newSkuItem = (0, _find.default)(items, (item) => {
+            if (item.f_sku_values_3dr && Array.isArray(item.f_sku_values_3dr)) {
+              const skuValues = (0, _Commerce.simplifySkuValues)(item.f_sku_values_3dr);
+              return Object.keys(newSkuValues).every((key) => newSkuValues[key] === skuValues[key]);
+            }
+          });
+          if (newSkuItem && newSkuItem.id) {
+            updateStore(instanceId, {
+              selectedSku: newSkuItem.id
+            });
+            if (newSkuItem["f_ec_sku_billing_method_2dr6dr14dr"] === "subscription" || productType === "Membership") {
+              updateStore(instanceId, {
+                requiresUserSession: true
+              });
+            }
+            const formsForProduct = document.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM}"][${_constants.DATA_ATTR_COMMERCE_PRODUCT_ID}="${instanceId}"]`);
+            Array.from(formsForProduct).forEach((addToCartForm) => {
+              const collectionItemWrapper = findCollectionItemWrapper(addToCartForm);
+              const referenceRepeaters = queryAllReferenceRepeaters(collectionItemWrapper);
+              const buyNowButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_BUY_NOW_BUTTON, addToCartForm);
+              if (buyNowButton) {
+                if (newSkuItem["f_ec_sku_billing_method_2dr6dr14dr"] === "subscription") {
+                  const addToCartButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON, addToCartForm);
+                  const buyNowSubscriptionText = buyNowButton.getAttribute(_constants.DATA_ATTR_SUBSCRIPTION_TEXT) || "Subscribe now";
+                  hideElement(addToCartButton);
+                  buyNowButton.innerText = buyNowSubscriptionText;
+                } else {
+                  const buyNowDefaultText = buyNowButton.getAttribute(_constants.DATA_ATTR_DEFAULT_TEXT) || "Buy now";
+                  buyNowButton.innerText = buyNowDefaultText;
+                }
+              }
+              const moreImagesFieldLength = newSkuItem.f_more_images_4dr && newSkuItem.f_more_images_4dr.length || 0;
+              if (referenceRepeaters.length > 0) {
+                referenceRepeaters.forEach((referenceRepeater) => {
+                  (0, _rendering.renderTree)(referenceRepeater, {
+                    data: newSkuItem
+                  });
+                  if (moreImagesFieldLength > 0) {
+                    hideEmptyStateAndShowItemsList(referenceRepeater);
+                  } else {
+                    showEmptyStateAndHideItemsList(referenceRepeater);
+                  }
+                });
+              }
+              const skuBoundNodes = queryAllWithoutOtherItemWrapperContents(collectionItemWrapper, `[${_constants.WF_SKU_BINDING_DATA_KEY}]`);
+              (0, _forEach.default)(skuBoundNodes, (node) => {
+                const skuBindingsData = node.getAttribute(_constants.WF_SKU_BINDING_DATA_KEY);
+                if (skuBindingsData) {
+                  const skuBindings = (0, _commerceUtils.safeParseJson)(skuBindingsData);
+                  if (Array.isArray(skuBindings)) {
+                    skuBindings.forEach((binding) => updateSkuBindings(binding, node, newSkuItem));
+                  }
+                }
+              });
+              const skuConditionBoundNodes = queryAllWithoutOtherItemWrapperContents(collectionItemWrapper, `[${_constants.WF_SKU_CONDITION_DATA_KEY}]`);
+              (0, _forEach.default)(skuConditionBoundNodes, (node) => {
+                const conditionData = (0, _commerceUtils.safeParseJson)(node.getAttribute(_constants.WF_SKU_CONDITION_DATA_KEY));
+                if (conditionData) {
+                  (0, _rendering.applySkuBoundConditionalVisibility)({
+                    conditionData,
+                    newSkuItem,
+                    node
+                  });
+                }
+              });
+              const errorElement = $2(collectionItemWrapper).siblings(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_ERROR}"]`)[0];
+              if (errorElement instanceof Element) {
+                errorElement.style.display = "none";
+              }
+            });
+            if (window.Webflow.require("lightbox")) {
+              window.Webflow.require("lightbox").ready();
+            }
+          } else {
+            updateStore(instanceId, {
+              selectedSku: ""
+            });
+          }
+        });
+      };
+      var updateSkuValuesOnPillSelect = (instanceId, apolloClient) => ({
+        optionId,
+        optionSetId,
+        groups
+      }) => {
+        const currentSkuValues = fetchFromStore(instanceId, "skuValues");
+        const newSkuValues = (0, _extends2.default)({}, currentSkuValues, {
+          [optionSetId]: optionId
+        });
+        updateStore(instanceId, {
+          skuValues: newSkuValues
+        });
+        disableOptionsOnChange({
+          apolloClient,
+          productId: instanceId,
+          optionSets: Object.values(groups),
+          optionSetId
+        });
+      };
+      var handleAtcPageLoad = (event, apolloClient, stripeStore) => {
+        if (!(event instanceof CustomEvent && event.type === _constants.RENDER_TREE_EVENT)) {
+          return;
+        }
+        const addToCartForms = document.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM}"]`);
+        if (window.Webflow.env("preview")) {
+          if (event.detail.isInitial) {
+            (0, _forEach.default)(addToCartForms, (addToCartForm) => {
+              const groups = new _PillGroup.PillGroups(addToCartForm, ({
+                optionId,
+                optionSetId
+              }) => {
+                groups.setSelectedPillsForSkuValues({
+                  [optionSetId]: optionId
+                });
+              });
+              groups.init();
+            });
+          }
+          return;
+        }
+        if (window.Webflow.env("design")) {
+          return;
+        }
+        (0, _forEach.default)(addToCartForms, (addToCartForm) => {
+          const addToCartButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_BUTTON, addToCartForm);
+          if (addToCartButton) {
+            const cartElementsThatOpenOnAdd = document.querySelectorAll(`[${_constants.DATA_ATTR_NODE_TYPE}="${_constants.NODE_TYPE_COMMERCE_CART_WRAPPER}"][${_constants.DATA_ATTR_OPEN_PRODUCT}]`);
+            addToCartButton.setAttribute("aria-haspopup", cartElementsThatOpenOnAdd.length > 0 ? "dialog" : "false");
+          }
+          const buyNowButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_BUY_NOW_BUTTON, addToCartForm);
+          if (stripeStore && !stripeStore.isInitialized()) {
+            if (buyNowButton) {
+              hideElement(buyNowButton);
+            }
+          }
+          const instanceId = getInstanceId(addToCartForm);
+          if (event.detail.isInitial) {
+            updateStore(instanceId, {
+              selectedSku: addToCartForm instanceof Element ? addToCartForm.getAttribute(_constants.DATA_ATTR_COMMERCE_SKU_ID) : ""
+            });
+            addStoreWatcher(instanceId, "skuValues", updatePageWithNewSkuValuesData(instanceId, apolloClient));
+            addStoreWatcher(instanceId, "skuValues", updateDropdownsOnPage(instanceId));
+            if (_PillGroup.PillGroups.hasPillGroups(addToCartForm)) {
+              const pillGroup = new _PillGroup.PillGroups(addToCartForm, updateSkuValuesOnPillSelect(instanceId, apolloClient));
+              addStoreWatcher(instanceId, "skuValues", (newSkuValues) => {
+                pillGroup.setSelectedPillsForSkuValues(newSkuValues);
+              });
+              pillGroup.init();
+            }
+          }
+          const currentSkuId = fetchFromStore(instanceId, "selectedSku");
+          if (!currentSkuId) {
+            return;
+          }
+          const productId = addToCartForm && addToCartForm.getAttribute(_constants.DATA_ATTR_COMMERCE_PRODUCT_ID);
+          if (productId) {
+            apolloClient.query({
+              query: getAllVariantsAndMemberships,
+              variables: {
+                productId
+              }
+            }).then(({
+              data
+            }) => {
+              var _data$database$collec6, _data$database4, _data$database4$colle, _data$database4$colle2, _data$database$collec7, _data$database5, _data$database5$colle, _data$database5$colle2, _data$database$commer, _data$database6, _memberships$;
+              const items = (_data$database$collec6 = data === null || data === void 0 ? void 0 : (_data$database4 = data.database) === null || _data$database4 === void 0 ? void 0 : (_data$database4$colle = _data$database4.collections) === null || _data$database4$colle === void 0 ? void 0 : (_data$database4$colle2 = _data$database4$colle.c_sku_) === null || _data$database4$colle2 === void 0 ? void 0 : _data$database4$colle2.items) !== null && _data$database$collec6 !== void 0 ? _data$database$collec6 : [];
+              const products = (_data$database$collec7 = data === null || data === void 0 ? void 0 : (_data$database5 = data.database) === null || _data$database5 === void 0 ? void 0 : (_data$database5$colle = _data$database5.collections) === null || _data$database5$colle === void 0 ? void 0 : (_data$database5$colle2 = _data$database5$colle.c_product_) === null || _data$database5$colle2 === void 0 ? void 0 : _data$database5$colle2.items) !== null && _data$database$collec7 !== void 0 ? _data$database$collec7 : [];
+              const productType = products[0] ? products[0].f_ec_product_type_2dr10dr.name : "Advanced";
+              if (event.detail.isInitial && items[0].f_sku_values_3dr && items[0].f_sku_values_3dr.length > 0) {
+                const skuValuesMap = items[0].f_sku_values_3dr.reduce((map, sku) => {
+                  map[sku.property.id] = "";
+                  return map;
+                }, {});
+                updateStore(instanceId, {
+                  skuValues: skuValuesMap
+                });
+              }
+              const memberships = (_data$database$commer = data === null || data === void 0 ? void 0 : (_data$database6 = data.database) === null || _data$database6 === void 0 ? void 0 : _data$database6.commerceMemberships) !== null && _data$database$commer !== void 0 ? _data$database$commer : [];
+              const hasActiveMemebership = Boolean((_memberships$ = memberships[0]) === null || _memberships$ === void 0 ? void 0 : _memberships$.active);
+              if (hasActiveMemebership) {
+                if (buyNowButton) {
+                  buyNowButton.removeAttribute("href");
+                  buyNowButton.setAttribute("role", "link");
+                  buyNowButton.setAttribute("aria-disabled", "true");
+                  buyNowButton.classList.add("w--ecommerce-buy-now-disabled");
+                }
+                if (addToCartButton) {
+                  addToCartButton.setAttribute("disabled", "true");
+                  addToCartButton.classList.add("w--ecommerce-add-to-cart-disabled");
+                }
+              }
+              const currentSku = items.find((item) => item.id === currentSkuId);
+              if (currentSku) {
+                if (currentSku["f_ec_sku_billing_method_2dr6dr14dr"] === "subscription" || productType === "Membership") {
+                  updateStore(instanceId, {
+                    requiresUserSession: true
+                  });
+                }
+                if (currentSku["f_ec_sku_billing_method_2dr6dr14dr"] === "subscription") {
+                  hideElement(addToCartButton);
+                  if (buyNowButton) {
+                    const buyNowSubscriptionText = buyNowButton.getAttribute(_constants.DATA_ATTR_SUBSCRIPTION_TEXT) || "Subscribe now";
+                    buyNowButton.innerText = buyNowSubscriptionText;
+                  }
+                } else if (buyNowButton) {
+                  const buyNowDefaultText = buyNowButton.getAttribute(_constants.DATA_ATTR_DEFAULT_TEXT) || "Buy now";
+                  buyNowButton.innerText = buyNowDefaultText;
+                }
+                const addToCartWrapper = addToCartForm.parentElement;
+                const optionListElement = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_OPTION_LIST, addToCartWrapper);
+                const outOfStockState = addToCartWrapper && addToCartWrapper.getElementsByClassName("w-commerce-commerceaddtocartoutofstock")[0];
+                const hasVariantsWithStock = items.some((variant) => variant.inventory.type === _constants.INVENTORY_TYPE_FINITE && variant.inventory.quantity > 0 || variant.inventory.type === _constants.INVENTORY_TYPE_INFINITE);
+                if (!hasVariantsWithStock && outOfStockState) {
+                  outOfStockState.style.display = "";
+                  addToCartForm.style.display = "none";
+                }
+                const optionSetsToUpdate = items[0].f_sku_values_3dr.map((skuValue) => skuValue.property.id);
+                optionSetsToUpdate.forEach((optionToUpdateSetId) => {
+                  let optionSet = addToCartForm.querySelector(`[${_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID}="${optionToUpdateSetId}"]`);
+                  if (!(optionSet instanceof HTMLElement)) {
+                    return;
+                  }
+                  const optionSetId = optionSet.getAttribute(_constants.DATA_ATTR_COMMERCE_OPTION_SET_ID);
+                  if (optionSet.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_ADD_TO_CART_PILL_GROUP) {
+                    optionSet = optionSet._wfPillGroup;
+                  }
+                  (0, _forEach.default)(optionSet.options, (option) => {
+                    if (!option.value) {
+                      option.enabled = true;
+                    } else {
+                      disableVariantsWithNoStock(items, optionSetId, option);
+                    }
+                  });
+                  const selectedOptionSets = optionSetsToUpdate.filter((optionSetToUpdate) => optionSetToUpdate.value);
+                  disableVariantsWithNoStockForRemainingSelections(items, selectedOptionSets, optionSet, optionSetId);
+                  if (event.detail.isInitial && optionListElement && optionListElement.getAttribute(_constants.DATA_ATTR_PRESELECT_DEFAULT_VARIANT) === "true") {
+                    const defaultSkuId = (0, _get.default)(data, ["database", "collections", "c_product_", "items", 0, "f_default_sku_7dr", "id"]);
+                    const defaultSku = items.find((item) => item.id === defaultSkuId);
+                    if (defaultSku && !(defaultSku.inventory.type === _constants.INVENTORY_TYPE_FINITE && defaultSku.inventory.quantity <= 0)) {
+                      const defaultSkuIndex = Array.from(optionSet.options).findIndex((option) => defaultSku.f_sku_values_3dr.some((value) => value.value.id === option.value));
+                      if (defaultSkuIndex > -1) {
+                        optionSet.selectedIndex = defaultSkuIndex;
+                        updateStore(instanceId, {
+                          selectedSku: defaultSku.id,
+                          // update the sku values map to set each property id to the value id
+                          // for the current variant
+                          skuValues: (0, _Commerce.simplifySkuValues)(defaultSku.f_sku_values_3dr)
+                        });
+                      }
+                    }
+                  }
+                });
+              }
+            });
+          }
+        });
+      };
+      var disableVariantsWithNoStockForRemainingSelections = (items, selectedOptionSets, optionSet, id) => {
+        let possibleVariantSelections = items.filter((item) => {
+          const itemMappedBySkuValues = item.f_sku_values_3dr.map((skuValues) => skuValues.value.id);
+          const currentlySelectedSkuValues = selectedOptionSets.map((selectedOptionSet) => selectedOptionSet.value);
+          return currentlySelectedSkuValues.every((selectedValue) => itemMappedBySkuValues.includes(selectedValue));
+        });
+        if (possibleVariantSelections.length === 1) {
+          possibleVariantSelections = items;
+        }
+        (0, _forEach.default)(optionSet.options, (option) => {
+          if (!option.value) {
+            option.enabled = true;
+          } else {
+            const variantsFiltered = possibleVariantSelections.filter((variant) => {
+              const sku = variant.f_sku_values_3dr.find((value) => value.property.id === id);
+              return sku.value.id === option.value;
+            });
+            const hasVariantsWithStock = variantsFiltered.some((variant) => variant.inventory.type === _constants.INVENTORY_TYPE_FINITE && variant.inventory.quantity > 0 || variant.inventory.type === _constants.INVENTORY_TYPE_INFINITE);
+            if (!hasVariantsWithStock) {
+              option.disabled = true;
+            } else {
+              option.disabled = false;
+            }
+          }
+        });
+      };
+      var disableVariantsWithNoStock = (items, optionSetId, option) => {
+        if (!option.value) {
+          return;
+        }
+        const variantsFiltered = items.filter((variant) => {
+          const sku = variant.f_sku_values_3dr.find((value) => value.property.id === optionSetId);
+          return sku.value.id === option.value;
+        });
+        const hasVariantsWithStock = variantsFiltered.some((variant) => variant.inventory.type === _constants.INVENTORY_TYPE_FINITE && variant.inventory.quantity > 0 || variant.inventory.type === _constants.INVENTORY_TYPE_INFINITE);
+        if (!hasVariantsWithStock) {
+          option.disabled = true;
+        } else {
+          option.disabled = false;
+        }
+      };
+      var updateTextNodeVisibility = (node) => {
+        if (node.innerText) {
+          (0, _RenderingUtils.removeWDynBindEmptyClass)(node);
+        }
+        if (!node.innerText && !node.classList.contains(_constants3.CLASS_NAME_W_DYN_BIND_EMPTY)) {
+          node.classList.add(_constants3.CLASS_NAME_W_DYN_BIND_EMPTY);
+        }
+      };
+      var updateLightboxJson = (node, binding) => {
+        const lightboxScript = node.querySelector("script.w-json");
+        if (lightboxScript) {
+          const nodeJsonData = JSON.parse(lightboxScript.innerHTML);
+          lightboxScript.innerHTML = JSON.stringify((0, _utils.createJsonFromBoundMedia)(binding, nodeJsonData) || {
+            items: [],
+            group: nodeJsonData && nodeJsonData.group
+          });
+        }
+      };
+      var isBuyNowButtonEvent = ({
+        target
+      }) => target instanceof Element && target.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_BUY_NOW_BUTTON;
+      var handleBuyNow = (event, apolloClient) => {
+        event.preventDefault();
+        if (window.Webflow.env("preview")) {
+          return;
+        }
+        const buyNowButton = event.target;
+        const addToCartForm = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_ADD_TO_CART_FORM, buyNowButton);
+        if (!(buyNowButton instanceof HTMLAnchorElement) || !(addToCartForm instanceof HTMLFormElement)) {
+          return;
+        }
+        if (buyNowButton.classList.contains("w--ecommerce-buy-now-disabled")) {
+          return;
+        }
