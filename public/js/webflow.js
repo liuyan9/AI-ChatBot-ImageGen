@@ -53206,3 +53206,436 @@
           const lastFocusableElement = focusableContent[focusableContent.length - 1];
           if (event.shiftKey) {
             if (document.activeElement === firstFocusableElement) {
+              lastFocusableElement.focus();
+              event.preventDefault();
+            }
+          } else {
+            if (document.activeElement === lastFocusableElement) {
+              firstFocusableElement.focus();
+              event.preventDefault();
+            }
+          }
+        });
+      };
+      var register = (handlerProxy) => {
+        handlerProxy.on("click", isItemRemovedEvent, handleItemRemoved);
+        handlerProxy.on("change", isItemQuantityChangedEvent, handleItemQuantityChanged);
+        handlerProxy.on("focus", isItemQuantityInputEvent, handleItemInputChanged);
+        handlerProxy.on("click", isCartButtonEvent, handleCartButton);
+        handlerProxy.on("click", isCartCheckoutButtonEvent, handleCartCheckoutButton);
+        handlerProxy.on("mouseover", isCartButtonEvent, handleCartButton);
+        handlerProxy.on(_constants.CHANGE_CART_EVENT, isCartWrapperEvent, handleChangeCartStateEvent);
+        handlerProxy.on(_constants.RENDER_TREE_EVENT, Boolean, handleRenderCart);
+        handlerProxy.on("submit", isCartFormEvent, handleSubmitForm);
+        handlerProxy.on("keyup", Boolean, handleCartKeyUp);
+        handlerProxy.on("click", Boolean, handleClickCloseCart);
+        if (window.Webflow.env("design") || window.Webflow.env("preview")) {
+          window.addEventListener("__wf_preview", handlePreviewMode);
+          window.addEventListener("__wf_design", handleDesignMode);
+        }
+      };
+      exports.register = register;
+      var _default = {
+        register
+      };
+      exports.default = _default;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/checkoutEvents.js
+  var require_checkoutEvents = __commonJS({
+    "shared/render/plugins/Commerce/modules/checkoutEvents.js"(exports) {
+      "use strict";
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.register = exports.default = void 0;
+      var _extends2 = _interopRequireDefault(require_extends());
+      var _debounce = _interopRequireDefault(require_debounce());
+      var _constants = require_constants2();
+      var _eventHandlerProxyWithApolloClient = _interopRequireDefault(require_eventHandlerProxyWithApolloClient());
+      var _commerceUtils = require_commerceUtils();
+      var _checkoutUtils = require_checkoutUtils();
+      var _debug = _interopRequireDefault(require_debug());
+      var isInputInsideCustomerInfoEvent = ({
+        target
+      }) => {
+        const checkoutFormContainer = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER);
+        if (!checkoutFormContainer) {
+          return false;
+        }
+        const customerInfoWrapper = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER, target);
+        if (customerInfoWrapper && target instanceof Element && target.tagName === "INPUT") {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var isInputInsideAddressWrapperEvent = ({
+        target
+      }) => {
+        const checkoutFormContainer = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER);
+        if (!checkoutFormContainer || !(target instanceof Element)) {
+          return false;
+        }
+        const shippingAddressWrapper = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER, target);
+        const billingAddressWrapper = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER, target);
+        if (shippingAddressWrapper) {
+          return shippingAddressWrapper;
+        } else if (billingAddressWrapper) {
+          return billingAddressWrapper;
+        } else {
+          return false;
+        }
+      };
+      var isInputInsideShippingMethodEvent = ({
+        target
+      }) => {
+        const checkoutFormContainer = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER) || (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_FORM_CONTAINER);
+        if (!checkoutFormContainer) {
+          return false;
+        }
+        const shippingMethodWrapper = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER, target);
+        if (shippingMethodWrapper && target instanceof Element && target.tagName === "INPUT") {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var isBillingAddressToggleEvent = ({
+        target
+      }) => {
+        if (target instanceof Element && target.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX) {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var isPlaceOrderButtonEvent = ({
+        target
+      }) => {
+        const placeOrderButton = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_PLACE_ORDER_BUTTON, target);
+        if (placeOrderButton && target instanceof Element) {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var isApplyDiscountFormEvent = ({
+        target
+      }) => {
+        if (target instanceof Element && target.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_FORM) {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var isFormInsideCheckoutContainerEvent = ({
+        target
+      }) => {
+        const checkoutForm = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, target);
+        if (target instanceof HTMLFormElement && checkoutForm) {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var isInputInsideCheckoutFormEvent = ({
+        target
+      }) => {
+        const checkoutForm = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, target);
+        if (target instanceof HTMLInputElement && checkoutForm) {
+          return target;
+        } else {
+          return false;
+        }
+      };
+      var handleRenderCheckout = (event, apolloClient, stripeStore) => {
+        if (window.Webflow.env("design") || window.Webflow.env("preview")) {
+          return;
+        }
+        if (!(event instanceof CustomEvent && event.type === _constants.RENDER_TREE_EVENT)) {
+          return;
+        }
+        const errors = [];
+        const {
+          detail
+        } = event;
+        if (detail != null && detail.error) {
+          errors.push(detail.error);
+        }
+        const focusedEle = window.document.activeElement;
+        const checkoutForm = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, focusedEle);
+        let prevFocusedInput = null;
+        if (focusedEle instanceof HTMLInputElement && checkoutForm) {
+          prevFocusedInput = focusedEle.id;
+          if (!prevFocusedInput) {
+            prevFocusedInput = focusedEle.getAttribute("data-wf-bindings");
+          }
+          prevFocusedInput = prevFocusedInput ? null : prevFocusedInput;
+        }
+        const checkoutFormContainers = (0, _commerceUtils.findAllElementsByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER);
+        (0, _checkoutUtils.renderCheckoutFormContainers)(checkoutFormContainers, errors, apolloClient, stripeStore, prevFocusedInput);
+      };
+      var checkFormValidity = ({
+        customerInfo,
+        shippingAddress,
+        shippingInfo,
+        billingAddress,
+        billingAddressToggle,
+        additionalInfo,
+        requiresShipping
+      }) => {
+        if (!HTMLFormElement.prototype.reportValidity) {
+          return true;
+        }
+        if (!customerInfo.reportValidity() || requiresShipping && !shippingAddress.reportValidity() || requiresShipping && !shippingInfo.reportValidity() || // only check the billing address if the toggle is off, i.e. the billing address
+        // form is being shown or if it does not require shipping
+        (!requiresShipping || !billingAddressToggle.checked) && !billingAddress.reportValidity() || additionalInfo && additionalInfo instanceof HTMLFormElement && !additionalInfo.reportValidity()) {
+          return false;
+        }
+        return true;
+      };
+      var placingOrder = false;
+      var startOrderFlow = (placeOrderButton) => {
+        placingOrder = true;
+        window.addEventListener("beforeunload", _checkoutUtils.beforeUnloadHandler);
+        const buttonText = placeOrderButton.innerHTML;
+        const loadingText = placeOrderButton.getAttribute(_constants.DATA_ATTR_LOADING_TEXT);
+        placeOrderButton.innerHTML = loadingText ? loadingText : _constants.CHECKOUT_PLACE_ORDER_LOADING_TEXT_DEFAULT;
+        const finishOrderFlow = (isRedirecting = false) => {
+          if (!isRedirecting) {
+            placingOrder = false;
+          }
+          window.removeEventListener("beforeunload", _checkoutUtils.beforeUnloadHandler);
+          placeOrderButton.innerHTML = buttonText ? buttonText : _constants.CHECKOUT_PLACE_ORDER_BUTTON_TEXT_DEFAULT;
+        };
+        return finishOrderFlow;
+      };
+      var handlePlaceOrder = (event, apolloClient, stripeStore) => {
+        if (window.Webflow.env("design") || window.Webflow.env("preview") || placingOrder) {
+          return;
+        }
+        const {
+          currentTarget
+        } = event;
+        if (!(currentTarget instanceof Element)) {
+          return;
+        }
+        const checkoutFormContainer = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, currentTarget);
+        if (!(checkoutFormContainer instanceof Element)) {
+          return;
+        }
+        const errorState = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE, checkoutFormContainer);
+        const customerInfo = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER, checkoutFormContainer);
+        const shippingAddress = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER, checkoutFormContainer);
+        const shippingInfo = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER, checkoutFormContainer);
+        const billingAddress = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER, checkoutFormContainer);
+        const billingAddressToggle = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX, checkoutFormContainer);
+        const placeOrderButton = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_PLACE_ORDER_BUTTON, checkoutFormContainer);
+        const additionalInfo = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_ADDITIONAL_INFO, checkoutFormContainer);
+        if (!(errorState instanceof HTMLElement) || !(customerInfo instanceof HTMLFormElement) || !(shippingAddress instanceof HTMLFormElement) || !(shippingInfo instanceof HTMLFormElement) || !(billingAddress instanceof HTMLFormElement) || !(billingAddressToggle instanceof HTMLInputElement) || !(placeOrderButton instanceof Element)) {
+          return;
+        }
+        const errorMessage = errorState.querySelector(_constants.CART_CHECKOUT_ERROR_MESSAGE_SELECTOR);
+        if (errorMessage && errorMessage.hasAttribute(_constants.NEEDS_REFRESH)) {
+          return;
+        }
+        const hasAdditionalInfo = additionalInfo && additionalInfo instanceof HTMLElement;
+        const finishOrderFlow = startOrderFlow(placeOrderButton);
+        errorState.style.setProperty("display", "none");
+        (0, _commerceUtils.fetchOrderStatusFlags)(apolloClient).then(({
+          requiresShipping,
+          isFreeOrder
+        }) => {
+          const isFormValid = checkFormValidity({
+            customerInfo,
+            shippingAddress,
+            shippingInfo,
+            billingAddress,
+            billingAddressToggle,
+            additionalInfo,
+            requiresShipping
+          });
+          if (!isFormValid) {
+            finishOrderFlow();
+            return;
+          }
+          const customerInfoFormData = (0, _commerceUtils.formToObject)(customerInfo);
+          const email = String(customerInfoFormData.email).trim();
+          const shippingAddressInfo = (0, _extends2.default)({
+            type: "shipping"
+          }, (0, _commerceUtils.formToObject)(shippingAddress, true));
+          const billingAddressInfo = (0, _extends2.default)({
+            type: "billing"
+          }, (0, _commerceUtils.formToObject)(!billingAddressToggle.checked || !requiresShipping ? billingAddress : shippingAddress, true));
+          const stripeBillingAddressInfo = {
+            billing_details: {
+              name: billingAddressInfo.name,
+              email,
+              address: {
+                line1: billingAddressInfo.address_line1,
+                line2: billingAddressInfo.address_line2,
+                city: billingAddressInfo.address_city,
+                state: billingAddressInfo.address_state,
+                country: billingAddressInfo.address_country,
+                postal_code: billingAddressInfo.address_zip
+              }
+            }
+          };
+          let shippingMethodId = "";
+          if (requiresShipping && shippingInfo.elements["shipping-method-choice"]) {
+            const shippingMethodChoice = shippingInfo.querySelector('input[name="shipping-method-choice"]:checked');
+            if (shippingMethodChoice) {
+              shippingMethodId = shippingMethodChoice.value;
+            }
+          }
+          const customData = hasAdditionalInfo ? (0, _commerceUtils.customDataFormToArray)(additionalInfo) : [];
+          const syncCheckoutForm = Promise.all([(0, _checkoutUtils.createOrderIdentityMutation)(apolloClient, email), (0, _checkoutUtils.createOrderAddressMutation)(apolloClient, billingAddressInfo), requiresShipping ? (0, _checkoutUtils.createOrderAddressMutation)(apolloClient, shippingAddressInfo) : Promise.resolve(), requiresShipping ? (0, _checkoutUtils.createOrderShippingMethodMutation)(apolloClient, shippingMethodId) : Promise.resolve(), hasAdditionalInfo ? (0, _checkoutUtils.createCustomDataMutation)(apolloClient, customData) : Promise.resolve()]);
+          syncCheckoutForm.then(() => {
+            if (isFreeOrder) {
+              return Promise.resolve();
+            }
+            if (!stripeStore.isInitialized()) {
+              return Promise.reject(new Error("Stripe has not been set up for this project \u2013 Go to the project's Ecommerce Payment settings in the Designer to link Stripe."));
+            }
+            const stripe = stripeStore.getStripeInstance();
+            const checkoutFormInstance = parseInt(checkoutFormContainer.getAttribute(_constants.STRIPE_ELEMENT_INSTANCE), 10);
+            const card = stripeStore.getElement("cardNumber", checkoutFormInstance);
+            return stripe.createPaymentMethod("card", card, stripeBillingAddressInfo);
+          }).then((data) => {
+            if (!data || isFreeOrder) {
+              return Promise.resolve();
+            }
+            if (data.error) {
+              return Promise.reject(data.error);
+            }
+            return (0, _checkoutUtils.createStripePaymentMethodMutation)(apolloClient, data.paymentMethod.id);
+          }).then(() => {
+            return (0, _checkoutUtils.createAttemptSubmitOrderRequest)(apolloClient, {
+              checkoutType: "normal"
+            });
+          }).then((data) => {
+            _debug.default.log(data);
+            const order = (0, _checkoutUtils.getOrderDataFromGraphQLResponse)(data);
+            if ((0, _checkoutUtils.orderRequiresAdditionalAction)(order.status)) {
+              const stripe = stripeStore.getStripeInstance();
+              return stripe.handleCardAction(order.clientSecret).then((result) => {
+                if (result.error) {
+                  return Promise.reject(result.error);
+                }
+                return (0, _checkoutUtils.createAttemptSubmitOrderRequest)(apolloClient, {
+                  checkoutType: "normal",
+                  paymentIntentId: result.paymentIntent.id
+                }).then((resp) => {
+                  const finishedOrder = (0, _checkoutUtils.getOrderDataFromGraphQLResponse)(resp);
+                  if (finishedOrder.ok) {
+                    finishOrderFlow(true);
+                    (0, _checkoutUtils.redirectToOrderConfirmation)(finishedOrder);
+                  }
+                });
+              });
+            }
+            if (order.ok) {
+              finishOrderFlow(true);
+              (0, _checkoutUtils.redirectToOrderConfirmation)(order);
+            }
+          }).catch((err) => {
+            finishOrderFlow();
+            _debug.default.error(err);
+            errorState.style.removeProperty("display");
+            (0, _checkoutUtils.updateErrorMessage)(errorState, err);
+          });
+        });
+      };
+      var handleApplyDiscount = (event, apolloClient) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const {
+          currentTarget
+        } = event;
+        if (!(currentTarget instanceof Element)) {
+          return;
+        }
+        const inputEl = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_INPUT, currentTarget);
+        const checkoutFormContainer = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, currentTarget) || (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_PAYPAL_CHECKOUT_FORM_CONTAINER, currentTarget);
+        if (!checkoutFormContainer) {
+          return;
+        }
+        const errorStateEl = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_ERROR_STATE, checkoutFormContainer);
+        if (!(inputEl instanceof HTMLInputElement && errorStateEl instanceof HTMLElement)) {
+          return;
+        }
+        const discountCode = inputEl.value.trim().toUpperCase();
+        (0, _checkoutUtils.applyDiscount)(apolloClient, {
+          discountCode
+        }).then(() => {
+          inputEl.value = "";
+          errorStateEl.style.display = "none";
+          (0, _commerceUtils.triggerRender)(null);
+        }).catch((error) => (0, _checkoutUtils.showErrorMessageForError)(error, checkoutFormContainer));
+      };
+      var handleUpdateCustomerInfo = (event, apolloClient) => {
+        const {
+          currentTarget
+        } = event;
+        if (!(currentTarget instanceof HTMLInputElement)) {
+          return;
+        }
+        const value = currentTarget.value.trim();
+        const email = value == null || value === "" ? null : value;
+        (0, _checkoutUtils.createOrderIdentityMutation)(apolloClient, email).then(() => {
+          (0, _commerceUtils.triggerRender)(null);
+        }).catch((err) => {
+          (0, _commerceUtils.triggerRender)(err);
+        });
+      };
+      var handleUpdateAddress = (0, _debounce.default)((event, apolloClient) => {
+        const {
+          currentTarget
+        } = event;
+        if (!(currentTarget instanceof HTMLFormElement)) {
+          return;
+        }
+        const type = currentTarget.getAttribute(_constants.DATA_ATTR_NODE_TYPE) === _constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER ? "shipping" : "billing";
+        const addressInfo = (0, _extends2.default)({
+          type
+        }, (0, _commerceUtils.formToObject)(currentTarget, true));
+        (0, _checkoutUtils.createOrderAddressMutation)(apolloClient, addressInfo).then(() => {
+          (0, _commerceUtils.triggerRender)(null);
+        }).catch((err) => {
+          (0, _commerceUtils.triggerRender)(err);
+        });
+      }, 500);
+      var handleToggleBillingAddress = ({
+        currentTarget
+      }) => {
+        const checkoutFormContainer = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, currentTarget);
+        if (!checkoutFormContainer) {
+          return;
+        }
+        const billingAddressWrapper = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER, checkoutFormContainer);
+        if (!billingAddressWrapper || !(currentTarget instanceof HTMLInputElement)) {
+          return;
+        }
+        if (currentTarget.checked) {
+          billingAddressWrapper.style.setProperty("display", "none");
+        } else {
+          billingAddressWrapper.style.removeProperty("display");
+        }
+      };
+      var handleChooseShippingMethod = ({
+        currentTarget
+      }, apolloClient) => {
+        if (!(currentTarget instanceof HTMLInputElement)) {
+          return;
+        }
+        (0, _checkoutUtils.createOrderShippingMethodMutation)(apolloClient, currentTarget.id).then(() => {
+          (0, _commerceUtils.triggerRender)(null);
+        }).catch((err) => {
+          (0, _commerceUtils.triggerRender)(err);
+        });
+      };
+      var handleSubmitFormInsideCheckoutContainer = (event, apolloClient) => {
+        if (event.type === "submit") {
