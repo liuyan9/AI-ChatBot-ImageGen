@@ -53639,3 +53639,474 @@
       };
       var handleSubmitFormInsideCheckoutContainer = (event, apolloClient) => {
         if (event.type === "submit") {
+          event.preventDefault();
+        }
+        if (event.type === "keyup" && event.keyCode !== 13 || !(event.currentTarget instanceof Element)) {
+          return;
+        }
+        if (event.target === (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_DISCOUNT_INPUT)) {
+          return;
+        }
+        const checkoutFormContainer = (0, _commerceUtils.findClosestElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_FORM_CONTAINER, event.currentTarget);
+        if (!(checkoutFormContainer instanceof Element)) {
+          return;
+        }
+        const customerInfo = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_CUSTOMER_INFO_WRAPPER, checkoutFormContainer);
+        const shippingAddress = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_ADDRESS_WRAPPER, checkoutFormContainer);
+        const shippingInfo = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_SHIPPING_METHODS_WRAPPER, checkoutFormContainer);
+        const billingAddress = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_WRAPPER, checkoutFormContainer);
+        const billingAddressToggle = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_BILLING_ADDRESS_TOGGLE_CHECKBOX, checkoutFormContainer);
+        const additionalInfo = (0, _commerceUtils.findElementByNodeType)(_constants.NODE_TYPE_COMMERCE_CHECKOUT_ADDITIONAL_INFO, checkoutFormContainer);
+        if (!(customerInfo instanceof HTMLFormElement) || !(shippingAddress instanceof HTMLFormElement) || !(shippingInfo instanceof HTMLFormElement) || !(billingAddress instanceof HTMLFormElement) || !(billingAddressToggle instanceof HTMLInputElement)) {
+          return;
+        }
+        const hasAdditionalInfo = additionalInfo && additionalInfo instanceof HTMLFormElement;
+        (0, _commerceUtils.fetchOrderStatusFlags)(apolloClient).then(({
+          requiresShipping
+        }) => {
+          checkFormValidity({
+            customerInfo,
+            shippingAddress,
+            shippingInfo,
+            billingAddress,
+            billingAddressToggle,
+            additionalInfo: hasAdditionalInfo ? additionalInfo : null,
+            requiresShipping
+          });
+        });
+      };
+      var register = (handlerProxy) => {
+        handlerProxy.on(_constants.RENDER_TREE_EVENT, Boolean, handleRenderCheckout);
+        handlerProxy.on("click", isPlaceOrderButtonEvent, handlePlaceOrder);
+        handlerProxy.on("keydown", isPlaceOrderButtonEvent, (event, apolloClient, StripeStore) => {
+          if (event.which === 32) {
+            event.preventDefault();
+          }
+          if (event.which === 13) {
+            return handlePlaceOrder(event, apolloClient, StripeStore);
+          }
+        });
+        handlerProxy.on("keyup", isPlaceOrderButtonEvent, (event, apolloClient, StripeStore) => {
+          if (event.which === 32) {
+            return handlePlaceOrder(event, apolloClient, StripeStore);
+          }
+        });
+        handlerProxy.on("submit", isApplyDiscountFormEvent, handleApplyDiscount);
+        handlerProxy.on("change", isInputInsideCustomerInfoEvent, handleUpdateCustomerInfo);
+        handlerProxy.on("change", isInputInsideAddressWrapperEvent, handleUpdateAddress);
+        handlerProxy.on("change", isBillingAddressToggleEvent, handleToggleBillingAddress);
+        handlerProxy.on("change", isInputInsideShippingMethodEvent, handleChooseShippingMethod);
+        handlerProxy.on("submit", isFormInsideCheckoutContainerEvent, handleSubmitFormInsideCheckoutContainer);
+        handlerProxy.on("keyup", isInputInsideCheckoutFormEvent, handleSubmitFormInsideCheckoutContainer);
+      };
+      exports.register = register;
+      var _default = {
+        register
+      };
+      exports.default = _default;
+    }
+  });
+
+  // node_modules/qs/lib/utils.js
+  var require_utils4 = __commonJS({
+    "node_modules/qs/lib/utils.js"(exports, module) {
+      "use strict";
+      var has = Object.prototype.hasOwnProperty;
+      var isArray = Array.isArray;
+      var hexTable = function() {
+        var array = [];
+        for (var i = 0; i < 256; ++i) {
+          array.push("%" + ((i < 16 ? "0" : "") + i.toString(16)).toUpperCase());
+        }
+        return array;
+      }();
+      var compactQueue = function compactQueue2(queue) {
+        while (queue.length > 1) {
+          var item = queue.pop();
+          var obj = item.obj[item.prop];
+          if (isArray(obj)) {
+            var compacted = [];
+            for (var j = 0; j < obj.length; ++j) {
+              if (typeof obj[j] !== "undefined") {
+                compacted.push(obj[j]);
+              }
+            }
+            item.obj[item.prop] = compacted;
+          }
+        }
+      };
+      var arrayToObject = function arrayToObject2(source, options) {
+        var obj = options && options.plainObjects ? /* @__PURE__ */ Object.create(null) : {};
+        for (var i = 0; i < source.length; ++i) {
+          if (typeof source[i] !== "undefined") {
+            obj[i] = source[i];
+          }
+        }
+        return obj;
+      };
+      var merge = function merge2(target, source, options) {
+        if (!source) {
+          return target;
+        }
+        if (typeof source !== "object") {
+          if (isArray(target)) {
+            target.push(source);
+          } else if (target && typeof target === "object") {
+            if (options && (options.plainObjects || options.allowPrototypes) || !has.call(Object.prototype, source)) {
+              target[source] = true;
+            }
+          } else {
+            return [target, source];
+          }
+          return target;
+        }
+        if (!target || typeof target !== "object") {
+          return [target].concat(source);
+        }
+        var mergeTarget = target;
+        if (isArray(target) && !isArray(source)) {
+          mergeTarget = arrayToObject(target, options);
+        }
+        if (isArray(target) && isArray(source)) {
+          source.forEach(function(item, i) {
+            if (has.call(target, i)) {
+              var targetItem = target[i];
+              if (targetItem && typeof targetItem === "object" && item && typeof item === "object") {
+                target[i] = merge2(targetItem, item, options);
+              } else {
+                target.push(item);
+              }
+            } else {
+              target[i] = item;
+            }
+          });
+          return target;
+        }
+        return Object.keys(source).reduce(function(acc, key) {
+          var value = source[key];
+          if (has.call(acc, key)) {
+            acc[key] = merge2(acc[key], value, options);
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, mergeTarget);
+      };
+      var assign = function assignSingleSource(target, source) {
+        return Object.keys(source).reduce(function(acc, key) {
+          acc[key] = source[key];
+          return acc;
+        }, target);
+      };
+      var decode = function(str, decoder, charset) {
+        var strWithoutPlus = str.replace(/\+/g, " ");
+        if (charset === "iso-8859-1") {
+          return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+        }
+        try {
+          return decodeURIComponent(strWithoutPlus);
+        } catch (e) {
+          return strWithoutPlus;
+        }
+      };
+      var encode = function encode2(str, defaultEncoder, charset) {
+        if (str.length === 0) {
+          return str;
+        }
+        var string = str;
+        if (typeof str === "symbol") {
+          string = Symbol.prototype.toString.call(str);
+        } else if (typeof str !== "string") {
+          string = String(str);
+        }
+        if (charset === "iso-8859-1") {
+          return escape(string).replace(/%u[0-9a-f]{4}/gi, function($0) {
+            return "%26%23" + parseInt($0.slice(2), 16) + "%3B";
+          });
+        }
+        var out = "";
+        for (var i = 0; i < string.length; ++i) {
+          var c = string.charCodeAt(i);
+          if (c === 45 || c === 46 || c === 95 || c === 126 || c >= 48 && c <= 57 || c >= 65 && c <= 90 || c >= 97 && c <= 122) {
+            out += string.charAt(i);
+            continue;
+          }
+          if (c < 128) {
+            out = out + hexTable[c];
+            continue;
+          }
+          if (c < 2048) {
+            out = out + (hexTable[192 | c >> 6] + hexTable[128 | c & 63]);
+            continue;
+          }
+          if (c < 55296 || c >= 57344) {
+            out = out + (hexTable[224 | c >> 12] + hexTable[128 | c >> 6 & 63] + hexTable[128 | c & 63]);
+            continue;
+          }
+          i += 1;
+          c = 65536 + ((c & 1023) << 10 | string.charCodeAt(i) & 1023);
+          out += hexTable[240 | c >> 18] + hexTable[128 | c >> 12 & 63] + hexTable[128 | c >> 6 & 63] + hexTable[128 | c & 63];
+        }
+        return out;
+      };
+      var compact = function compact2(value) {
+        var queue = [{ obj: { o: value }, prop: "o" }];
+        var refs = [];
+        for (var i = 0; i < queue.length; ++i) {
+          var item = queue[i];
+          var obj = item.obj[item.prop];
+          var keys = Object.keys(obj);
+          for (var j = 0; j < keys.length; ++j) {
+            var key = keys[j];
+            var val = obj[key];
+            if (typeof val === "object" && val !== null && refs.indexOf(val) === -1) {
+              queue.push({ obj, prop: key });
+              refs.push(val);
+            }
+          }
+        }
+        compactQueue(queue);
+        return value;
+      };
+      var isRegExp = function isRegExp2(obj) {
+        return Object.prototype.toString.call(obj) === "[object RegExp]";
+      };
+      var isBuffer = function isBuffer2(obj) {
+        if (!obj || typeof obj !== "object") {
+          return false;
+        }
+        return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
+      };
+      var combine = function combine2(a, b) {
+        return [].concat(a, b);
+      };
+      var maybeMap = function maybeMap2(val, fn) {
+        if (isArray(val)) {
+          var mapped = [];
+          for (var i = 0; i < val.length; i += 1) {
+            mapped.push(fn(val[i]));
+          }
+          return mapped;
+        }
+        return fn(val);
+      };
+      module.exports = {
+        arrayToObject,
+        assign,
+        combine,
+        compact,
+        decode,
+        encode,
+        isBuffer,
+        isRegExp,
+        maybeMap,
+        merge
+      };
+    }
+  });
+
+  // node_modules/qs/lib/formats.js
+  var require_formats = __commonJS({
+    "node_modules/qs/lib/formats.js"(exports, module) {
+      "use strict";
+      var replace = String.prototype.replace;
+      var percentTwenties = /%20/g;
+      var util = require_utils4();
+      var Format = {
+        RFC1738: "RFC1738",
+        RFC3986: "RFC3986"
+      };
+      module.exports = util.assign(
+        {
+          "default": Format.RFC3986,
+          formatters: {
+            RFC1738: function(value) {
+              return replace.call(value, percentTwenties, "+");
+            },
+            RFC3986: function(value) {
+              return String(value);
+            }
+          }
+        },
+        Format
+      );
+    }
+  });
+
+  // node_modules/qs/lib/stringify.js
+  var require_stringify = __commonJS({
+    "node_modules/qs/lib/stringify.js"(exports, module) {
+      "use strict";
+      var utils = require_utils4();
+      var formats = require_formats();
+      var has = Object.prototype.hasOwnProperty;
+      var arrayPrefixGenerators = {
+        brackets: function brackets(prefix) {
+          return prefix + "[]";
+        },
+        comma: "comma",
+        indices: function indices(prefix, key) {
+          return prefix + "[" + key + "]";
+        },
+        repeat: function repeat(prefix) {
+          return prefix;
+        }
+      };
+      var isArray = Array.isArray;
+      var push = Array.prototype.push;
+      var pushToArray = function(arr, valueOrArray) {
+        push.apply(arr, isArray(valueOrArray) ? valueOrArray : [valueOrArray]);
+      };
+      var toISO = Date.prototype.toISOString;
+      var defaultFormat = formats["default"];
+      var defaults = {
+        addQueryPrefix: false,
+        allowDots: false,
+        charset: "utf-8",
+        charsetSentinel: false,
+        delimiter: "&",
+        encode: true,
+        encoder: utils.encode,
+        encodeValuesOnly: false,
+        format: defaultFormat,
+        formatter: formats.formatters[defaultFormat],
+        // deprecated
+        indices: false,
+        serializeDate: function serializeDate(date) {
+          return toISO.call(date);
+        },
+        skipNulls: false,
+        strictNullHandling: false
+      };
+      var isNonNullishPrimitive = function isNonNullishPrimitive2(v) {
+        return typeof v === "string" || typeof v === "number" || typeof v === "boolean" || typeof v === "symbol" || typeof v === "bigint";
+      };
+      var stringify = function stringify2(object, prefix, generateArrayPrefix, strictNullHandling, skipNulls, encoder, filter, sort, allowDots, serializeDate, formatter, encodeValuesOnly, charset) {
+        var obj = object;
+        if (typeof filter === "function") {
+          obj = filter(prefix, obj);
+        } else if (obj instanceof Date) {
+          obj = serializeDate(obj);
+        } else if (generateArrayPrefix === "comma" && isArray(obj)) {
+          obj = utils.maybeMap(obj, function(value2) {
+            if (value2 instanceof Date) {
+              return serializeDate(value2);
+            }
+            return value2;
+          }).join(",");
+        }
+        if (obj === null) {
+          if (strictNullHandling) {
+            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, "key") : prefix;
+          }
+          obj = "";
+        }
+        if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
+          if (encoder) {
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, "key");
+            return [formatter(keyValue) + "=" + formatter(encoder(obj, defaults.encoder, charset, "value"))];
+          }
+          return [formatter(prefix) + "=" + formatter(String(obj))];
+        }
+        var values = [];
+        if (typeof obj === "undefined") {
+          return values;
+        }
+        var objKeys;
+        if (isArray(filter)) {
+          objKeys = filter;
+        } else {
+          var keys = Object.keys(obj);
+          objKeys = sort ? keys.sort(sort) : keys;
+        }
+        for (var i = 0; i < objKeys.length; ++i) {
+          var key = objKeys[i];
+          var value = obj[key];
+          if (skipNulls && value === null) {
+            continue;
+          }
+          var keyPrefix = isArray(obj) ? typeof generateArrayPrefix === "function" ? generateArrayPrefix(prefix, key) : prefix : prefix + (allowDots ? "." + key : "[" + key + "]");
+          pushToArray(values, stringify2(
+            value,
+            keyPrefix,
+            generateArrayPrefix,
+            strictNullHandling,
+            skipNulls,
+            encoder,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            formatter,
+            encodeValuesOnly,
+            charset
+          ));
+        }
+        return values;
+      };
+      var normalizeStringifyOptions = function normalizeStringifyOptions2(opts) {
+        if (!opts) {
+          return defaults;
+        }
+        if (opts.encoder !== null && opts.encoder !== void 0 && typeof opts.encoder !== "function") {
+          throw new TypeError("Encoder has to be a function.");
+        }
+        var charset = opts.charset || defaults.charset;
+        if (typeof opts.charset !== "undefined" && opts.charset !== "utf-8" && opts.charset !== "iso-8859-1") {
+          throw new TypeError("The charset option must be either utf-8, iso-8859-1, or undefined");
+        }
+        var format = formats["default"];
+        if (typeof opts.format !== "undefined") {
+          if (!has.call(formats.formatters, opts.format)) {
+            throw new TypeError("Unknown format option provided.");
+          }
+          format = opts.format;
+        }
+        var formatter = formats.formatters[format];
+        var filter = defaults.filter;
+        if (typeof opts.filter === "function" || isArray(opts.filter)) {
+          filter = opts.filter;
+        }
+        return {
+          addQueryPrefix: typeof opts.addQueryPrefix === "boolean" ? opts.addQueryPrefix : defaults.addQueryPrefix,
+          allowDots: typeof opts.allowDots === "undefined" ? defaults.allowDots : !!opts.allowDots,
+          charset,
+          charsetSentinel: typeof opts.charsetSentinel === "boolean" ? opts.charsetSentinel : defaults.charsetSentinel,
+          delimiter: typeof opts.delimiter === "undefined" ? defaults.delimiter : opts.delimiter,
+          encode: typeof opts.encode === "boolean" ? opts.encode : defaults.encode,
+          encoder: typeof opts.encoder === "function" ? opts.encoder : defaults.encoder,
+          encodeValuesOnly: typeof opts.encodeValuesOnly === "boolean" ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
+          filter,
+          formatter,
+          serializeDate: typeof opts.serializeDate === "function" ? opts.serializeDate : defaults.serializeDate,
+          skipNulls: typeof opts.skipNulls === "boolean" ? opts.skipNulls : defaults.skipNulls,
+          sort: typeof opts.sort === "function" ? opts.sort : null,
+          strictNullHandling: typeof opts.strictNullHandling === "boolean" ? opts.strictNullHandling : defaults.strictNullHandling
+        };
+      };
+      module.exports = function(object, opts) {
+        var obj = object;
+        var options = normalizeStringifyOptions(opts);
+        var objKeys;
+        var filter;
+        if (typeof options.filter === "function") {
+          filter = options.filter;
+          obj = filter("", obj);
+        } else if (isArray(options.filter)) {
+          filter = options.filter;
+          objKeys = filter;
+        }
+        var keys = [];
+        if (typeof obj !== "object" || obj === null) {
+          return "";
+        }
+        var arrayFormat;
+        if (opts && opts.arrayFormat in arrayPrefixGenerators) {
+          arrayFormat = opts.arrayFormat;
+        } else if (opts && "indices" in opts) {
+          arrayFormat = opts.indices ? "indices" : "repeat";
+        } else {
+          arrayFormat = "indices";
+        }
+        var generateArrayPrefix = arrayPrefixGenerators[arrayFormat];
+        if (!objKeys) {
