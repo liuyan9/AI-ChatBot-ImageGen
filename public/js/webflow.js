@@ -54564,3 +54564,458 @@
           return;
         }
         const errorMessage = errorState.querySelector(_constants.CART_CHECKOUT_ERROR_MESSAGE_SELECTOR);
+        if (errorMessage && errorMessage.hasAttribute(_constants.NEEDS_REFRESH)) {
+          return;
+        }
+        const hasAdditionalInfo = additionalInfo && additionalInfo instanceof HTMLElement;
+        const finishOrderFlow = startOrderFlow(placeOrderButton);
+        errorState.style.setProperty("display", "none");
+        (0, _commerceUtils.fetchOrderStatusFlags)(apolloClient).then(({
+          requiresShipping
+        }) => {
+          const isFormValid = checkFormValidity({
+            shippingInfo,
+            additionalInfo,
+            requiresShipping
+          });
+          if (!isFormValid) {
+            finishOrderFlow();
+            return;
+          }
+          let shippingMethodId = "";
+          if (requiresShipping && shippingInfo.elements["shipping-method-choice"]) {
+            const shippingMethodChoice = shippingInfo.querySelector('input[name="shipping-method-choice"]:checked');
+            if (shippingMethodChoice) {
+              shippingMethodId = shippingMethodChoice.value;
+            }
+          }
+          const customData = hasAdditionalInfo ? (0, _commerceUtils.customDataFormToArray)(additionalInfo) : [];
+          const syncPayPalCheckoutForm = Promise.all([requiresShipping ? (0, _checkoutUtils.createOrderShippingMethodMutation)(apolloClient, shippingMethodId) : Promise.resolve(), hasAdditionalInfo ? (0, _checkoutUtils.createCustomDataMutation)(apolloClient, customData) : Promise.resolve()]);
+          syncPayPalCheckoutForm.then(() => {
+            return (0, _checkoutUtils.createAttemptSubmitOrderRequest)(apolloClient, {
+              checkoutType: "paypal"
+            });
+          }).then((data) => {
+            _debug.default.log(data);
+            const order = (0, _checkoutUtils.getOrderDataFromGraphQLResponse)(data);
+            if (order.ok) {
+              finishOrderFlow(true);
+              (0, _checkoutUtils.redirectToOrderConfirmation)(order, true);
+            }
+          }).catch((err) => {
+            finishOrderFlow();
+            _debug.default.error(err);
+            errorState.style.removeProperty("display");
+            (0, _checkoutUtils.updateErrorMessage)(errorState, err);
+            if (err.graphQLErrors && err.graphQLErrors[0] && err.graphQLErrors[0].message) {
+              const parsedError = (0, _commerceUtils.safeParseJson)(err.graphQLErrors[0].message);
+              if (!parsedError) {
+                return;
+              }
+              if (parsedError.details && parsedError.details[0] && parsedError.details[0].issue === "INSTRUMENT_DECLINED") {
+                const message = {
+                  isWebflow: true,
+                  type: "error",
+                  detail: parsedError
+                };
+                window.parent.postMessage(JSON.stringify(message), window.location.origin);
+              }
+            }
+          });
+        });
+      };
+      var iframeStyle = `
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  z-index: 2147483647;
+  border: 0;
+  background-color: #ffffff;
+`;
+      var createConfirmationIframe = (actions) => {
+        const documentRoot = document.documentElement;
+        const documentBody = document.querySelector("body");
+        if (!documentRoot || !documentBody) {
+          return;
+        }
+        const iframe = document.createElement("iframe");
+        iframe.setAttribute("style", iframeStyle);
+        iframe.setAttribute("src", "/paypal-checkout");
+        if (!documentBody.parentNode) {
+          return;
+        }
+        documentBody.parentNode.appendChild(iframe);
+        const previousRootOverflow = documentRoot.style.overflow;
+        documentRoot.style.overflow = "hidden";
+        const previousBodyDisplay = documentBody.style.display;
+        documentBody.style.display = "none";
+        const paypalMessageHandler = (event) => {
+          if (event.origin !== window.location.origin) {
+            return;
+          }
+          const data = (0, _commerceUtils.safeParseJson)(String(event.data));
+          if (!data || data.isWebflow !== true || !data.type || !data.detail) {
+            return;
+          }
+          if (data.type === "success") {
+            window.removeEventListener("message", paypalMessageHandler);
+            window.location.href = data.detail;
+          }
+          if (data.type === "error") {
+            window.removeEventListener("message", paypalMessageHandler);
+            if (previousRootOverflow) {
+              documentRoot.style.overflow = previousRootOverflow;
+            } else {
+              documentRoot.style.overflow = "";
+            }
+            if (previousBodyDisplay) {
+              documentBody.style.display = previousBodyDisplay;
+            } else {
+              documentBody.style.display = "";
+            }
+            if (documentBody.parentNode) {
+              documentBody.parentNode.removeChild(iframe);
+            }
+            actions.restart();
+          }
+        };
+        window.addEventListener("message", paypalMessageHandler);
+      };
+      var renderPaypalButtons = (apolloClient) => () => {
+        const paypalElement = document.querySelector(`[${_constants.PAYPAL_ELEMENT_INSTANCE}]`);
+        const buttons = Array.from(document.querySelectorAll(`[${_constants.PAYPAL_BUTTON_ELEMENT_INSTANCE}]`));
+        if (paypalElement && buttons && buttons.length > 0) {
+          buttons.forEach((button) => {
+            const style = (0, _commerceUtils.safeParseJson)(button.getAttribute(_constants.PAYPAL_BUTTON_ELEMENT_INSTANCE));
+            window.paypal.Buttons({
+              style,
+              createOrder() {
+                return apolloClient.mutate({
+                  mutation: _checkoutMutations.requestPayPalOrderMutation
+                }).then((data) => {
+                  const {
+                    data: {
+                      ecommercePaypalOrderRequest: {
+                        orderId
+                      }
+                    }
+                  } = data;
+                  return orderId;
+                }).catch((err) => {
+                  (0, _checkoutUtils.showErrorMessageForError)(err);
+                  if ((0, _cartUtils.isCartOpen)()) {
+                    (0, _cartUtils.showErrorMessageForError)(err);
+                  }
+                  throw err;
+                });
+              },
+              onApprove(data, actions) {
+                createConfirmationIframe(actions);
+              }
+            }).render(button);
+          });
+        }
+      };
+      exports.renderPaypalButtons = renderPaypalButtons;
+      var register = (handlerProxy) => {
+        handlerProxy.on(_constants.RENDER_TREE_EVENT, Boolean, handleRenderPayPalCheckout);
+        handlerProxy.on("click", isPlaceOrderButtonEvent, handlePlaceOrder);
+        handlerProxy.on("keydown", isPlaceOrderButtonEvent, (event, apolloClient) => {
+          if (event.which === 32) {
+            event.preventDefault();
+          }
+          if (event.which === 13) {
+            return handlePlaceOrder(event, apolloClient);
+          }
+        });
+        handlerProxy.on("keyup", isPlaceOrderButtonEvent, (event, apolloClient) => {
+          if (event.which === 32) {
+            return handlePlaceOrder(event, apolloClient);
+          }
+        });
+      };
+      var _default = {
+        register
+      };
+      exports.default = _default;
+    }
+  });
+
+  // shared/render/plugins/Commerce/modules/index.js
+  var require_modules = __commonJS({
+    "shared/render/plugins/Commerce/modules/index.js"(exports) {
+      "use strict";
+      var _interopRequireWildcard = require_interopRequireWildcard().default;
+      var _interopRequireDefault = require_interopRequireDefault().default;
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.design = design;
+      exports.destroy = destroy;
+      exports.init = init;
+      exports.preview = preview;
+      require_polyfill();
+      require_symbol3();
+      require_array3();
+      require_repeat3();
+      require_entries3();
+      require_for_each2();
+      require_number3();
+      var _apolloClient = require_apolloClient();
+      var _eventHandlerProxyWithApolloClient = _interopRequireDefault(require_eventHandlerProxyWithApolloClient());
+      var _addToCartEvents = _interopRequireDefault(require_addToCartEvents());
+      var _cartEvents = _interopRequireDefault(require_cartEvents());
+      var _checkoutEvents = _interopRequireDefault(require_checkoutEvents());
+      var _orderConfirmationEvents = _interopRequireDefault(require_orderConfirmationEvents());
+      var _webPaymentsEvents = _interopRequireDefault(require_webPaymentsEvents());
+      var _stripeStore = require_stripeStore();
+      var _commerceUtils = require_commerceUtils();
+      init_polyfill();
+      require_polyfill2();
+      var _checkoutUtils = require_checkoutUtils();
+      var _paypalEvents = _interopRequireWildcard(require_paypalEvents());
+      var GQL_QUERY_PATH = "/.wf_graphql/apollo";
+      var handlerProxy;
+      var apolloClient;
+      var stripeStore;
+      function attachHandlers() {
+        handlerProxy && handlerProxy.attachHandlers(window);
+      }
+      function detachHandlers() {
+        handlerProxy && handlerProxy.removeHandlers(window);
+      }
+      function init({
+        siteId
+      }) {
+        apolloClient = (0, _apolloClient.createApolloClient)({
+          path: window.Webflow.env("design") || window.Webflow.env("preview") ? `/api/v1/sites/${siteId}/apollo` : GQL_QUERY_PATH,
+          maxAttempts: 5,
+          useCsrf: true
+        });
+        stripeStore = new _stripeStore.StripeStore(document);
+        handlerProxy = new _eventHandlerProxyWithApolloClient.default(apolloClient, stripeStore);
+        _addToCartEvents.default.register(handlerProxy);
+        _cartEvents.default.register(handlerProxy);
+        _checkoutEvents.default.register(handlerProxy);
+        _orderConfirmationEvents.default.register(handlerProxy);
+        _webPaymentsEvents.default.register(handlerProxy);
+        _paypalEvents.default.register(handlerProxy);
+        (0, _checkoutUtils.initializeStripeElements)(stripeStore);
+        detachHandlers();
+        attachHandlers();
+        (0, _commerceUtils.triggerRender)(null, true);
+        if (!window.Webflow.env()) {
+          window.Webflow.load((0, _paypalEvents.renderPaypalButtons)(apolloClient));
+        }
+      }
+      function preview() {
+        detachHandlers();
+        attachHandlers();
+        (0, _commerceUtils.triggerRender)(null, true);
+      }
+      function design() {
+        detachHandlers();
+        if (apolloClient && apolloClient.store) {
+          apolloClient.resetStore();
+        }
+      }
+      function destroy() {
+        detachHandlers();
+      }
+    }
+  });
+
+  // shared/render/plugins/Commerce/webflow-commerce.js
+  var require_webflow_commerce = __commonJS({
+    "shared/render/plugins/Commerce/webflow-commerce.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      var commerce = require_modules();
+      Webflow.define("commerce", module.exports = function() {
+        return commerce;
+      });
+    }
+  });
+
+  // shared/render/plugins/Form/webflow-forms.js
+  var require_webflow_forms = __commonJS({
+    "shared/render/plugins/Form/webflow-forms.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      Webflow.define("forms", module.exports = function($2, _) {
+        var api = {};
+        var $doc = $2(document);
+        var $forms;
+        var loc = window.location;
+        var retro = window.XDomainRequest && !window.atob;
+        var namespace = ".w-form";
+        var siteId;
+        var emailField = /e(-)?mail/i;
+        var emailValue = /^\S+@\S+$/;
+        var alert = window.alert;
+        var inApp = Webflow.env();
+        var listening;
+        var formUrl;
+        var signFileUrl;
+        var chimpRegex = /list-manage[1-9]?.com/i;
+        var disconnected = _.debounce(function() {
+          alert("Oops! This page has improperly configured forms. Please contact your website administrator to fix this issue.");
+        }, 100);
+        api.ready = api.design = api.preview = function() {
+          init();
+          if (!inApp && !listening) {
+            addListeners();
+          }
+        };
+        function init() {
+          siteId = $2("html").attr("data-wf-site");
+          formUrl = "https://webflow.com/api/v1/form/" + siteId;
+          if (retro && formUrl.indexOf("https://webflow.com") >= 0) {
+            formUrl = formUrl.replace("https://webflow.com", "https://formdata.webflow.com");
+          }
+          signFileUrl = `${formUrl}/signFile`;
+          $forms = $2(namespace + " form");
+          if (!$forms.length) {
+            return;
+          }
+          $forms.each(build);
+        }
+        function build(i, el) {
+          var $el = $2(el);
+          var data = $2.data(el, namespace);
+          if (!data) {
+            data = $2.data(el, namespace, {
+              form: $el
+            });
+          }
+          reset(data);
+          var wrap = $el.closest("div.w-form");
+          data.done = wrap.find("> .w-form-done");
+          data.fail = wrap.find("> .w-form-fail");
+          data.fileUploads = wrap.find(".w-file-upload");
+          data.fileUploads.each(function(j) {
+            initFileUpload(j, data);
+          });
+          var formName = data.form.attr("aria-label") || data.form.attr("data-name") || "Form";
+          if (!data.done.attr("aria-label")) {
+            data.form.attr("aria-label", formName);
+          }
+          data.done.attr("tabindex", "-1");
+          data.done.attr("role", "region");
+          if (!data.done.attr("aria-label")) {
+            data.done.attr("aria-label", formName + " success");
+          }
+          data.fail.attr("tabindex", "-1");
+          data.fail.attr("role", "region");
+          if (!data.fail.attr("aria-label")) {
+            data.fail.attr("aria-label", formName + " failure");
+          }
+          var action = data.action = $el.attr("action");
+          data.handler = null;
+          data.redirect = $el.attr("data-redirect");
+          if (chimpRegex.test(action)) {
+            data.handler = submitMailChimp;
+            return;
+          }
+          if (action) {
+            return;
+          }
+          if (siteId) {
+            data.handler = true ? exportedSubmitWebflow : (() => {
+              const hostedSubmitHandler = null.default;
+              return hostedSubmitHandler(reset, loc, Webflow, collectEnterpriseTrackingCookies, preventDefault, findFields, alert, findFileUploads, disableBtn, siteId, afterSubmit, $2, formUrl);
+            })();
+            return;
+          }
+          disconnected();
+        }
+        function addListeners() {
+          listening = true;
+          $doc.on("submit", namespace + " form", function(evt) {
+            var data = $2.data(this, namespace);
+            if (data.handler) {
+              data.evt = evt;
+              data.handler(data);
+            }
+          });
+          const CHECKBOX_CLASS_NAME = ".w-checkbox-input";
+          const RADIO_INPUT_CLASS_NAME = ".w-radio-input";
+          const CHECKED_CLASS = "w--redirected-checked";
+          const FOCUSED_CLASS = "w--redirected-focus";
+          const FOCUSED_VISIBLE_CLASS = "w--redirected-focus-visible";
+          const focusVisibleSelectors = ":focus-visible, [data-wf-focus-visible]";
+          const CUSTOM_CONTROLS = [["checkbox", CHECKBOX_CLASS_NAME], ["radio", RADIO_INPUT_CLASS_NAME]];
+          $doc.on("change", namespace + ` form input[type="checkbox"]:not(` + CHECKBOX_CLASS_NAME + ")", (evt) => {
+            $2(evt.target).siblings(CHECKBOX_CLASS_NAME).toggleClass(CHECKED_CLASS);
+          });
+          $doc.on("change", namespace + ` form input[type="radio"]`, (evt) => {
+            $2(`input[name="${evt.target.name}"]:not(${CHECKBOX_CLASS_NAME})`).map((i, el) => $2(el).siblings(RADIO_INPUT_CLASS_NAME).removeClass(CHECKED_CLASS));
+            const $target = $2(evt.target);
+            if (!$target.hasClass("w-radio-input")) {
+              $target.siblings(RADIO_INPUT_CLASS_NAME).addClass(CHECKED_CLASS);
+            }
+          });
+          CUSTOM_CONTROLS.forEach(([controlType, customControlClassName]) => {
+            $doc.on("focus", namespace + ` form input[type="${controlType}"]:not(` + customControlClassName + ")", (evt) => {
+              $2(evt.target).siblings(customControlClassName).addClass(FOCUSED_CLASS);
+              $2(evt.target).filter(focusVisibleSelectors).siblings(customControlClassName).addClass(FOCUSED_VISIBLE_CLASS);
+            });
+            $doc.on("blur", namespace + ` form input[type="${controlType}"]:not(` + customControlClassName + ")", (evt) => {
+              $2(evt.target).siblings(customControlClassName).removeClass(`${FOCUSED_CLASS} ${FOCUSED_VISIBLE_CLASS}`);
+            });
+          });
+        }
+        function reset(data) {
+          var btn = data.btn = data.form.find(':input[type="submit"]');
+          data.wait = data.btn.attr("data-wait") || null;
+          data.success = false;
+          btn.prop("disabled", false);
+          data.label && btn.val(data.label);
+        }
+        function disableBtn(data) {
+          var btn = data.btn;
+          var wait = data.wait;
+          btn.prop("disabled", true);
+          if (wait) {
+            data.label = btn.val();
+            btn.val(wait);
+          }
+        }
+        function findFields(form, result) {
+          var status = null;
+          result = result || {};
+          form.find(':input:not([type="submit"]):not([type="file"])').each(function(i, el) {
+            var field = $2(el);
+            var type = field.attr("type");
+            var name = field.attr("data-name") || field.attr("name") || "Field " + (i + 1);
+            var value = field.val();
+            if (type === "checkbox") {
+              value = field.is(":checked");
+            } else if (type === "radio") {
+              if (result[name] === null || typeof result[name] === "string") {
+                return;
+              }
+              value = form.find('input[name="' + field.attr("name") + '"]:checked').val() || null;
+            }
+            if (typeof value === "string") {
+              value = $2.trim(value);
+            }
+            result[name] = value;
+            status = status || getStatus(field, type, name, value);
+          });
+          return status;
+        }
+        function findFileUploads(form) {
+          var result = {};
+          form.find(':input[type="file"]').each(function(i, el) {
+            var field = $2(el);
+            var name = field.attr("data-name") || field.attr("name") || "File " + (i + 1);
