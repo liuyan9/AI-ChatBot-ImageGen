@@ -101,4 +101,14 @@
 
 <script>
   // Get the chat container, user input field, send button, and credits display elements
-  const chatContainer = document.
+  const chatContainer = document.getElementById('chat-container');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const creditsDisplay = document.getElementById('credits-display');
+
+  // Function to add a message to the chat container
+  function addMessageToChat(content, role) {
+    // Create a new div element to hold the message
+    const message = document.createElement('div');
+    // Regular expression pattern to match code blocks
+ 
