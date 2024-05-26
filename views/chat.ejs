@@ -121,4 +121,14 @@
       matchedCodeBlocks.forEach(block => {
         // Get the content of the code block
         const codeContent = block.slice(3, -3).trim();
-        // Wrap the content in 
+        // Wrap the content in a pre element
+        const codeBlock = `<pre>${codeContent}</pre>`;
+        // Replace the code block in the content with the pre element
+        content = content.replace(block, codeBlock);
+      });
+    }
+
+    // Set the inner HTML of the message div to display the role and message
+    message.innerHTML = `<strong>${role}:</strong> ${content}`;
+    // Set a margin at the bottom of the message
+    message.s
