@@ -131,4 +131,18 @@
     // Set the inner HTML of the message div to display the role and message
     message.innerHTML = `<strong>${role}:</strong> ${content}`;
     // Set a margin at the bottom of the message
-    message.s
+    message.style.marginBottom = '1rem';
+    // Append the message to the chat container
+    chatContainer.appendChild(message);
+    // Scroll the chat container to the bottom
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  // Asynchronous function to send a message to the server
+  async function sendMessage() {
+  // Get the value of the user input
+  const message = userInput.value.trim();
+  // Return if the input is empty
+  if (message === '') return;
+
+  // Get the number
