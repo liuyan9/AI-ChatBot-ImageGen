@@ -87,4 +87,18 @@
   <div class="container-3 w-container">
     <!-- Display the number of credits -->
     <h2>Credits: <span id="credits-display"><%= user.credits %></span></h2>
-    <!-- Chat cont
+    <!-- Chat container -->
+    <div id="chat-container">
+    </div>
+    <!-- Input container -->
+    <div id="input-container">
+        <!-- User input field -->
+        <input type="text" id="user-input" placeholder="Type your message here...">
+        <!-- Send button -->
+        <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+<script>
+  // Get the chat container, user input field, send button, and credits display elements
+  const chatContainer = document.
