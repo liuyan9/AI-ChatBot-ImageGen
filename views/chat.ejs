@@ -111,4 +111,14 @@
     // Create a new div element to hold the message
     const message = document.createElement('div');
     // Regular expression pattern to match code blocks
- 
+    const codeBlockRegex = /`{3}([\s\S]*?)`{3}/g;
+    // Array of matched code blocks
+    const matchedCodeBlocks = content.match(codeBlockRegex);
+
+    // If there are matched code blocks
+    if (matchedCodeBlocks) {
+      // Loop through each code block
+      matchedCodeBlocks.forEach(block => {
+        // Get the content of the code block
+        const codeContent = block.slice(3, -3).trim();
+        // Wrap the content in 
