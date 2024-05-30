@@ -145,4 +145,19 @@
   // Return if the input is empty
   if (message === '') return;
 
-  // Get the number
+  // Get the number of credits
+  const currentCredits = parseInt(creditsDisplay.textContent, 10);
+  // Check if the user has enough credits
+  if (currentCredits < 1) {
+    // Display an error message
+    alert("You don't have enough credits to send a message.");
+    return;
+  }
+
+  // Clear the user input field
+  userInput.value = '';
+  // Add the user's message to the chat
+  addMessageToChat(message, 'User');
+
+  // Add a loading icon to the chat
+  const loadingMessage = docu
