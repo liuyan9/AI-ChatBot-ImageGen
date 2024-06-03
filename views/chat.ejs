@@ -160,4 +160,16 @@
   addMessageToChat(message, 'User');
 
   // Add a loading icon to the chat
-  const loadingMessage = docu
+  const loadingMessage = document.createElement('div');
+  loadingMessage.innerHTML = `<strong>GPT-4:</strong> <span class="loading"></span>`;
+  loadingMessage.style.marginBottom = '1rem';
+  chatContainer.appendChild(loadingMessage);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  try {
+    // Send a POST request to the server
+    const response = await fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
