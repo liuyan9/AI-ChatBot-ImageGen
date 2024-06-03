@@ -186,4 +186,19 @@
       loadingMessage.innerHTML = `<strong>GPT-4:</strong> ${reply}`;
     } else {
       // Log an error if the request fails
-      console.error
+      console.error('Failed to send message');
+    }
+  } catch (err) {
+    // Log an error if there is a problem with the request
+    console.error('Error:', err);
+  }
+}
+
+
+// Add a click event listener to the send button
+sendBtn.addEventListener('click', sendMessage);
+// Add a keydown event listener to the user input field
+userInput.addEventListener('keydown', event => {
+// If the entered key is the Enter key
+if (event.key === 'Enter') {
+// Prevent the defaul
