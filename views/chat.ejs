@@ -172,4 +172,18 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({ message })
+    });
+
+    // If the request is successful
+    if (response.ok) {
+      // Get the response data
+      const { reply, credits } = await response.json();
+      // Update the number of credits
+      creditsDisplay.textContent = credits;
+      // Remove the loading icon from the chat
+      loadingMessage.innerHTML = `<strong>GPT-4:</strong> ${reply}`;
+    } else {
+      // Log an error if the request fails
+      console.error
