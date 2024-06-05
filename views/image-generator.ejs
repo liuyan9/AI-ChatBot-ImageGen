@@ -123,4 +123,16 @@ h2 {
     <!-- Heading -->
     <h2>Credits: <span id="credits-display"><%= user.credits %></span></h2>
     <!-- Image generation form -->
-    <f
+    <form id="image-form">
+        <!-- Prompt label -->
+        <label for="prompt">Enter a prompt for the image:</label>
+        <!-- Prompt input field -->
+        <input type="text" id="prompt" name="prompt" required>
+        <!-- Submit button -->
+        <button type="submit">Generate Image</button>
+    </form>
+    <!-- Image container -->
+    <div id="image-container">
+      <div id="loading-icon"></div>
+    </div>
+        <!-- Credits di
