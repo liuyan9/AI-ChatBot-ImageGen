@@ -147,4 +147,17 @@ const creditsDisplay = document.getElementById('credits-display');
 const loadingIcon = document.getElementById('loading-icon');
 
 // Add a submit event listener to the image form
-imageForm.addEventListen
+imageForm.addEventListener('submit', async (e) => {
+  // Prevent the default form submission behavior
+  e.preventDefault();
+
+  // Get the value of the prompt input
+  const prompt = document.getElementById('prompt').value;
+
+  // Get the current number of credits
+  const currentCredits = parseInt(creditsDisplay.textContent, 10);
+
+  // Check if the user has enough credits
+  if (currentCredits < 1) {
+      // If not, display an error message
+      alert("You don't have enough credit
