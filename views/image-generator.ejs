@@ -160,4 +160,22 @@ imageForm.addEventListener('submit', async (e) => {
   // Check if the user has enough credits
   if (currentCredits < 1) {
       // If not, display an error message
-      alert("You don't have enough credit
+      alert("You don't have enough credits to generate an image.");
+      // Exit the function
+      return;
+  }
+
+  // Show the loading icon
+  loadingIcon.style.display = 'block';
+
+  // Make a POST request to the /image endpoint with the prompt
+  const response = await fetch('/image', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prompt }),
+  });
+
+  // Get the image URL from the response
+  const imageUrl = await respon
