@@ -24,4 +24,6 @@ To get the project up and running locally, follow these instructions:
 3. Navigate to the project directory and run `npm install` to install the necessary dependencies.
 4. Rename the `example.env` file to `.env` and replace the placeholders with your specific keys and credentials. To obtain the required API keys, follow the instructions below:
  - For the OpenAI API key, create an account at [OpenAI](https://beta.openai.com/signup/) and adhere to their instructions to generate an API key.
-   - For the Stripe secret key, set up an account at [Stripe](https://dashboard.stripe.com/register) and head over to the API section in the dashboard to fetch your secret key. Set up three monthly subscription plans in Stripe and note their price 
+   - For the Stripe secret key, set up an account at [Stripe](https://dashboard.stripe.com/register) and head over to the API section in the dashboard to fetch your secret key. Set up three monthly subscription plans in Stripe and note their price IDs. Don't forget to get your Stripe public key.
+   - To get the Google Client ID and Google Client Secret, access [Google Developers Console](https://console.developers.google.com/), create a new project, enable the necessary Google APIs (such as Google+ API, Google OAuth2 API) and create an OAuth 2.0 client ID. You'll be provided with the client ID and secret.
+   - For the MongoDB URI, create an account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/regist
