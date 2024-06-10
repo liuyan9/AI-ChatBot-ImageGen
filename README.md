@@ -22,4 +22,6 @@ To get the project up and running locally, follow these instructions:
 1. Clone the repository from GitHub.
 2. Ensure Node.js and npm (Node Package Manager) are installed. If not, please install.
 3. Navigate to the project directory and run `npm install` to install the necessary dependencies.
-4. Rename the `example.env` file to `.env` and replace the placeholders with your specific keys and credentials. To obtain 
+4. Rename the `example.env` file to `.env` and replace the placeholders with your specific keys and credentials. To obtain the required API keys, follow the instructions below:
+ - For the OpenAI API key, create an account at [OpenAI](https://beta.openai.com/signup/) and adhere to their instructions to generate an API key.
+   - For the Stripe secret key, set up an account at [Stripe](https://dashboard.stripe.com/register) and head over to the API section in the dashboard to fetch your secret key. Set up three monthly subscription plans in Stripe and note their price 
