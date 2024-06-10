@@ -178,4 +178,18 @@ imageForm.addEventListener('submit', async (e) => {
   });
 
   // Get the image URL from the response
-  const imageUrl = await respon
+  const imageUrl = await response.text();
+
+  // Hide the loading icon
+  loadingIcon.style.display = 'none';
+
+  // Create an image element
+  const image = document.createElement('img');
+  // Set the source of the image to the URL
+  image.src = imageUrl;
+  // Clear any previous images in the container
+  imageContainer.innerHTML = '';
+  // Add the new image to the container
+  imageContainer.appendChild(image);
+  // Update the number of credits displayed
+  creditsDispl
