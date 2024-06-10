@@ -17,4 +17,9 @@ The AI-ChatBot-ImageGen web app is a straightforward and extensible SAAS web app
 
 ## Getting Started
 
-To get the pr
+To get the project up and running locally, follow these instructions:
+
+1. Clone the repository from GitHub.
+2. Ensure Node.js and npm (Node Package Manager) are installed. If not, please install.
+3. Navigate to the project directory and run `npm install` to install the necessary dependencies.
+4. Rename the `example.env` file to `.env` and replace the placeholders with your specific keys and credentials. To obtain 
