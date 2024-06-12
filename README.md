@@ -26,4 +26,9 @@ To get the project up and running locally, follow these instructions:
  - For the OpenAI API key, create an account at [OpenAI](https://beta.openai.com/signup/) and adhere to their instructions to generate an API key.
    - For the Stripe secret key, set up an account at [Stripe](https://dashboard.stripe.com/register) and head over to the API section in the dashboard to fetch your secret key. Set up three monthly subscription plans in Stripe and note their price IDs. Don't forget to get your Stripe public key.
    - To get the Google Client ID and Google Client Secret, access [Google Developers Console](https://console.developers.google.com/), create a new project, enable the necessary Google APIs (such as Google+ API, Google OAuth2 API) and create an OAuth 2.0 client ID. You'll be provided with the client ID and secret.
-   - For the MongoDB URI, create an account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/regist
+   - For the MongoDB URI, create an account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register), set up a new cluster. Next, create a user with suitable permissions, and you'll be able to generate the connection URI.
+5. Set a strong `SESSION_SECRET` value in the `.env` file. You can set any long, random string.
+6. Locate the following variables in the frontend JavaScript code, index.js and views/dashboard.ejs and replace them with your details:
+   - `stripePublicKey`: Your Stripe public key.
+   - `priceTrial`: The price ID for the trial plan.
+   - `pri
