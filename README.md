@@ -31,4 +31,11 @@ To get the project up and running locally, follow these instructions:
 6. Locate the following variables in the frontend JavaScript code, index.js and views/dashboard.ejs and replace them with your details:
    - `stripePublicKey`: Your Stripe public key.
    - `priceTrial`: The price ID for the trial plan.
-   - `pri
+   - `pricePlan1`: The price ID for plan 1.
+   - `pricePlan2`: The price ID for plan 2.
+7. You can start the server by executing `npm start`.
+8. Install the Stripe CLI by adhering to the instructions provided in the [Stripe CLI documentation](https://stripe.com/docs/stripe-cli#install).
+9. Run the following command to facilitate webhook events listening on your local machine:
+`stripe listen --forward-to http://localhost:3000/webhook`
+
+10. Open your web browser and navigate to `http://localhost:300
