@@ -38,4 +38,14 @@ To get the project up and running locally, follow these instructions:
 9. Run the following command to facilitate webhook events listening on your local machine:
 `stripe listen --forward-to http://localhost:3000/webhook`
 
-10. Open your web browser and navigate to `http://localhost:300
+10. Open your web browser and navigate to `http://localhost:3000` to view the web app.
+
+## Roadmap
+
+For new contributors, here are some tasks you can start venturing into:
+
+- Enhance user experience by integrating features like image galleries, voice input, and chat history.
+- Collaborate with more APIs for a wider scope of content generation.
+- Improve front-end design for better responsiveness across different devices.
+- Optimize server performance for efficient API calls handling.
+- Improve user authentication and account management.
